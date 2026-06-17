@@ -14,13 +14,18 @@
  * GET    /api/spark/insights         Recent learning insights
  */
 
-import type { SparkCategory } from '@ai-operations/shared-types';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
-import { stores } from '../storage';
-import { WeightManager, AwarenessCore, MemoryCore, SparkOrchestrator } from '@ai-operations/spark-engine';
-import { validateBody, sparkChatSchema } from '../middleware/validate';
-import { ALL_CATEGORIES } from '@ai-operations/spark-engine';
+import type { SparkCategory } from "@ai-operations/shared-types";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
+import { stores } from "../storage";
+import {
+  WeightManager,
+  AwarenessCore,
+  MemoryCore,
+  SparkOrchestrator,
+} from "@ai-operations/spark-engine";
+import { validateBody, sparkChatSchema } from "../middleware/validate";
+import { ALL_CATEGORIES } from "@ai-operations/spark-engine";
 
 // ── Singletons ────────────────────────────────────────────────────────────────
 
@@ -49,7 +54,7 @@ async function getWeights(ctx: any): Promise<void> {
 async function getWeightHistory(ctx: any): Promise<void> {
   const { res, query } = ctx;
 
-  const limit = parseInt(query.limit || '50', 10);
+  const limit = parseInt(query.limit || "50", 10);
   const category = query.category || undefined;
 
   const history = stores.spark.getHistory({ category, limit });
@@ -64,8 +69,8 @@ async function getWeightHistory(ctx: any): Promise<void> {
 async function listEpisodes(ctx: any): Promise<void> {
   const { res, query } = ctx;
 
-  const limit = parseInt(query.limit || '50', 10);
-  const offset = parseInt(query.offset || '0', 10);
+  const limit = parseInt(query.limit || "50", 10);
+  const offset = parseInt(query.offset || "0", 10);
   const category = query.category || undefined;
 
   const episodes = stores.spark.listEpisodes({ category, limit, offset });
@@ -83,7 +88,7 @@ async function listEpisodes(ctx: any): Promise<void> {
 async function listPredictions(ctx: any): Promise<void> {
   const { res, query } = ctx;
 
-  const limit = parseInt(query.limit || '50', 10);
+  const limit = parseInt(query.limit || "50", 10);
   const runId = query.runId || undefined;
   const category = query.category || undefined;
 
@@ -108,10 +113,13 @@ async function getStats(ctx: any): Promise<void> {
     const episodeCount = stores.spark.countEpisodes({ category: w.category });
 
     // Calculate accuracy: episodes where adjustment was 'none' (prediction was correct)
-    const correctPredictions = episodes.filter((ep) => ep.adjustmentDirection === 'none').length;
-    const accuracy = episodeCount > 0
-      ? Math.round((correctPredictions / episodeCount) * 1000) / 1000
-      : 0;
+    const correctPredictions = episodes.filter(
+      (ep) => ep.adjustmentDirection === "none",
+    ).length;
+    const accuracy =
+      episodeCount > 0
+        ? Math.round((correctPredictions / episodeCount) * 1000) / 1000
+        : 0;
 
     // Calculate drift: how far current weight has moved from base
     const drift = Math.round((w.currentWeight - w.baseWeight) * 10000) / 10000;
@@ -137,7 +145,7 @@ async function getStats(ctx: any): Promise<void> {
 async function createSnapshot(ctx: any): Promise<void> {
   const { res, body } = ctx;
 
-  const reason = (body.reason as string) || 'Manual snapshot';
+  const reason = (body.reason as string) || "Manual snapshot";
 
   const snapshotId = weightManager.createSnapshot(reason);
 
@@ -154,7 +162,7 @@ async function rollbackSnapshot(ctx: any): Promise<void> {
 
   const snapshotId = body.snapshotId as string;
   if (!snapshotId) {
-    sendError(res, 400, 'Missing required field: snapshotId');
+    sendError(res, 400, "Missing required field: snapshotId");
     return;
   }
 
@@ -168,7 +176,11 @@ async function rollbackSnapshot(ctx: any): Promise<void> {
       weights,
     });
   } catch (err) {
-    sendError(res, 404, err instanceof Error ? err.message : `Snapshot not found: ${snapshotId}`);
+    sendError(
+      res,
+      404,
+      err instanceof Error ? err.message : `Snapshot not found: ${snapshotId}`,
+    );
   }
 }
 
@@ -176,7 +188,7 @@ async function rollbackSnapshot(ctx: any): Promise<void> {
 async function listSnapshots(ctx: any): Promise<void> {
   const { res, query } = ctx;
 
-  const limit = parseInt(query.limit || '20', 10);
+  const limit = parseInt(query.limit || "20", 10);
   const snapshots = stores.spark.listSnapshots(limit);
 
   sendJson(res, 200, {
@@ -232,12 +244,17 @@ async function getBeliefs(ctx: any): Promise<void> {
 async function getInsights(ctx: any): Promise<void> {
   const { res, query } = ctx;
 
-  const limit = parseInt(query.limit || '50', 10);
+  const limit = parseInt(query.limit || "50", 10);
   const category = query.category || undefined;
   const pattern = query.pattern || undefined;
   const minImpact = query.minImpact ? parseFloat(query.minImpact) : undefined;
 
-  const insights = stores.spark.listInsights({ category, pattern, limit, minImpact });
+  const insights = stores.spark.listInsights({
+    category,
+    pattern,
+    limit,
+    minImpact,
+  });
 
   sendJson(res, 200, {
     insights,
@@ -280,7 +297,7 @@ async function chat(ctx: any): Promise<void> {
 /** GET /api/spark/conversations — List recent conversations. */
 async function listConversations(ctx: any): Promise<void> {
   const { res, query } = ctx;
-  const limit = parseInt(query.limit || '20', 10);
+  const limit = parseInt(query.limit || "20", 10);
   const conversations = stores.spark.listRecentConversations(limit);
   sendJson(res, 200, { conversations, total: conversations.length });
 }
@@ -289,7 +306,7 @@ async function listConversations(ctx: any): Promise<void> {
 async function getConversation(ctx: any): Promise<void> {
   const { res, params, query } = ctx;
   const conversationId = params.id;
-  const limit = parseInt(query.limit || '50', 10);
+  const limit = parseInt(query.limit || "50", 10);
 
   const conversation = stores.spark.getConversation(conversationId);
   if (!conversation) {
@@ -319,7 +336,7 @@ async function getMemoryTokens(ctx: any): Promise<void> {
     type: query.type || undefined,
     tier: query.tier || undefined,
     minStrength: query.minStrength ? Number(query.minStrength) : undefined,
-    excludeArchived: query.includeArchived !== 'true',
+    excludeArchived: query.includeArchived !== "true",
     limit: query.limit ? Number(query.limit) : 50,
   });
   sendJson(res, 200, { tokens, count: tokens.length });
@@ -350,10 +367,13 @@ async function getMemoryEdges(ctx: any): Promise<void> {
 /** GET /api/spark/memory/graph — Full token graph for visualization. */
 async function getMemoryGraph(ctx: any): Promise<void> {
   const { res } = ctx;
-  const tokens = stores.spark.listMemoryTokens({ excludeArchived: true, limit: 200 });
+  const tokens = stores.spark.listMemoryTokens({
+    excludeArchived: true,
+    limit: 200,
+  });
   const edges = stores.spark.listMemoryEdges({ limit: 500 });
   sendJson(res, 200, {
-    tokens: tokens.map(t => ({
+    tokens: tokens.map((t) => ({
       id: t.id,
       type: t.type,
       tier: t.tier,
@@ -364,7 +384,7 @@ async function getMemoryGraph(ctx: any): Promise<void> {
       sentiment: t.essence.sentiment,
       createdAt: t.createdAt,
     })),
-    edges: edges.map(e => ({
+    edges: edges.map((e) => ({
       id: e.id,
       from: e.fromTokenId,
       to: e.toTokenId,
@@ -380,7 +400,9 @@ async function getMemoryGraph(ctx: any): Promise<void> {
 async function getMemoryStats(ctx: any): Promise<void> {
   const { res } = ctx;
   const totalTokens = stores.spark.countMemoryTokens();
-  const activeTokens = stores.spark.countMemoryTokens({ excludeArchived: true });
+  const activeTokens = stores.spark.countMemoryTokens({
+    excludeArchived: true,
+  });
   const edges = stores.spark.listMemoryEdges({ limit: 1000 });
   const topicDocs = stores.spark.getTopicDocumentCount();
 
@@ -397,7 +419,7 @@ async function getMemoryStats(ctx: any): Promise<void> {
 async function reconstructMemory(ctx: any): Promise<void> {
   const { res, body } = ctx;
   const query = body?.query;
-  if (!query || typeof query !== 'string') {
+  if (!query || typeof query !== "string") {
     sendError(res, 400, 'Missing "query" string in request body');
     return;
   }
@@ -434,7 +456,7 @@ async function triggerReflection(ctx: any): Promise<void> {
 /** GET /api/spark/reflections — List past reflections. */
 async function listReflections(ctx: any): Promise<void> {
   const { res, query } = ctx;
-  const limit = parseInt(query.limit || '20', 10);
+  const limit = parseInt(query.limit || "20", 10);
   const reflections = stores.spark.listReflections(limit);
   sendJson(res, 200, { reflections, total: reflections.length });
 }
@@ -455,33 +477,33 @@ async function getPersonality(ctx: any): Promise<void> {
 export { weightManager };
 
 export const sparkRoutes: Route[] = [
-  pathToRoute('GET', '/api/spark/weights', getWeights),
-  pathToRoute('GET', '/api/spark/weights/history', getWeightHistory),
-  pathToRoute('GET', '/api/spark/episodes', listEpisodes),
-  pathToRoute('GET', '/api/spark/predictions', listPredictions),
-  pathToRoute('GET', '/api/spark/stats', getStats),
-  pathToRoute('POST', '/api/spark/snapshot', createSnapshot),
-  pathToRoute('POST', '/api/spark/rollback', rollbackSnapshot),
-  pathToRoute('GET', '/api/spark/snapshots', listSnapshots),
-  pathToRoute('GET', '/api/spark/awareness', getAwareness),
-  pathToRoute('GET', '/api/spark/emotional-state', getEmotionalState),
-  pathToRoute('GET', '/api/spark/beliefs', getBeliefs),
-  pathToRoute('GET', '/api/spark/insights', getInsights),
-  pathToRoute('POST', '/api/spark/chat', chat),
-  pathToRoute('GET', '/api/spark/conversations', listConversations),
-  pathToRoute('GET', '/api/spark/conversations/:id', getConversation),
-  pathToRoute('GET', '/api/spark/context', getCrossConnectorContext),
+  pathToRoute("GET", "/api/spark/weights", getWeights),
+  pathToRoute("GET", "/api/spark/weights/history", getWeightHistory),
+  pathToRoute("GET", "/api/spark/episodes", listEpisodes),
+  pathToRoute("GET", "/api/spark/predictions", listPredictions),
+  pathToRoute("GET", "/api/spark/stats", getStats),
+  pathToRoute("POST", "/api/spark/snapshot", createSnapshot),
+  pathToRoute("POST", "/api/spark/rollback", rollbackSnapshot),
+  pathToRoute("GET", "/api/spark/snapshots", listSnapshots),
+  pathToRoute("GET", "/api/spark/awareness", getAwareness),
+  pathToRoute("GET", "/api/spark/emotional-state", getEmotionalState),
+  pathToRoute("GET", "/api/spark/beliefs", getBeliefs),
+  pathToRoute("GET", "/api/spark/insights", getInsights),
+  pathToRoute("POST", "/api/spark/chat", chat),
+  pathToRoute("GET", "/api/spark/conversations", listConversations),
+  pathToRoute("GET", "/api/spark/conversations/:id", getConversation),
+  pathToRoute("GET", "/api/spark/context", getCrossConnectorContext),
   // Spiral Memory
-  pathToRoute('GET', '/api/spark/memory/tokens', getMemoryTokens),
-  pathToRoute('GET', '/api/spark/memory/tokens/:id', getMemoryToken),
-  pathToRoute('GET', '/api/spark/memory/edges', getMemoryEdges),
-  pathToRoute('GET', '/api/spark/memory/graph', getMemoryGraph),
-  pathToRoute('GET', '/api/spark/memory/stats', getMemoryStats),
-  pathToRoute('POST', '/api/spark/memory/reconstruct', reconstructMemory),
-  pathToRoute('POST', '/api/spark/memory/maintenance', maintenancePass),
+  pathToRoute("GET", "/api/spark/memory/tokens", getMemoryTokens),
+  pathToRoute("GET", "/api/spark/memory/tokens/:id", getMemoryToken),
+  pathToRoute("GET", "/api/spark/memory/edges", getMemoryEdges),
+  pathToRoute("GET", "/api/spark/memory/graph", getMemoryGraph),
+  pathToRoute("GET", "/api/spark/memory/stats", getMemoryStats),
+  pathToRoute("POST", "/api/spark/memory/reconstruct", reconstructMemory),
+  pathToRoute("POST", "/api/spark/memory/maintenance", maintenancePass),
   // Reflection
-  pathToRoute('POST', '/api/spark/reflect', triggerReflection),
-  pathToRoute('GET', '/api/spark/reflections', listReflections),
+  pathToRoute("POST", "/api/spark/reflect", triggerReflection),
+  pathToRoute("GET", "/api/spark/reflections", listReflections),
   // Personality
-  pathToRoute('GET', '/api/spark/personality', getPersonality),
+  pathToRoute("GET", "/api/spark/personality", getPersonality),
 ];

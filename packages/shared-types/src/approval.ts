@@ -1,4 +1,4 @@
-import { randomUUID } from './uuid';
+import { randomUUID } from "./uuid";
 
 /**
  * Approval — Human-in-the-loop gate.
@@ -7,9 +7,9 @@ import { randomUUID } from './uuid';
  * an Approval request is created. The user sees a preview and decides.
  */
 
-export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+export type RiskLevel = "low" | "medium" | "high" | "critical";
 
-export type ApprovalDecision = 'approved' | 'denied' | 'modified';
+export type ApprovalDecision = "approved" | "denied" | "modified";
 
 export interface Approval {
   /** Approval request identifier (UUID v4) */

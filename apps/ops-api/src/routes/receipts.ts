@@ -4,9 +4,9 @@
  * GET  /api/receipts   List receipts with optional filtering
  */
 
-import { pathToRoute, sendJson } from '../server';
-import type { Route } from '../server';
-import { stores } from '../storage';
+import { pathToRoute, sendJson } from "../server";
+import type { Route } from "../server";
+import { stores } from "../storage";
 
 interface ReceiptRow {
   id: string;
@@ -30,8 +30,8 @@ function rowToReceipt(row: ReceiptRow) {
     policyVersion: row.policy_version,
     cordDecision: row.cord_decision,
     cordScore: row.cord_score,
-    cordReasons: JSON.parse(row.cord_reasons || '[]'),
-    input: JSON.parse(row.input || '{}'),
+    cordReasons: JSON.parse(row.cord_reasons || "[]"),
+    input: JSON.parse(row.input || "{}"),
     output: row.output ? JSON.parse(row.output) : undefined,
     timestamp: row.timestamp,
     hash: row.hash,
@@ -43,11 +43,11 @@ function rowToReceipt(row: ReceiptRow) {
 async function listReceipts(ctx: any): Promise<void> {
   const { res, query } = ctx;
 
-  const limit = parseInt(query.limit || '50', 10);
+  const limit = parseInt(query.limit || "50", 10);
 
   try {
     const rows = stores.db.db
-      .prepare('SELECT * FROM receipts ORDER BY timestamp DESC LIMIT ?')
+      .prepare("SELECT * FROM receipts ORDER BY timestamp DESC LIMIT ?")
       .all(limit) as ReceiptRow[];
 
     const receipts = rows.map(rowToReceipt);
@@ -58,5 +58,5 @@ async function listReceipts(ctx: any): Promise<void> {
 }
 
 export const receiptRoutes: Route[] = [
-  pathToRoute('GET', '/api/receipts', listReceipts),
+  pathToRoute("GET", "/api/receipts", listReceipts),
 ];

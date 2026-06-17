@@ -1,4 +1,4 @@
-import { randomUUID } from './uuid';
+import { randomUUID } from "./uuid";
 
 /**
  * Action — A single executed operation.
@@ -7,7 +7,7 @@ import { randomUUID } from './uuid';
  * unit of work — they map 1:1 to external API calls.
  */
 
-export type ActionStatus = 'pending' | 'executed' | 'blocked' | 'failed';
+export type ActionStatus = "pending" | "executed" | "blocked" | "failed";
 
 export interface Action {
   /** Action identifier (UUID v4) */
@@ -61,6 +61,6 @@ export function createAction(
     connector,
     operation,
     input,
-    status: 'pending',
+    status: "pending",
   };
 }

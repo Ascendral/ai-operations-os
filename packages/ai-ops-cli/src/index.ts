@@ -4,6 +4,6 @@
  * Re-exports all commands for programmatic use.
  */
 
-export { health } from './commands/health';
-export { demo } from './commands/demo';
-export { receiptsVerify } from './commands/receipts';
+export { health } from "./commands/health";
+export { demo } from "./commands/demo";
+export { receiptsVerify } from "./commands/receipts";

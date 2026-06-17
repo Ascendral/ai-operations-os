@@ -7,7 +7,7 @@
  *   - store.inventory: Check and alert on low inventory
  */
 
-import type { QueueJob } from '../queue';
+import type { QueueJob } from "../queue";
 
 export interface StoreFulfillData {
   taskId: string;
@@ -29,9 +29,13 @@ export interface StoreSupportData {
 /**
  * Handle order fulfillment.
  */
-export async function handleStoreFulfill(job: QueueJob<StoreFulfillData>): Promise<unknown> {
+export async function handleStoreFulfill(
+  job: QueueJob<StoreFulfillData>,
+): Promise<unknown> {
   const { taskId, orderNumber, items } = job.data;
-  console.log(`[store.fulfill] Processing order #${orderNumber} with ${items.length} items (task: ${taskId})`);
+  console.log(
+    `[store.fulfill] Processing order #${orderNumber} with ${items.length} items (task: ${taskId})`,
+  );
 
   // Queues fulfillment for approval before sending to Shopify
   return {
@@ -39,7 +43,7 @@ export async function handleStoreFulfill(job: QueueJob<StoreFulfillData>): Promi
     taskId,
     orderNumber,
     itemCount: items.length,
-    status: 'queued_for_fulfillment',
+    status: "queued_for_fulfillment",
     requiresApproval: true,
   };
 }
@@ -47,9 +51,13 @@ export async function handleStoreFulfill(job: QueueJob<StoreFulfillData>): Promi
 /**
  * Handle customer support ticket.
  */
-export async function handleStoreSupport(job: QueueJob<StoreSupportData>): Promise<unknown> {
+export async function handleStoreSupport(
+  job: QueueJob<StoreSupportData>,
+): Promise<unknown> {
   const { taskId, ticketId, customerName, subject } = job.data;
-  console.log(`[store.support] Handling ticket ${ticketId} from ${customerName}: "${subject}" (task: ${taskId})`);
+  console.log(
+    `[store.support] Handling ticket ${ticketId} from ${customerName}: "${subject}" (task: ${taskId})`,
+  );
 
   // Uses LLM to draft response when OPS_LLM_PROVIDER is set
   return {
@@ -57,7 +65,7 @@ export async function handleStoreSupport(job: QueueJob<StoreSupportData>): Promi
     taskId,
     ticketId,
     suggestedResponse: `Hi ${customerName}, thank you for contacting us about "${subject}". I'm looking into this and will follow up shortly.`,
-    status: 'queued_for_approval',
+    status: "queued_for_approval",
     requiresApproval: true,
   };
 }

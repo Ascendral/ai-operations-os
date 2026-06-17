@@ -1,4 +1,4 @@
-import { BaseConnector } from './base';
+import { BaseConnector } from "./base";
 
 /**
  * Central registry for managing connector instances.
@@ -62,12 +62,12 @@ export class ConnectorRegistry {
     );
 
     for (const check of checks) {
-      if (check.status === 'fulfilled') {
+      if (check.status === "fulfilled") {
         results.set(check.value.name, check.value.healthy);
       } else {
         // This branch should not be reached given the inner try/catch,
         // but we handle it defensively.
-        results.set('unknown', false);
+        results.set("unknown", false);
       }
     }
 

@@ -136,7 +136,7 @@ export async function resilientFetch(
         if (response.status === 429) {
           // Rate limited — respect Retry-After header
           const retryAfter = parseRetryAfter(
-            response.headers.get('Retry-After'),
+            response.headers.get("Retry-After"),
           );
           delayMs = retryAfter ?? opts.initialDelayMs * Math.pow(2, attempt);
         } else {
@@ -158,7 +158,7 @@ export async function resilientFetch(
       lastError = err instanceof Error ? err : new Error(String(err));
 
       // Abort errors (timeout) are not retryable
-      if (lastError.name === 'AbortError') {
+      if (lastError.name === "AbortError") {
         throw new Error(`Request timed out after ${opts.timeoutMs}ms: ${url}`);
       }
 
@@ -174,7 +174,9 @@ export async function resilientFetch(
   }
 
   // All retries exhausted
-  throw lastError ?? new Error(`All ${opts.maxRetries + 1} attempts failed: ${url}`);
+  throw (
+    lastError ?? new Error(`All ${opts.maxRetries + 1} attempts failed: ${url}`)
+  );
 }
 
 // ---------------------------------------------------------------------------

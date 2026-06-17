@@ -16,7 +16,7 @@ import {
   type WorkflowStore,
   type ApprovalStore,
   type TaskStore,
-} from '@ai-operations/ops-storage';
+} from "@ai-operations/ops-storage";
 import type {
   ActionReceipt,
   WorkflowRun,
@@ -24,7 +24,7 @@ import type {
   Approval,
   Task,
   Action,
-} from '@ai-operations/shared-types';
+} from "@ai-operations/shared-types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,7 +36,7 @@ export interface TimelineEvent {
   timestamp: string;
 
   /** Event category for filtering and display. */
-  category: 'action' | 'decision' | 'approval' | 'error' | 'system';
+  category: "action" | "decision" | "approval" | "error" | "system";
 
   /** Short label describing the event. */
   label: string;
@@ -120,20 +120,20 @@ interface ReceiptRow {
 // ---------------------------------------------------------------------------
 
 const COLORS = {
-  reset: '\x1b[0m',
-  bold: '\x1b[1m',
-  dim: '\x1b[2m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  gray: '\x1b[90m',
+  reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
+  gray: "\x1b[90m",
 } as const;
 
 /** Map event categories to ANSI color codes. */
-const CATEGORY_COLORS: Record<TimelineEvent['category'], string> = {
+const CATEGORY_COLORS: Record<TimelineEvent["category"], string> = {
   action: COLORS.cyan,
   decision: COLORS.yellow,
   approval: COLORS.magenta,
@@ -224,7 +224,7 @@ export class ForensicEngine {
       // Use a parameterised query per run to stay compatible with
       // better-sqlite3 (which doesn't support array binding directly).
       const actionStmt = rawDb.prepare(
-        'SELECT * FROM actions WHERE run_id = ?',
+        "SELECT * FROM actions WHERE run_id = ?",
       );
       for (const runId of runIds) {
         const rows = actionStmt.all(runId) as ActionRow[];
@@ -238,7 +238,7 @@ export class ForensicEngine {
     const receiptsByAction = new Map<string, ReceiptRow[]>();
     if (actionsMap.size > 0) {
       const receiptStmt = rawDb.prepare(
-        'SELECT * FROM receipts WHERE action_id = ? ORDER BY timestamp ASC',
+        "SELECT * FROM receipts WHERE action_id = ? ORDER BY timestamp ASC",
       );
       for (const actionId of actionsMap.keys()) {
         const rows = receiptStmt.all(actionId) as ReceiptRow[];
@@ -281,11 +281,11 @@ export class ForensicEngine {
    */
   buildTimeline(): ForensicTimeline {
     if (!this.sessionId) {
-      throw new Error('No session loaded. Call loadSession() first.');
+      throw new Error("No session loaded. Call loadSession() first.");
     }
 
     if (!this.sessionData) {
-      throw new Error('Session data not loaded. Call loadSession() first.');
+      throw new Error("Session data not loaded. Call loadSession() first.");
     }
 
     const events: TimelineEvent[] = [];
@@ -297,7 +297,7 @@ export class ForensicEngine {
     if (task) {
       events.push({
         timestamp: task.createdAt,
-        category: 'system',
+        category: "system",
         label: `Task created: ${task.title}`,
         detail: `source=${task.source} intent=${task.intent} priority=${task.priority}`,
       });
@@ -308,7 +308,7 @@ export class ForensicEngine {
       // Workflow run start
       events.push({
         timestamp: run.startedAt,
-        category: 'system',
+        category: "system",
         label: `Workflow started: ${run.workflowType}`,
         detail: `runId=${run.id} state=${run.state}`,
       });
@@ -323,14 +323,14 @@ export class ForensicEngine {
         if (run.error) {
           events.push({
             timestamp: run.endedAt,
-            category: 'error',
+            category: "error",
             label: `Workflow failed: ${run.workflowType}`,
             detail: run.error,
           });
         } else {
           events.push({
             timestamp: run.endedAt,
-            category: 'system',
+            category: "system",
             label: `Workflow completed: ${run.workflowType}`,
             detail: `state=${run.state}`,
           });
@@ -343,7 +343,7 @@ export class ForensicEngine {
       // Approval requested
       events.push({
         timestamp: approval.requestedAt,
-        category: 'approval',
+        category: "approval",
         label: `Approval requested: ${approval.reason}`,
         detail: `risk=${approval.risk} actionId=${approval.actionId} preview=${truncate(approval.preview, 80)}`,
       });
@@ -351,16 +351,16 @@ export class ForensicEngine {
       // Approval decided
       if (approval.decision && approval.decidedAt) {
         const decisionLabel =
-          approval.decision === 'approved'
-            ? 'Approved'
-            : approval.decision === 'denied'
-              ? 'Denied'
-              : 'Modified';
+          approval.decision === "approved"
+            ? "Approved"
+            : approval.decision === "denied"
+              ? "Denied"
+              : "Modified";
 
         events.push({
           timestamp: approval.decidedAt,
-          category: 'approval',
-          label: `${decisionLabel} by ${approval.decidedBy ?? 'unknown'}`,
+          category: "approval",
+          label: `${decisionLabel} by ${approval.decidedBy ?? "unknown"}`,
           detail: approval.modifications
             ? `modifications=${JSON.stringify(approval.modifications)}`
             : undefined,
@@ -394,32 +394,24 @@ export class ForensicEngine {
    */
   renderTimeline(): void {
     if (!this.timeline) {
-      throw new Error('No timeline built. Call buildTimeline() first.');
+      throw new Error("No timeline built. Call buildTimeline() first.");
     }
 
     const { sessionId, events, builtAt } = this.timeline;
 
     // Header
-    console.log('');
-    console.log(
-      `${COLORS.bold}=== Forensic Timeline ===${COLORS.reset}`,
-    );
-    console.log(
-      `${COLORS.dim}Session: ${sessionId}${COLORS.reset}`,
-    );
-    console.log(
-      `${COLORS.dim}Built:   ${builtAt}${COLORS.reset}`,
-    );
-    console.log(
-      `${COLORS.dim}Events:  ${events.length}${COLORS.reset}`,
-    );
-    console.log('');
+    console.log("");
+    console.log(`${COLORS.bold}=== Forensic Timeline ===${COLORS.reset}`);
+    console.log(`${COLORS.dim}Session: ${sessionId}${COLORS.reset}`);
+    console.log(`${COLORS.dim}Built:   ${builtAt}${COLORS.reset}`);
+    console.log(`${COLORS.dim}Events:  ${events.length}${COLORS.reset}`);
+    console.log("");
 
     if (events.length === 0) {
       console.log(
         `${COLORS.yellow}  (no events recorded for this session)${COLORS.reset}`,
       );
-      console.log('');
+      console.log("");
       return;
     }
 
@@ -439,7 +431,8 @@ export class ForensicEngine {
 
       // Add CORD decision if present
       if (event.cordDecision) {
-        const decisionColor = DECISION_COLORS[event.cordDecision] ?? COLORS.gray;
+        const decisionColor =
+          DECISION_COLORS[event.cordDecision] ?? COLORS.gray;
         line += `  ${decisionColor}${event.cordDecision}${COLORS.reset}`;
 
         if (event.cordScore !== undefined) {
@@ -451,17 +444,13 @@ export class ForensicEngine {
 
       // Detail on the next line if present
       if (event.detail) {
-        console.log(
-          `${COLORS.dim}           ${event.detail}${COLORS.reset}`,
-        );
+        console.log(`${COLORS.dim}           ${event.detail}${COLORS.reset}`);
       }
     }
 
-    console.log('');
-    console.log(
-      `${COLORS.dim}--- end of timeline ---${COLORS.reset}`,
-    );
-    console.log('');
+    console.log("");
+    console.log(`${COLORS.dim}--- end of timeline ---${COLORS.reset}`);
+    console.log("");
   }
 
   // -----------------------------------------------------------------------
@@ -510,7 +499,7 @@ export class ForensicEngine {
     if (stepActions.length > 0) {
       // Sort actions by executed_at so they appear in order
       stepActions.sort((a, b) =>
-        (a.executed_at ?? '').localeCompare(b.executed_at ?? ''),
+        (a.executed_at ?? "").localeCompare(b.executed_at ?? ""),
       );
 
       for (const action of stepActions) {
@@ -519,9 +508,9 @@ export class ForensicEngine {
         // Action execution event
         events.push({
           timestamp: ts,
-          category: action.status === 'failed' ? 'error' : 'action',
+          category: action.status === "failed" ? "error" : "action",
           label:
-            action.status === 'failed'
+            action.status === "failed"
               ? `Action failed: ${action.connector}.${action.operation}`
               : `Action executed: ${action.connector}.${action.operation}`,
           detail: action.error
@@ -540,11 +529,11 @@ export class ForensicEngine {
             const reasons = safeParseJsonArray(receipt.cord_reasons);
             events.push({
               timestamp: receipt.timestamp,
-              category: 'decision',
+              category: "decision",
               label: `CORD evaluated: ${receipt.cord_decision}`,
               detail:
                 reasons.length > 0
-                  ? `reasons=[${reasons.join(', ')}] policy=${receipt.policy_version}`
+                  ? `reasons=[${reasons.join(", ")}] policy=${receipt.policy_version}`
                   : `policy=${receipt.policy_version}`,
               connector: action.connector,
               operation: action.operation,
@@ -559,10 +548,10 @@ export class ForensicEngine {
       // This covers steps that have CORD data attached directly.
       const ts = run.startedAt;
 
-      if (step.status === 'failed') {
+      if (step.status === "failed") {
         events.push({
           timestamp: ts,
-          category: 'error',
+          category: "error",
           label: `Step failed: ${step.connector}.${step.operation}`,
           detail: step.error ?? undefined,
           connector: step.connector,
@@ -570,24 +559,26 @@ export class ForensicEngine {
           cordDecision: step.cordDecision,
           cordScore: step.cordScore,
         });
-      } else if (step.status === 'blocked') {
+      } else if (step.status === "blocked") {
         events.push({
           timestamp: ts,
-          category: 'decision',
+          category: "decision",
           label: `Step blocked: ${step.connector}.${step.operation}`,
-          detail: step.error ?? 'Blocked by CORD policy',
+          detail: step.error ?? "Blocked by CORD policy",
           connector: step.connector,
           operation: step.operation,
-          cordDecision: step.cordDecision ?? 'BLOCK',
+          cordDecision: step.cordDecision ?? "BLOCK",
           cordScore: step.cordScore,
         });
       } else {
         events.push({
           timestamp: ts,
-          category: 'action',
+          category: "action",
           label: `Step executed: ${step.connector}.${step.operation}`,
           detail:
-            step.durationMs != null ? `duration=${step.durationMs}ms` : undefined,
+            step.durationMs != null
+              ? `duration=${step.durationMs}ms`
+              : undefined,
           connector: step.connector,
           operation: step.operation,
           cordDecision: step.cordDecision,
@@ -618,5 +609,5 @@ function safeParseJsonArray(raw: string): string[] {
 /** Truncate a string to a maximum length, appending an ellipsis if trimmed. */
 function truncate(str: string, maxLen: number): string {
   if (str.length <= maxLen) return str;
-  return str.slice(0, maxLen - 3) + '...';
+  return str.slice(0, maxLen - 3) + "...";
 }

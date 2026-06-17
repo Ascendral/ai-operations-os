@@ -1,6 +1,6 @@
-import { BaseConnector, ConnectorConfig, ConnectorResult } from './base';
+import { BaseConnector, ConnectorConfig, ConnectorResult } from "./base";
 
-const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
+const CALENDAR_API = "https://www.googleapis.com/calendar/v3";
 
 /**
  * Google Calendar connector — lists, creates, updates, deletes events
@@ -18,9 +18,9 @@ export class CalendarConnector extends BaseConnector {
     super({
       enabled: !!config?.credentials?.accessToken,
       ...config,
-      name: config?.name ?? 'calendar',
+      name: config?.name ?? "calendar",
     });
-    this.accessToken = config?.credentials?.accessToken || '';
+    this.accessToken = config?.credentials?.accessToken || "";
   }
 
   /**
@@ -33,11 +33,11 @@ export class CalendarConnector extends BaseConnector {
    */
   get supportedOperations(): string[] {
     return [
-      'list_events',
-      'create_event',
-      'update_event',
-      'delete_event',
-      'check_availability',
+      "list_events",
+      "create_event",
+      "update_event",
+      "delete_event",
+      "check_availability",
     ];
   }
 
@@ -58,7 +58,10 @@ export class CalendarConnector extends BaseConnector {
     input: Record<string, unknown>,
   ): Promise<ConnectorResult> {
     if (!this.accessToken) {
-      return { success: false, error: 'No Google Calendar access token configured. Run setup first.' };
+      return {
+        success: false,
+        error: "No Google Calendar access token configured. Run setup first.",
+      };
     }
     if (!this.supportsOperation(operation)) {
       return { success: false, error: `Unsupported operation: ${operation}` };
@@ -66,12 +69,18 @@ export class CalendarConnector extends BaseConnector {
 
     try {
       switch (operation) {
-        case 'list_events': return await this.listEvents(input);
-        case 'create_event': return await this.createEvent(input);
-        case 'update_event': return await this.updateEvent(input);
-        case 'delete_event': return await this.deleteEvent(input);
-        case 'check_availability': return await this.checkAvailability(input);
-        default: return { success: false, error: `Unknown operation: ${operation}` };
+        case "list_events":
+          return await this.listEvents(input);
+        case "create_event":
+          return await this.createEvent(input);
+        case "update_event":
+          return await this.updateEvent(input);
+        case "delete_event":
+          return await this.deleteEvent(input);
+        case "check_availability":
+          return await this.checkAvailability(input);
+        default:
+          return { success: false, error: `Unknown operation: ${operation}` };
       }
     } catch (err) {
       return {
@@ -89,7 +98,7 @@ export class CalendarConnector extends BaseConnector {
   async healthCheck(): Promise<boolean> {
     if (!this.accessToken) return false;
     try {
-      const res = await this.calendarFetch('/calendars/primary');
+      const res = await this.calendarFetch("/calendars/primary");
       return res.ok;
     } catch {
       return false;
@@ -99,21 +108,25 @@ export class CalendarConnector extends BaseConnector {
   // ── Operations ────────────────────────────────────────────────────────
 
   /** List events from the primary calendar within a date range */
-  private async listEvents(input: Record<string, unknown>): Promise<ConnectorResult> {
-    const calendarId = (input.calendarId as string) || 'primary';
+  private async listEvents(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
+    const calendarId = (input.calendarId as string) || "primary";
     const maxResults = (input.maxResults as number) || 25;
     const timeMin = input.timeMin as string | undefined;
     const timeMax = input.timeMax as string | undefined;
 
     const params = new URLSearchParams({
       maxResults: String(maxResults),
-      singleEvents: 'true',
-      orderBy: 'startTime',
+      singleEvents: "true",
+      orderBy: "startTime",
     });
-    if (timeMin) params.set('timeMin', timeMin);
-    if (timeMax) params.set('timeMax', timeMax);
+    if (timeMin) params.set("timeMin", timeMin);
+    if (timeMax) params.set("timeMax", timeMax);
 
-    const res = await this.calendarFetch(`/calendars/${encodeURIComponent(calendarId)}/events?${params}`);
+    const res = await this.calendarFetch(
+      `/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
+    );
     if (!res.ok) return this.apiError(res);
 
     const data = (await res.json()) as any;
@@ -141,15 +154,17 @@ export class CalendarConnector extends BaseConnector {
   }
 
   /** Create a new calendar event */
-  private async createEvent(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async createEvent(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const summary = input.summary as string;
     const start = input.start as string;
     const end = input.end as string;
     if (!summary || !start || !end) {
-      return { success: false, error: 'summary, start, and end are required' };
+      return { success: false, error: "summary, start, and end are required" };
     }
 
-    const calendarId = (input.calendarId as string) || 'primary';
+    const calendarId = (input.calendarId as string) || "primary";
     const description = input.description as string | undefined;
     const location = input.location as string | undefined;
     const attendees = input.attendees as string[] | undefined;
@@ -167,7 +182,7 @@ export class CalendarConnector extends BaseConnector {
 
     const res = await this.calendarFetch(
       `/calendars/${encodeURIComponent(calendarId)}/events`,
-      { method: 'POST', body: JSON.stringify(body) },
+      { method: "POST", body: JSON.stringify(body) },
     );
     if (!res.ok) return this.apiError(res);
 
@@ -186,28 +201,33 @@ export class CalendarConnector extends BaseConnector {
   }
 
   /** Update an existing calendar event */
-  private async updateEvent(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async updateEvent(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const eventId = input.eventId as string;
     if (!eventId) {
-      return { success: false, error: 'eventId is required' };
+      return { success: false, error: "eventId is required" };
     }
 
-    const calendarId = (input.calendarId as string) || 'primary';
+    const calendarId = (input.calendarId as string) || "primary";
 
     // Build partial update body — only include fields that are provided
     const body: Record<string, unknown> = {};
     if (input.summary !== undefined) body.summary = input.summary;
     if (input.description !== undefined) body.description = input.description;
     if (input.location !== undefined) body.location = input.location;
-    if (input.start !== undefined) body.start = { dateTime: input.start as string };
+    if (input.start !== undefined)
+      body.start = { dateTime: input.start as string };
     if (input.end !== undefined) body.end = { dateTime: input.end as string };
     if (input.attendees !== undefined) {
-      body.attendees = (input.attendees as string[]).map((email) => ({ email }));
+      body.attendees = (input.attendees as string[]).map((email) => ({
+        email,
+      }));
     }
 
     const res = await this.calendarFetch(
       `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
-      { method: 'PATCH', body: JSON.stringify(body) },
+      { method: "PATCH", body: JSON.stringify(body) },
     );
     if (!res.ok) return this.apiError(res);
 
@@ -226,17 +246,19 @@ export class CalendarConnector extends BaseConnector {
   }
 
   /** Delete a calendar event by its ID */
-  private async deleteEvent(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async deleteEvent(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const eventId = input.eventId as string;
     if (!eventId) {
-      return { success: false, error: 'eventId is required' };
+      return { success: false, error: "eventId is required" };
     }
 
-    const calendarId = (input.calendarId as string) || 'primary';
+    const calendarId = (input.calendarId as string) || "primary";
 
     const res = await this.calendarFetch(
       `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
-      { method: 'DELETE' },
+      { method: "DELETE" },
     );
     // DELETE returns 204 No Content on success
     if (!res.ok && res.status !== 204) return this.apiError(res);
@@ -248,15 +270,17 @@ export class CalendarConnector extends BaseConnector {
   }
 
   /** Check free/busy availability for a time range */
-  private async checkAvailability(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async checkAvailability(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const timeMin = input.timeMin as string;
     const timeMax = input.timeMax as string;
     if (!timeMin || !timeMax) {
-      return { success: false, error: 'timeMin and timeMax are required' };
+      return { success: false, error: "timeMin and timeMax are required" };
     }
 
     // Items to check availability for — defaults to the primary calendar
-    const items = (input.items as Array<{ id: string }>) || [{ id: 'primary' }];
+    const items = (input.items as Array<{ id: string }>) || [{ id: "primary" }];
 
     const body = {
       timeMin,
@@ -264,8 +288,8 @@ export class CalendarConnector extends BaseConnector {
       items,
     };
 
-    const res = await this.calendarFetch('/freeBusy', {
-      method: 'POST',
+    const res = await this.calendarFetch("/freeBusy", {
+      method: "POST",
       body: JSON.stringify(body),
     });
     if (!res.ok) return this.apiError(res);
@@ -295,12 +319,15 @@ export class CalendarConnector extends BaseConnector {
 
   // ── Helpers ───────────────────────────────────────────────────────────
 
-  private async calendarFetch(path: string, options?: RequestInit): Promise<Response> {
+  private async calendarFetch(
+    path: string,
+    options?: RequestInit,
+  ): Promise<Response> {
     return fetch(`${CALENDAR_API}${path}`, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.accessToken}`,
+        "Content-Type": "application/json",
         ...((options?.headers as Record<string, string>) || {}),
       },
     });
@@ -311,7 +338,9 @@ export class CalendarConnector extends BaseConnector {
     try {
       const data = (await res.json()) as any;
       msg = data.error?.message || msg;
-    } catch { /* ignore parse errors */ }
+    } catch {
+      /* ignore parse errors */
+    }
     return { success: false, error: msg };
   }
 }

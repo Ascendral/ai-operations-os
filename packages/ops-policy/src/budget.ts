@@ -36,10 +36,7 @@ export class BudgetTracker {
    * @param dailyLimit       - Global daily spending limit in USD.
    * @param connectorLimits  - Optional per-connector spending limits.
    */
-  constructor(
-    dailyLimit?: number,
-    connectorLimits?: Record<string, number>,
-  ) {
+  constructor(dailyLimit?: number, connectorLimits?: Record<string, number>) {
     this.dailyLimit = dailyLimit;
     this.dayStart = this.getMidnight();
 
@@ -61,11 +58,17 @@ export class BudgetTracker {
    * @param connector - The connector that would spend this amount.
    * @returns An object indicating whether the spend is allowed and why.
    */
-  canSpend(amount: number, connector: string): { allowed: boolean; reason: string } {
+  canSpend(
+    amount: number,
+    connector: string,
+  ): { allowed: boolean; reason: string } {
     this.maybeResetDay();
 
     if (amount <= 0) {
-      return { allowed: true, reason: 'Zero or negative amount always allowed' };
+      return {
+        allowed: true,
+        reason: "Zero or negative amount always allowed",
+      };
     }
 
     // Check global daily limit
@@ -91,7 +94,7 @@ export class BudgetTracker {
       }
     }
 
-    return { allowed: true, reason: 'Within budget limits' };
+    return { allowed: true, reason: "Within budget limits" };
   }
 
   /**

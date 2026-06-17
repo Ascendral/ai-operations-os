@@ -9,25 +9,35 @@
  * DELETE /api/auth/credentials/:id       Delete a stored credential
  */
 
-import { signToken, hashPassword, verifyPassword, encrypt, getVaultKey } from '@ai-operations/ops-auth';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
-import { stores } from '../storage';
-import { authenticate } from '../middleware/auth';
-import { createLogger } from '@ai-operations/ops-core';
-import type * as http from 'http';
+import {
+  signToken,
+  hashPassword,
+  verifyPassword,
+  encrypt,
+  getVaultKey,
+} from "@ai-operations/ops-auth";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
+import { stores } from "../storage";
+import { authenticate } from "../middleware/auth";
+import { createLogger } from "@ai-operations/ops-core";
+import type * as http from "http";
 
-const log = createLogger('auth');
+const log = createLogger("auth");
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.OPS_API_KEY || 'ai-ops-dev-jwt-secret';
+const JWT_SECRET =
+  process.env.JWT_SECRET || process.env.OPS_API_KEY || "ai-ops-dev-jwt-secret";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 /** Extract auth context, requiring authentication. */
-async function requireAuth(req: http.IncomingMessage, res: http.ServerResponse): Promise<string | null> {
+async function requireAuth(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+): Promise<string | null> {
   const auth = await authenticate(req);
   if (!auth.authenticated || !auth.userId) {
-    sendError(res, 401, 'Authentication required');
+    sendError(res, 401, "Authentication required");
     return null;
   }
   return auth.userId;
@@ -46,25 +56,25 @@ async function registerUser(ctx: any): Promise<void> {
 
   const email = body.email as string;
   const password = body.password as string;
-  const name = (body.name as string) || email.split('@')[0];
+  const name = (body.name as string) || email.split("@")[0];
 
   if (!email || !password) {
-    sendError(res, 400, 'Missing required fields: email, password');
+    sendError(res, 400, "Missing required fields: email, password");
     return;
   }
 
   if (password.length < 6) {
-    sendError(res, 400, 'Password must be at least 6 characters');
+    sendError(res, 400, "Password must be at least 6 characters");
     return;
   }
 
   // Check if email already exists
   const existing = stores.users.getByEmail(email);
   if (existing) {
-    stores.audit.log('auth.register', {
-      details: { email, reason: 'email_already_registered' },
+    stores.audit.log("auth.register", {
+      details: { email, reason: "email_already_registered" },
     });
-    sendError(res, 409, 'Email already registered');
+    sendError(res, 409, "Email already registered");
     return;
   }
 
@@ -74,7 +84,7 @@ async function registerUser(ctx: any): Promise<void> {
     email,
     name,
     passwordHash,
-    role: 'operator',
+    role: "operator",
   });
 
   // Generate JWT
@@ -84,14 +94,14 @@ async function registerUser(ctx: any): Promise<void> {
     86_400, // 24 hours
   );
 
-  stores.audit.log('auth.register', {
+  stores.audit.log("auth.register", {
     actorId: user.id,
-    resourceType: 'user',
+    resourceType: "user",
     resourceId: user.id,
     details: { email: user.email },
   });
 
-  log.info('User registered', { userId: user.id, email: user.email });
+  log.info("User registered", { userId: user.id, email: user.email });
 
   sendJson(res, 201, {
     user: {
@@ -119,26 +129,26 @@ async function loginUser(ctx: any): Promise<void> {
   const password = body.password as string;
 
   if (!email || !password) {
-    sendError(res, 400, 'Missing required fields: email, password');
+    sendError(res, 400, "Missing required fields: email, password");
     return;
   }
 
   const user = stores.users.getByEmail(email);
   if (!user || !user.passwordHash) {
-    stores.audit.log('auth.login_failed', {
-      details: { email, reason: 'user_not_found' },
+    stores.audit.log("auth.login_failed", {
+      details: { email, reason: "user_not_found" },
     });
-    sendError(res, 401, 'Invalid email or password');
+    sendError(res, 401, "Invalid email or password");
     return;
   }
 
   const valid = verifyPassword(password, user.passwordHash);
   if (!valid) {
-    stores.audit.log('auth.login_failed', {
+    stores.audit.log("auth.login_failed", {
       actorId: user.id,
-      details: { email, reason: 'invalid_password' },
+      details: { email, reason: "invalid_password" },
     });
-    sendError(res, 401, 'Invalid email or password');
+    sendError(res, 401, "Invalid email or password");
     return;
   }
 
@@ -152,14 +162,14 @@ async function loginUser(ctx: any): Promise<void> {
     86_400,
   );
 
-  stores.audit.log('auth.login', {
+  stores.audit.log("auth.login", {
     actorId: user.id,
-    resourceType: 'user',
+    resourceType: "user",
     resourceId: user.id,
     details: { email: user.email },
   });
 
-  log.info('User logged in', { userId: user.id, email: user.email });
+  log.info("User logged in", { userId: user.id, email: user.email });
 
   sendJson(res, 200, {
     user: {
@@ -187,7 +197,7 @@ async function getCurrentUser(ctx: any): Promise<void> {
 
   const user = stores.users.get(userId);
   if (!user) {
-    sendError(res, 404, 'User not found');
+    sendError(res, 404, "User not found");
     return;
   }
 
@@ -220,22 +230,27 @@ async function storeCredential(ctx: any): Promise<void> {
   const value = body.value as string;
 
   if (!connector || !key || !value) {
-    sendError(res, 400, 'Missing required fields: connector, key, value');
+    sendError(res, 400, "Missing required fields: connector, key, value");
     return;
   }
 
   const vaultKey = getVaultKey();
   if (!vaultKey) {
-    sendError(res, 503, 'Vault not configured. Set VAULT_KEY env var.');
+    sendError(res, 503, "Vault not configured. Set VAULT_KEY env var.");
     return;
   }
 
   const encryptedValue = encrypt(value, vaultKey);
-  const credential = stores.credentials.save(connector, key, encryptedValue, userId);
+  const credential = stores.credentials.save(
+    connector,
+    key,
+    encryptedValue,
+    userId,
+  );
 
-  stores.audit.log('credential.created', {
+  stores.audit.log("credential.created", {
     actorId: userId,
-    resourceType: 'credential',
+    resourceType: "credential",
     resourceId: credential.id,
     details: { connector, key },
   });
@@ -260,7 +275,10 @@ async function getCredentials(ctx: any): Promise<void> {
   const userId = await requireAuth(req, res);
   if (!userId) return;
 
-  const credentials = stores.credentials.getForConnector(params.connector, userId);
+  const credentials = stores.credentials.getForConnector(
+    params.connector,
+    userId,
+  );
 
   sendJson(res, 200, {
     credentials: credentials.map((c) => ({
@@ -288,9 +306,9 @@ async function deleteCredential(ctx: any): Promise<void> {
     return;
   }
 
-  stores.audit.log('credential.deleted', {
+  stores.audit.log("credential.deleted", {
     actorId: userId,
-    resourceType: 'credential',
+    resourceType: "credential",
     resourceId: params.id,
   });
 
@@ -300,10 +318,10 @@ async function deleteCredential(ctx: any): Promise<void> {
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const authRoutes: Route[] = [
-  pathToRoute('POST', '/api/auth/register', registerUser),
-  pathToRoute('POST', '/api/auth/login', loginUser),
-  pathToRoute('GET', '/api/auth/me', getCurrentUser),
-  pathToRoute('POST', '/api/auth/credentials', storeCredential),
-  pathToRoute('GET', '/api/auth/credentials/:connector', getCredentials),
-  pathToRoute('DELETE', '/api/auth/credentials/:id', deleteCredential),
+  pathToRoute("POST", "/api/auth/register", registerUser),
+  pathToRoute("POST", "/api/auth/login", loginUser),
+  pathToRoute("GET", "/api/auth/me", getCurrentUser),
+  pathToRoute("POST", "/api/auth/credentials", storeCredential),
+  pathToRoute("GET", "/api/auth/credentials/:connector", getCredentials),
+  pathToRoute("DELETE", "/api/auth/credentials/:id", deleteCredential),
 ];

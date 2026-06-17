@@ -11,36 +11,36 @@
  * - Snapshot and rollback preserve system state
  */
 
-import { Database } from '@ai-operations/ops-storage';
-import { SparkStore } from '@ai-operations/ops-storage';
+import { Database } from "@ai-operations/ops-storage";
+import { SparkStore } from "@ai-operations/ops-storage";
 import type {
   SparkCategory,
   Prediction,
   OutcomeSignal,
   WorkflowStep,
-} from '@ai-operations/shared-types';
-import { SENTINEL_CATEGORIES } from '@ai-operations/shared-types';
-import { Predictor, operationToCategory } from '../predictor';
-import { OutcomeTracker } from '../outcome-tracker';
-import { LearningCore } from '../learning-core';
-import { WeightManager } from '../weight-manager';
-import { AdaptiveSafetyGate } from '../adaptive-safety-gate';
+} from "@ai-operations/shared-types";
+import { SENTINEL_CATEGORIES } from "@ai-operations/shared-types";
+import { Predictor, operationToCategory } from "../predictor";
+import { OutcomeTracker } from "../outcome-tracker";
+import { LearningCore } from "../learning-core";
+import { WeightManager } from "../weight-manager";
+import { AdaptiveSafetyGate } from "../adaptive-safety-gate";
 import {
   ALL_CATEGORIES,
   MIN_EPISODES_BEFORE_LEARNING,
   buildAllDefaultWeights,
-} from '../constants';
+} from "../constants";
 
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
+import * as path from "path";
+import * as fs from "fs";
+import * as os from "os";
 
 // ── Helpers ──────────────────────────────────────────────────────
 
 let tmpDir: string;
 
 beforeAll(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'spark-integration-test-'));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "spark-integration-test-"));
 });
 
 afterAll(() => {
@@ -82,10 +82,10 @@ function createSparkSystem(): SparkSystem {
 function makeStep(overrides: Partial<WorkflowStep> = {}): WorkflowStep {
   return {
     id: `step-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    connector: 'gmail',
-    operation: 'send',
-    input: { to: 'user@example.com' },
-    status: 'completed',
+    connector: "gmail",
+    operation: "send",
+    input: { to: "user@example.com" },
+    status: "completed",
     ...overrides,
   };
 }
@@ -124,21 +124,21 @@ function seedMinEpisodes(sys: SparkSystem, category: SparkCategory): void {
   for (let i = 0; i < count; i++) {
     const step = makeStep({
       id: `seed-${category}-${i}-${Math.random().toString(36).slice(2, 8)}`,
-      connector: category === 'financial' ? 'shopify' : 'gmail',
+      connector: category === "financial" ? "shopify" : "gmail",
       operation:
-        category === 'readonly'
-          ? 'read'
-          : category === 'financial'
-            ? 'refund'
-            : category === 'destructive'
-              ? 'delete'
-              : category === 'publication'
-                ? 'post'
-                : category === 'scheduling'
-                  ? 'create_event'
-                  : 'send',
-      status: 'completed',
-      cordDecision: 'ALLOW',
+        category === "readonly"
+          ? "read"
+          : category === "financial"
+            ? "refund"
+            : category === "destructive"
+              ? "delete"
+              : category === "publication"
+                ? "post"
+                : category === "scheduling"
+                  ? "create_event"
+                  : "send",
+      status: "completed",
+      cordDecision: "ALLOW",
       cordScore: 10,
       durationMs: 200,
     });
@@ -148,7 +148,7 @@ function seedMinEpisodes(sys: SparkSystem, category: SparkCategory): void {
 
 // ── Integration Tests ────────────────────────────────────────────
 
-describe('SPARK Feedback Loop Integration', () => {
+describe("SPARK Feedback Loop Integration", () => {
   let sys: SparkSystem;
 
   beforeEach(() => {
@@ -159,13 +159,13 @@ describe('SPARK Feedback Loop Integration', () => {
     sys.db.close();
   });
 
-  it('full predict -> measure -> learn cycle works end to end', () => {
+  it("full predict -> measure -> learn cycle works end to end", () => {
     const step = makeStep({
-      id: 'integration-step-1',
-      connector: 'gmail',
-      operation: 'send',
-      status: 'completed',
-      cordDecision: 'ALLOW',
+      id: "integration-step-1",
+      connector: "gmail",
+      operation: "send",
+      status: "completed",
+      cordDecision: "ALLOW",
       cordScore: 15,
       durationMs: 300,
     });
@@ -173,27 +173,27 @@ describe('SPARK Feedback Loop Integration', () => {
     const { prediction, outcome, episode } = runCycle(
       sys,
       step,
-      'integration-run-1',
+      "integration-run-1",
     );
 
     // Prediction was created and saved
     expect(prediction.id).toBeDefined();
-    expect(prediction.category).toBe('communication');
+    expect(prediction.category).toBe("communication");
     expect(sys.store.getPrediction(prediction.id)).toBeDefined();
 
     // Outcome was created and saved
     expect(outcome.id).toBeDefined();
-    expect(outcome.actualOutcome).toBe('success');
+    expect(outcome.actualOutcome).toBe("success");
     expect(sys.store.getOutcome(outcome.id)).toBeDefined();
 
     // Episode was created and saved
     expect(episode.id).toBeDefined();
-    expect(episode.category).toBe('communication');
+    expect(episode.category).toBe("communication");
     expect(sys.store.getEpisode(episode.id)).toBeDefined();
   });
 
-  it('system gets more cautious after repeated failures', () => {
-    const category: SparkCategory = 'communication';
+  it("system gets more cautious after repeated failures", () => {
+    const category: SparkCategory = "communication";
     seedMinEpisodes(sys, category);
 
     const weightBefore = sys.store.getWeight(category)!.currentWeight;
@@ -202,10 +202,10 @@ describe('SPARK Feedback Loop Integration', () => {
     for (let i = 0; i < 10; i++) {
       const step = makeStep({
         id: `fail-step-${i}-${Math.random().toString(36).slice(2, 8)}`,
-        connector: 'gmail',
-        operation: 'send',
-        status: 'failed',
-        cordDecision: 'ALLOW',
+        connector: "gmail",
+        operation: "send",
+        status: "failed",
+        cordDecision: "ALLOW",
         cordScore: 10,
         error: `API failure ${i}`,
       });
@@ -218,20 +218,20 @@ describe('SPARK Feedback Loop Integration', () => {
     expect(weightAfter).toBeGreaterThan(weightBefore);
   });
 
-  it('system relaxes after repeated approved successes', () => {
-    const category: SparkCategory = 'scheduling';
+  it("system relaxes after repeated approved successes", () => {
+    const category: SparkCategory = "scheduling";
     seedMinEpisodes(sys, category);
 
     // First, increase the weight by simulating some failures
     for (let i = 0; i < 5; i++) {
       const failStep = makeStep({
         id: `pre-fail-${i}-${Math.random().toString(36).slice(2, 8)}`,
-        connector: 'calendar',
-        operation: 'create_event',
-        status: 'failed',
-        cordDecision: 'ALLOW',
+        connector: "calendar",
+        operation: "create_event",
+        status: "failed",
+        cordDecision: "ALLOW",
         cordScore: 10,
-        error: 'Calendar API error',
+        error: "Calendar API error",
       });
       runCycle(sys, failStep, `pre-fail-run-${i}`);
     }
@@ -243,10 +243,10 @@ describe('SPARK Feedback Loop Integration', () => {
     for (let i = 0; i < 15; i++) {
       const successStep = makeStep({
         id: `approve-step-${i}-${Math.random().toString(36).slice(2, 8)}`,
-        connector: 'calendar',
-        operation: 'create_event',
-        status: 'approved',
-        cordDecision: 'CHALLENGE',
+        connector: "calendar",
+        operation: "create_event",
+        status: "approved",
+        cordDecision: "CHALLENGE",
         cordScore: 55,
         durationMs: 200,
       });
@@ -259,7 +259,7 @@ describe('SPARK Feedback Loop Integration', () => {
     expect(weightAfterSuccesses).toBeLessThan(weightAfterFailures);
   });
 
-  it('SENTINEL categories stay protected across many episodes', () => {
+  it("SENTINEL categories stay protected across many episodes", () => {
     for (const sentinel of SENTINEL_CATEGORIES) {
       const mySys = createSparkSystem();
       seedMinEpisodes(mySys, sentinel);
@@ -268,10 +268,10 @@ describe('SPARK Feedback Loop Integration', () => {
       for (let i = 0; i < 30; i++) {
         const step = makeStep({
           id: `sentinel-${sentinel}-${i}-${Math.random().toString(36).slice(2, 8)}`,
-          connector: sentinel === 'financial' ? 'shopify' : 'gmail',
-          operation: sentinel === 'financial' ? 'refund' : 'delete',
-          status: 'approved',
-          cordDecision: 'CHALLENGE',
+          connector: sentinel === "financial" ? "shopify" : "gmail",
+          operation: sentinel === "financial" ? "refund" : "delete",
+          status: "approved",
+          cordDecision: "CHALLENGE",
           cordScore: 70,
           durationMs: 200,
         });
@@ -286,15 +286,15 @@ describe('SPARK Feedback Loop Integration', () => {
     }
   });
 
-  it('prediction confidence increases with more data', () => {
-    const category: SparkCategory = 'communication';
+  it("prediction confidence increases with more data", () => {
+    const category: SparkCategory = "communication";
 
     // First prediction with no history: low confidence
     const firstPrediction = sys.predictor.predict(
-      'first-step',
-      'run-1',
-      'gmail',
-      'send',
+      "first-step",
+      "run-1",
+      "gmail",
+      "send",
     );
     const initialConfidence = firstPrediction.confidence;
 
@@ -303,10 +303,10 @@ describe('SPARK Feedback Loop Integration', () => {
     for (let i = 0; i < 20; i++) {
       const step = makeStep({
         id: `conf-step-${i}-${Math.random().toString(36).slice(2, 8)}`,
-        connector: 'gmail',
-        operation: 'send',
-        status: 'completed',
-        cordDecision: 'ALLOW',
+        connector: "gmail",
+        operation: "send",
+        status: "completed",
+        cordDecision: "ALLOW",
         cordScore: 15,
         durationMs: 200,
       });
@@ -315,33 +315,33 @@ describe('SPARK Feedback Loop Integration', () => {
 
     // After many episodes, confidence should be higher
     const laterPrediction = sys.predictor.predict(
-      'later-step',
-      'run-later',
-      'gmail',
-      'send',
+      "later-step",
+      "run-later",
+      "gmail",
+      "send",
     );
 
     expect(laterPrediction.confidence).toBeGreaterThan(initialConfidence);
   });
 
-  it('snapshot and rollback preserve system state', () => {
-    const category: SparkCategory = 'communication';
+  it("snapshot and rollback preserve system state", () => {
+    const category: SparkCategory = "communication";
     seedMinEpisodes(sys, category);
 
     // Record initial state
-    const snapshotId = sys.manager.createSnapshot('before failures');
+    const snapshotId = sys.manager.createSnapshot("before failures");
     const weightAtSnapshot = sys.store.getWeight(category)!.currentWeight;
 
     // Run failures to change the weight
     for (let i = 0; i < 8; i++) {
       const step = makeStep({
         id: `snap-fail-${i}-${Math.random().toString(36).slice(2, 8)}`,
-        connector: 'gmail',
-        operation: 'send',
-        status: 'failed',
-        cordDecision: 'ALLOW',
+        connector: "gmail",
+        operation: "send",
+        status: "failed",
+        cordDecision: "ALLOW",
         cordScore: 10,
-        error: 'Failure for snapshot test',
+        error: "Failure for snapshot test",
       });
       runCycle(sys, step, `snap-fail-run-${i}`);
     }
@@ -360,15 +360,18 @@ describe('SPARK Feedback Loop Integration', () => {
     expect(episodes.length).toBeGreaterThan(0);
   });
 
-  it('all 7 categories can be processed independently', () => {
-    const operationMap: Record<SparkCategory, { connector: string; operation: string }> = {
-      communication: { connector: 'gmail', operation: 'send' },
-      publication: { connector: 'x', operation: 'post' },
-      destructive: { connector: 'gmail', operation: 'delete' },
-      scheduling: { connector: 'calendar', operation: 'create_event' },
-      financial: { connector: 'shopify', operation: 'refund' },
-      readonly: { connector: 'gmail', operation: 'read' },
-      general: { connector: 'custom', operation: 'do_something' },
+  it("all 7 categories can be processed independently", () => {
+    const operationMap: Record<
+      SparkCategory,
+      { connector: string; operation: string }
+    > = {
+      communication: { connector: "gmail", operation: "send" },
+      publication: { connector: "x", operation: "post" },
+      destructive: { connector: "gmail", operation: "delete" },
+      scheduling: { connector: "calendar", operation: "create_event" },
+      financial: { connector: "shopify", operation: "refund" },
+      readonly: { connector: "gmail", operation: "read" },
+      general: { connector: "custom", operation: "do_something" },
     };
 
     for (const cat of ALL_CATEGORIES) {
@@ -377,8 +380,8 @@ describe('SPARK Feedback Loop Integration', () => {
         id: `cat-${cat}-${Math.random().toString(36).slice(2, 8)}`,
         connector: info.connector,
         operation: info.operation,
-        status: 'completed',
-        cordDecision: 'ALLOW',
+        status: "completed",
+        cordDecision: "ALLOW",
         cordScore: 10,
         durationMs: 100,
       });
@@ -400,20 +403,20 @@ describe('SPARK Feedback Loop Integration', () => {
     }
   });
 
-  it('multiple categories learn independently without interference', () => {
-    seedMinEpisodes(sys, 'communication');
-    seedMinEpisodes(sys, 'readonly');
+  it("multiple categories learn independently without interference", () => {
+    seedMinEpisodes(sys, "communication");
+    seedMinEpisodes(sys, "readonly");
 
     // Cause failures in communication
     for (let i = 0; i < 5; i++) {
       const step = makeStep({
         id: `indep-comm-${i}-${Math.random().toString(36).slice(2, 8)}`,
-        connector: 'gmail',
-        operation: 'send',
-        status: 'failed',
-        cordDecision: 'ALLOW',
+        connector: "gmail",
+        operation: "send",
+        status: "failed",
+        cordDecision: "ALLOW",
         cordScore: 8,
-        error: 'Communication failure',
+        error: "Communication failure",
       });
       runCycle(sys, step, `indep-comm-run-${i}`);
     }
@@ -422,18 +425,18 @@ describe('SPARK Feedback Loop Integration', () => {
     for (let i = 0; i < 5; i++) {
       const step = makeStep({
         id: `indep-read-${i}-${Math.random().toString(36).slice(2, 8)}`,
-        connector: 'gmail',
-        operation: 'read',
-        status: 'completed',
-        cordDecision: 'ALLOW',
+        connector: "gmail",
+        operation: "read",
+        status: "completed",
+        cordDecision: "ALLOW",
         cordScore: 5,
         durationMs: 100,
       });
       runCycle(sys, step, `indep-read-run-${i}`);
     }
 
-    const commWeight = sys.store.getWeight('communication')!.currentWeight;
-    const readWeight = sys.store.getWeight('readonly')!.currentWeight;
+    const commWeight = sys.store.getWeight("communication")!.currentWeight;
+    const readWeight = sys.store.getWeight("readonly")!.currentWeight;
 
     // Communication should have increased (failures)
     expect(commWeight).toBeGreaterThan(1.0);

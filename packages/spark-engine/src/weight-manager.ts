@@ -6,9 +6,13 @@
  * weight snapshots for rollback capability.
  */
 
-import type { SparkCategory, SparkWeights, SparkWeightEntry } from '@ai-operations/shared-types';
-import type { SparkStore } from '@ai-operations/ops-storage';
-import { ALL_CATEGORIES, buildDefaultWeight } from './constants';
+import type {
+  SparkCategory,
+  SparkWeights,
+  SparkWeightEntry,
+} from "@ai-operations/shared-types";
+import type { SparkStore } from "@ai-operations/ops-storage";
+import { ALL_CATEGORIES, buildDefaultWeight } from "./constants";
 
 // ── WeightManager ─────────────────────────────────────────────────
 
@@ -42,7 +46,7 @@ export class WeightManager {
    */
   initialize(): void {
     const existing = this.store.getAllWeights();
-    const existingCategories = new Set(existing.map(w => w.category));
+    const existingCategories = new Set(existing.map((w) => w.category));
 
     const missing: SparkWeightEntry[] = [];
     for (const category of ALL_CATEGORIES) {
@@ -80,16 +84,17 @@ export class WeightManager {
    */
   getAllWeights(): SparkWeights {
     const stored = this.store.getAllWeights();
-    const storedMap = new Map(stored.map(w => [w.category, w]));
+    const storedMap = new Map(stored.map((w) => [w.category, w]));
 
     const weights: Record<string, SparkWeightEntry> = {};
     for (const category of ALL_CATEGORIES) {
-      weights[category] = storedMap.get(category) ?? buildDefaultWeight(category);
+      weights[category] =
+        storedMap.get(category) ?? buildDefaultWeight(category);
     }
 
     return {
       weights: weights as Record<SparkCategory, SparkWeightEntry>,
-      version: '0.1.0',
+      version: "0.1.0",
       updatedAt: new Date().toISOString(),
     };
   }

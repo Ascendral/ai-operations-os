@@ -2,8 +2,8 @@
  * TaskStore — SQLite-backed CRUD for Task records.
  */
 
-import type BetterSqlite3 from 'better-sqlite3';
-import type { Task } from '@ai-operations/shared-types';
+import type BetterSqlite3 from "better-sqlite3";
+import type { Task } from "@ai-operations/shared-types";
 
 export interface TaskFilter {
   status?: string;
@@ -31,9 +31,9 @@ export class TaskStore {
         (@id, @source, @sourceId, @intent, @title, @body, @priority, @status, @owner, @dueAt, @createdAt, @updatedAt, @metadata)
     `);
 
-    this.getStmt = this.db.prepare('SELECT * FROM tasks WHERE id = ?');
+    this.getStmt = this.db.prepare("SELECT * FROM tasks WHERE id = ?");
 
-    this.deleteStmt = this.db.prepare('DELETE FROM tasks WHERE id = ?');
+    this.deleteStmt = this.db.prepare("DELETE FROM tasks WHERE id = ?");
   }
 
   /** INSERT OR REPLACE a task */
@@ -68,23 +68,24 @@ export class TaskStore {
     const params: Record<string, unknown> = {};
 
     if (filter?.status) {
-      conditions.push('status = @status');
+      conditions.push("status = @status");
       params.status = filter.status;
     }
     if (filter?.source) {
-      conditions.push('source = @source');
+      conditions.push("source = @source");
       params.source = filter.source;
     }
     if (filter?.intent) {
-      conditions.push('intent = @intent');
+      conditions.push("intent = @intent");
       params.intent = filter.intent;
     }
     if (filter?.priority) {
-      conditions.push('priority = @priority');
+      conditions.push("priority = @priority");
       params.priority = filter.priority;
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const limit = filter?.limit ?? 50;
     const offset = filter?.offset ?? 0;
 
@@ -101,7 +102,11 @@ export class TaskStore {
     const existing = this.get(id);
     if (!existing) return undefined;
 
-    const merged: Task = { ...existing, ...updates, updatedAt: new Date().toISOString() };
+    const merged: Task = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
     this.save(merged);
     return merged;
   }
@@ -112,23 +117,24 @@ export class TaskStore {
     const params: Record<string, unknown> = {};
 
     if (filter?.status) {
-      conditions.push('status = @status');
+      conditions.push("status = @status");
       params.status = filter.status;
     }
     if (filter?.source) {
-      conditions.push('source = @source');
+      conditions.push("source = @source");
       params.source = filter.source;
     }
     if (filter?.intent) {
-      conditions.push('intent = @intent');
+      conditions.push("intent = @intent");
       params.intent = filter.intent;
     }
     if (filter?.priority) {
-      conditions.push('priority = @priority');
+      conditions.push("priority = @priority");
       params.priority = filter.priority;
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const sql = `SELECT COUNT(*) as count FROM tasks ${where}`;
     const row = this.db.prepare(sql).get(params) as { count: number };
     return row.count;
@@ -144,13 +150,13 @@ export class TaskStore {
   private rowToTask(row: Record<string, unknown>): Task {
     return {
       id: row.id as string,
-      source: row.source as Task['source'],
+      source: row.source as Task["source"],
       sourceId: row.source_id as string | undefined,
-      intent: row.intent as Task['intent'],
+      intent: row.intent as Task["intent"],
       title: row.title as string,
       body: row.body as string | undefined,
-      priority: row.priority as Task['priority'],
-      status: row.status as Task['status'],
+      priority: row.priority as Task["priority"],
+      status: row.status as Task["status"],
       owner: row.owner as string | undefined,
       dueAt: row.due_at as string | undefined,
       createdAt: row.created_at as string,

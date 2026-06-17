@@ -13,13 +13,27 @@ npm install @ai-operations/ops-connectors
 ## Quick Start
 
 ```ts
-import { ConnectorRegistry, GmailConnector, resilientFetch, RateLimiter } from '@ai-operations/ops-connectors';
+import {
+  ConnectorRegistry,
+  GmailConnector,
+  resilientFetch,
+  RateLimiter,
+} from "@ai-operations/ops-connectors";
 
 const registry = new ConnectorRegistry();
-registry.register(new GmailConnector({ name: 'gmail', enabled: true, credentials: { token: '...' } }));
+registry.register(
+  new GmailConnector({
+    name: "gmail",
+    enabled: true,
+    credentials: { token: "..." },
+  }),
+);
 
-const gmail = registry.get('gmail');
-const result = await gmail.execute('send', { to: 'user@example.com', body: 'Hello!' });
+const gmail = registry.get("gmail");
+const result = await gmail.execute("send", {
+  to: "user@example.com",
+  body: "Hello!",
+});
 ```
 
 ## API
@@ -41,12 +55,12 @@ isEnabled(): boolean
 
 ### Connector Implementations
 
-| Connector | Class | Operations |
-|-----------|-------|-----------|
-| Gmail | `GmailConnector` | send, read, list, search |
+| Connector       | Class               | Operations                                     |
+| --------------- | ------------------- | ---------------------------------------------- |
+| Gmail           | `GmailConnector`    | send, read, list, search                       |
 | Google Calendar | `CalendarConnector` | create_event, update_event, cancel_event, list |
-| X / Twitter | `XTwitterConnector` | post, delete, search |
-| Shopify | `ShopifyConnector` | fulfill, refund, list, get |
+| X / Twitter     | `XTwitterConnector` | post, delete, search                           |
+| Shopify         | `ShopifyConnector`  | fulfill, refund, list, get                     |
 
 ### `ConnectorRegistry`
 
@@ -65,8 +79,8 @@ Retry-aware HTTP client with exponential backoff, 429 Retry-After support, reque
 
 ```ts
 const { response, attempts, totalDurationMs } = await resilientFetch(
-  'https://api.example.com/data',
-  { method: 'GET', headers: { Authorization: 'Bearer token' } },
+  "https://api.example.com/data",
+  { method: "GET", headers: { Authorization: "Bearer token" } },
   { maxRetries: 3, timeoutMs: 10000 },
 );
 ```

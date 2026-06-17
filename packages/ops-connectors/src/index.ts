@@ -8,20 +8,24 @@
  */
 
 // Base class and types
-export { BaseConnector } from './base';
-export type { ConnectorConfig, ConnectorResult } from './base';
+export { BaseConnector } from "./base";
+export type { ConnectorConfig, ConnectorResult } from "./base";
 
 // Connector implementations
-export { GmailConnector } from './gmail';
-export { CalendarConnector } from './calendar';
-export { XTwitterConnector } from './x-twitter';
-export { ShopifyConnector } from './shopify';
-export { SlackConnector } from './slack';
-export { NotionConnector } from './notion';
+export { GmailConnector } from "./gmail";
+export { CalendarConnector } from "./calendar";
+export { XTwitterConnector } from "./x-twitter";
+export { ShopifyConnector } from "./shopify";
+export { SlackConnector } from "./slack";
+export { NotionConnector } from "./notion";
 
 // Registry
-export { ConnectorRegistry } from './registry';
+export { ConnectorRegistry } from "./registry";
 
 // Resilient fetch (retry + rate limiting)
-export { resilientFetch, RateLimiter } from './resilient-fetch';
-export type { ResilientFetchOptions, FetchAttemptResult, RateLimiterOptions } from './resilient-fetch';
+export { resilientFetch, RateLimiter } from "./resilient-fetch";
+export type {
+  ResilientFetchOptions,
+  FetchAttemptResult,
+  RateLimiterOptions,
+} from "./resilient-fetch";

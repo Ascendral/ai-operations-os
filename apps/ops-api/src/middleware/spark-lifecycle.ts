@@ -6,10 +6,17 @@
  * predict → measure → learn → consolidate pipeline.
  */
 
-import { randomUUID } from 'node:crypto';
-import { SparkOrchestrator } from '@ai-operations/spark-engine';
-import { stores } from '../storage';
-import type { WorkflowStep, CordDecision, Prediction, LearningEpisode, Insight, ReasoningResult } from '@ai-operations/shared-types';
+import { randomUUID } from "node:crypto";
+import { SparkOrchestrator } from "@ai-operations/spark-engine";
+import { stores } from "../storage";
+import type {
+  WorkflowStep,
+  CordDecision,
+  Prediction,
+  LearningEpisode,
+  Insight,
+  ReasoningResult,
+} from "@ai-operations/shared-types";
 
 // Single orchestrator instance shared across all route handlers
 const orchestrator = new SparkOrchestrator(stores.spark);
@@ -56,14 +63,18 @@ export function sparkLearn(input: SparkCycleInput): SparkCycleResult | null {
     connector: input.connector,
     operation: input.operation,
     input: {},
-    status: input.success ? 'completed' : 'failed',
+    status: input.success ? "completed" : "failed",
     cordDecision: input.cordDecision,
     cordScore: input.cordScore,
     durationMs: input.durationMs,
     error: input.error,
   };
 
-  const outcome = orchestrator.tracker.measure(step, input.stepId, input.wasApproved);
+  const outcome = orchestrator.tracker.measure(
+    step,
+    input.stepId,
+    input.wasApproved,
+  );
   return orchestrator.learn(prediction, outcome);
 }
 
@@ -77,11 +88,14 @@ const pendingContexts = new Map<string, SparkCycleInput>();
  * Register a pending SPARK context when an approval is created.
  * Called from route handlers when CORD returns CHALLENGE.
  */
-export function registerPendingApproval(approvalId: string, context: Omit<SparkCycleInput, 'success' | 'durationMs'>): void {
+export function registerPendingApproval(
+  approvalId: string,
+  context: Omit<SparkCycleInput, "success" | "durationMs">,
+): void {
   pendingContexts.set(approvalId, {
     ...context,
-    success: false,     // placeholder — will be set on resolution
-    durationMs: 0,      // placeholder — will be computed on resolution
+    success: false, // placeholder — will be set on resolution
+    durationMs: 0, // placeholder — will be computed on resolution
   });
 }
 
@@ -92,7 +106,7 @@ export function registerPendingApproval(approvalId: string, context: Omit<SparkC
  */
 export function resolvePendingApproval(
   approvalId: string,
-  decision: 'approved' | 'denied' | 'modified',
+  decision: "approved" | "denied" | "modified",
 ): SparkCycleResult | null {
   const context = pendingContexts.get(approvalId);
   if (!context) return null;
@@ -100,10 +114,10 @@ export function resolvePendingApproval(
   pendingContexts.delete(approvalId);
 
   // Approved = success, denied = not success (action didn't happen)
-  const wasApproved = decision === 'approved' || decision === 'modified';
+  const wasApproved = decision === "approved" || decision === "modified";
   const updatedContext: SparkCycleInput = {
     ...context,
-    success: wasApproved,   // approved means action will proceed
+    success: wasApproved, // approved means action will proceed
     wasApproved,
     durationMs: Date.now(), // total time from prediction to decision
   };
@@ -122,7 +136,10 @@ export function getPendingCount(): number {
  * Talk to SPARK. Convenience wrapper around orchestrator.chat()
  * for use outside of HTTP route handlers (e.g. CLI, scheduled tasks).
  */
-export function sparkChat(message: string, conversationId?: string): ReasoningResult {
+export function sparkChat(
+  message: string,
+  conversationId?: string,
+): ReasoningResult {
   orchestrator.weights.initialize();
   return orchestrator.chat(message, conversationId);
 }

@@ -6,8 +6,8 @@
  * topic index maintenance.
  */
 
-import { randomUUID } from 'node:crypto';
-import type { SparkStore } from '@ai-operations/ops-storage';
+import { randomUUID } from "node:crypto";
+import type { SparkStore } from "@ai-operations/ops-storage";
 import type {
   MemoryToken,
   MemoryTokenType,
@@ -19,8 +19,8 @@ import type {
   Essence,
   BlindSpot,
   GrowthAssessment,
-} from '@ai-operations/shared-types';
-import { EssenceExtractor } from './essence-extractor';
+} from "@ai-operations/shared-types";
+import { EssenceExtractor } from "./essence-extractor";
 import {
   INITIAL_TOKEN_STRENGTH,
   ARCHIVE_STRENGTH_THRESHOLD,
@@ -28,7 +28,7 @@ import {
   RAW_TIER_MS,
   RECENT_TIER_MS,
   COMPRESSED_TIER_MS,
-} from './spiral-constants';
+} from "./spiral-constants";
 
 export class MemoryTokenManager {
   private readonly store: SparkStore;
@@ -47,8 +47,8 @@ export class MemoryTokenManager {
     const now = new Date().toISOString();
     const token: MemoryToken = {
       id: randomUUID(),
-      type: 'conversation',
-      tier: 'raw',
+      type: "conversation",
+      tier: "raw",
       essence,
       strength: INITIAL_TOKEN_STRENGTH,
       spiralCount: 0,
@@ -75,8 +75,8 @@ export class MemoryTokenManager {
     const now = new Date().toISOString();
     const token: MemoryToken = {
       id: randomUUID(),
-      type: 'episode',
-      tier: 'raw',
+      type: "episode",
+      tier: "raw",
       essence,
       strength: INITIAL_TOKEN_STRENGTH + (episode.outcomeMismatch ? 0.1 : 0),
       spiralCount: 0,
@@ -101,12 +101,12 @@ export class MemoryTokenManager {
       categories: [insight.category],
     });
     // Insights start with higher strength based on impact
-    const strength = INITIAL_TOKEN_STRENGTH + (insight.impact * 0.3);
+    const strength = INITIAL_TOKEN_STRENGTH + insight.impact * 0.3;
     const now = new Date().toISOString();
     const token: MemoryToken = {
       id: randomUUID(),
-      type: 'insight',
-      tier: 'raw',
+      type: "insight",
+      tier: "raw",
       essence,
       strength: Math.min(1.0, strength),
       spiralCount: 0,
@@ -133,11 +133,13 @@ export class MemoryTokenManager {
     const now = new Date().toISOString();
 
     // Check for existing belief token for this category
-    const existing = this.store.listMemoryTokens({
-      type: 'belief',
-      excludeArchived: true,
-      limit: 100,
-    }).find(t => t.essence.categories.includes(belief.category));
+    const existing = this.store
+      .listMemoryTokens({
+        type: "belief",
+        excludeArchived: true,
+        limit: 100,
+      })
+      .find((t) => t.essence.categories.includes(belief.category));
 
     if (existing) {
       // Update existing token's essence and refresh
@@ -153,10 +155,10 @@ export class MemoryTokenManager {
 
     const token: MemoryToken = {
       id: randomUUID(),
-      type: 'belief',
-      tier: 'raw',
+      type: "belief",
+      tier: "raw",
       essence,
-      strength: 0.6 + (belief.stability * 0.2),
+      strength: 0.6 + belief.stability * 0.2,
       spiralCount: existing ? existing.spiralCount : 0,
       sourceId: belief.category,
       mergedFrom: existing ? [existing.id] : [],
@@ -178,13 +180,14 @@ export class MemoryTokenManager {
     growth: GrowthAssessment;
     narrative: string;
   }): MemoryToken {
-    const blindSpotNames = reflection.blindSpots.map(bs => bs.category);
+    const blindSpotNames = reflection.blindSpots.map((bs) => bs.category);
     const growthCats = [
       ...reflection.growth.categoriesImproved,
       ...reflection.growth.categoriesDeclined,
     ];
-    const text = `Self-reflection: ${reflection.growth.direction}. ` +
-      `Blind spots: ${blindSpotNames.length > 0 ? blindSpotNames.join(', ') : 'none'}. ` +
+    const text =
+      `Self-reflection: ${reflection.growth.direction}. ` +
+      `Blind spots: ${blindSpotNames.length > 0 ? blindSpotNames.join(", ") : "none"}. ` +
       reflection.narrative;
 
     const essence = this.extractor.extract(text, {
@@ -195,8 +198,8 @@ export class MemoryTokenManager {
     const now = new Date().toISOString();
     const token: MemoryToken = {
       id: randomUUID(),
-      type: 'reflection',
-      tier: 'raw',
+      type: "reflection",
+      tier: "raw",
       essence,
       strength: 0.7,
       spiralCount: 0,
@@ -217,36 +220,51 @@ export class MemoryTokenManager {
    */
   merge(tokenIds: string[]): MemoryToken | null {
     const tokens = tokenIds
-      .map(id => this.store.getMemoryToken(id))
+      .map((id) => this.store.getMemoryToken(id))
       .filter((t): t is MemoryToken => t != null);
 
     if (tokens.length < 2) return null;
 
     // Combine topics (deduplicated)
-    const allTopics = [...new Set(tokens.flatMap(t => t.essence.topics))];
-    const allCategories = [...new Set(tokens.flatMap(t => t.essence.categories))];
-    const allConnectors = [...new Set(tokens.flatMap(t => t.essence.connectors))];
-    const allRelationships = tokens.flatMap(t => t.essence.relationships);
-    const allDecisions = tokens.flatMap(t => t.essence.decisionPoints);
+    const allTopics = [...new Set(tokens.flatMap((t) => t.essence.topics))];
+    const allCategories = [
+      ...new Set(tokens.flatMap((t) => t.essence.categories)),
+    ];
+    const allConnectors = [
+      ...new Set(tokens.flatMap((t) => t.essence.connectors)),
+    ];
+    const allRelationships = tokens.flatMap((t) => t.essence.relationships);
+    const allDecisions = tokens.flatMap((t) => t.essence.decisionPoints);
 
     // Average sentiment
     let sentimentSum = 0;
     for (const t of tokens) {
-      if (t.essence.sentiment === 'positive') sentimentSum += 1;
-      else if (t.essence.sentiment === 'negative') sentimentSum -= 1;
+      if (t.essence.sentiment === "positive") sentimentSum += 1;
+      else if (t.essence.sentiment === "negative") sentimentSum -= 1;
     }
     const avgSentiment = sentimentSum / tokens.length;
 
     // Combine gists
-    const gist = tokens.map(t => t.essence.gist).filter(g => g).join('. ').slice(0, 120);
+    const gist = tokens
+      .map((t) => t.essence.gist)
+      .filter((g) => g)
+      .join(". ")
+      .slice(0, 120);
 
     const compositeEssence: Essence = {
       topics: allTopics.slice(0, 10),
-      sentiment: avgSentiment > 0.3 ? 'positive' : avgSentiment < -0.3 ? 'negative' : 'mixed',
-      sentimentIntensity: tokens.reduce((s, t) => s + t.essence.sentimentIntensity, 0) / tokens.length,
+      sentiment:
+        avgSentiment > 0.3
+          ? "positive"
+          : avgSentiment < -0.3
+            ? "negative"
+            : "mixed",
+      sentimentIntensity:
+        tokens.reduce((s, t) => s + t.essence.sentimentIntensity, 0) /
+        tokens.length,
       relationships: allRelationships,
       decisionPoints: allDecisions,
-      importance: Math.max(...tokens.map(t => t.essence.importance)),
+      importance: Math.max(...tokens.map((t) => t.essence.importance)),
       categories: allCategories as any,
       connectors: allConnectors,
       gist,
@@ -255,11 +273,11 @@ export class MemoryTokenManager {
     const now = new Date().toISOString();
     const composite: MemoryToken = {
       id: randomUUID(),
-      type: 'composite',
-      tier: 'compressed',
+      type: "composite",
+      tier: "compressed",
       essence: compositeEssence,
-      strength: Math.max(...tokens.map(t => t.strength)),
-      spiralCount: Math.max(...tokens.map(t => t.spiralCount)),
+      strength: Math.max(...tokens.map((t) => t.strength)),
+      spiralCount: Math.max(...tokens.map((t) => t.spiralCount)),
       sourceId: tokenIds[0],
       mergedFrom: tokenIds,
       createdAt: now,
@@ -282,8 +300,13 @@ export class MemoryTokenManager {
    * Uses the SpiralLoop's computeTopicSimilarity for consistency.
    * Returns the number of tokens merged.
    */
-  autoMerge(spiralLoop: { computeTopicSimilarity(a: Essence, b: Essence): number }): number {
-    const activeTokens = this.store.listMemoryTokens({ excludeArchived: true, limit: 500 });
+  autoMerge(spiralLoop: {
+    computeTopicSimilarity(a: Essence, b: Essence): number;
+  }): number {
+    const activeTokens = this.store.listMemoryTokens({
+      excludeArchived: true,
+      limit: 500,
+    });
     if (activeTokens.length < 2) return 0;
 
     // Group tokens by type
@@ -332,17 +355,20 @@ export class MemoryTokenManager {
    */
   updateTiers(): number {
     const now = Date.now();
-    const activeTokens = this.store.listMemoryTokens({ excludeArchived: true, limit: 1000 });
+    const activeTokens = this.store.listMemoryTokens({
+      excludeArchived: true,
+      limit: 1000,
+    });
     let updated = 0;
 
     for (const token of activeTokens) {
       const age = now - new Date(token.createdAt).getTime();
       let newTier: CompressionTier;
 
-      if (age < RAW_TIER_MS) newTier = 'raw';
-      else if (age < RECENT_TIER_MS) newTier = 'recent';
-      else if (age < COMPRESSED_TIER_MS) newTier = 'compressed';
-      else newTier = 'archival';
+      if (age < RAW_TIER_MS) newTier = "raw";
+      else if (age < RECENT_TIER_MS) newTier = "recent";
+      else if (age < COMPRESSED_TIER_MS) newTier = "compressed";
+      else newTier = "archival";
 
       if (newTier !== token.tier) {
         this.store.updateMemoryTokenTier(token.id, newTier);
@@ -358,10 +384,12 @@ export class MemoryTokenManager {
    */
   archiveWeak(): number {
     const now = new Date().toISOString();
-    const weakTokens = this.store.listMemoryTokens({
-      excludeArchived: true,
-      limit: 1000,
-    }).filter(t => t.strength < ARCHIVE_STRENGTH_THRESHOLD);
+    const weakTokens = this.store
+      .listMemoryTokens({
+        excludeArchived: true,
+        limit: 1000,
+      })
+      .filter((t) => t.strength < ARCHIVE_STRENGTH_THRESHOLD);
 
     for (const token of weakTokens) {
       this.store.archiveMemoryToken(token.id, now);
@@ -381,7 +409,8 @@ export class MemoryTokenManager {
     for (const topic of token.essence.topics) {
       // Use a simple score based on topic position (earlier = more important)
       const idx = token.essence.topics.indexOf(topic);
-      const score = 1.0 - (idx / Math.max(token.essence.topics.length, 1)) * 0.5;
+      const score =
+        1.0 - (idx / Math.max(token.essence.topics.length, 1)) * 0.5;
       this.store.upsertTopicIndex(topic, token.id, score);
     }
   }

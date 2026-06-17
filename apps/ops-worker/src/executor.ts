@@ -5,11 +5,19 @@
  * the CORD safety gate, runs through connectors, and manages approvals.
  */
 
-import type { WorkflowRun, WorkflowStep, CordDecision } from '@ai-operations/shared-types';
+import type {
+  WorkflowRun,
+  WorkflowStep,
+  CordDecision,
+} from "@ai-operations/shared-types";
 
 export interface ExecutorOptions {
   /** Callback to evaluate safety before execution */
-  safetyGate?: (connector: string, operation: string, input: Record<string, unknown>) => {
+  safetyGate?: (
+    connector: string,
+    operation: string,
+    input: Record<string, unknown>,
+  ) => {
     allowed: boolean;
     decision: CordDecision;
     score: number;
@@ -18,7 +26,11 @@ export interface ExecutorOptions {
   };
 
   /** Callback to execute a connector operation */
-  executeConnector?: (connector: string, operation: string, input: Record<string, unknown>) => Promise<{
+  executeConnector?: (
+    connector: string,
+    operation: string,
+    input: Record<string, unknown>,
+  ) => Promise<{
     success: boolean;
     data?: Record<string, unknown>;
     error?: string;
@@ -29,9 +41,16 @@ export interface ExecutorOptions {
 }
 
 export interface ExecutorEvent {
-  type: 'step_start' | 'step_complete' | 'step_blocked' | 'step_failed' |
-        'approval_requested' | 'approval_granted' | 'approval_denied' |
-        'run_complete' | 'run_failed';
+  type:
+    | "step_start"
+    | "step_complete"
+    | "step_blocked"
+    | "step_failed"
+    | "approval_requested"
+    | "approval_granted"
+    | "approval_denied"
+    | "run_complete"
+    | "run_failed";
   step?: WorkflowStep;
   run?: WorkflowRun;
   message?: string;
@@ -53,28 +72,32 @@ export class WorkflowExecutor {
    * Execute a workflow run. Yields events for each step.
    */
   async *execute(run: WorkflowRun): AsyncGenerator<ExecutorEvent> {
-    run.state = 'running';
+    run.state = "running";
 
     for (const step of run.steps) {
       // Skip already completed steps (for resume)
-      if (step.status === 'completed') continue;
+      if (step.status === "completed") continue;
 
-      step.status = 'running';
-      yield { type: 'step_start', step, run };
+      step.status = "running";
+      yield { type: "step_start", step, run };
 
       const startTime = Date.now();
 
       // ── Safety gate ──────────────────────────────────────────────
       if (this.options.safetyGate) {
-        const gate = this.options.safetyGate(step.connector, step.operation, step.input);
+        const gate = this.options.safetyGate(
+          step.connector,
+          step.operation,
+          step.input,
+        );
         step.cordDecision = gate.decision;
         step.cordScore = gate.score;
 
         if (!gate.allowed) {
-          step.status = 'blocked';
-          step.error = `Blocked by CORD: ${gate.reasons.join(', ')}`;
+          step.status = "blocked";
+          step.error = `Blocked by CORD: ${gate.reasons.join(", ")}`;
           yield {
-            type: 'step_blocked',
+            type: "step_blocked",
             step,
             run,
             cordDecision: gate.decision,
@@ -83,17 +106,17 @@ export class WorkflowExecutor {
           };
 
           // Fail the entire run on block
-          run.state = 'failed';
+          run.state = "failed";
           run.error = `Step blocked: ${step.connector}.${step.operation}`;
           run.endedAt = new Date().toISOString();
-          yield { type: 'run_failed', run, message: run.error };
+          yield { type: "run_failed", run, message: run.error };
           return;
         }
 
         // ── Approval gate ────────────────────────────────────────
         if (gate.requiresApproval) {
           yield {
-            type: 'approval_requested',
+            type: "approval_requested",
             step,
             message: `${step.connector}.${step.operation} requires approval (score: ${gate.score})`,
           };
@@ -105,19 +128,23 @@ export class WorkflowExecutor {
             );
 
             if (!approved) {
-              step.status = 'blocked';
-              step.error = 'Denied by user';
-              yield { type: 'approval_denied', step, message: 'User denied approval' };
+              step.status = "blocked";
+              step.error = "Denied by user";
+              yield {
+                type: "approval_denied",
+                step,
+                message: "User denied approval",
+              };
 
-              run.state = 'failed';
-              run.error = 'User denied approval';
+              run.state = "failed";
+              run.error = "User denied approval";
               run.endedAt = new Date().toISOString();
-              yield { type: 'run_failed', run, message: run.error };
+              yield { type: "run_failed", run, message: run.error };
               return;
             }
 
-            step.status = 'approved';
-            yield { type: 'approval_granted', step, message: 'User approved' };
+            step.status = "approved";
+            yield { type: "approval_granted", step, message: "User approved" };
           }
         }
       }
@@ -135,38 +162,38 @@ export class WorkflowExecutor {
           step.durationMs = Date.now() - startTime;
 
           if (!result.success) {
-            step.status = 'failed';
-            step.error = result.error || 'Connector returned failure';
-            yield { type: 'step_failed', step, run, message: step.error };
+            step.status = "failed";
+            step.error = result.error || "Connector returned failure";
+            yield { type: "step_failed", step, run, message: step.error };
 
-            run.state = 'failed';
+            run.state = "failed";
             run.error = `Step failed: ${step.connector}.${step.operation} — ${step.error}`;
             run.endedAt = new Date().toISOString();
-            yield { type: 'run_failed', run, message: run.error };
+            yield { type: "run_failed", run, message: run.error };
             return;
           }
         }
 
-        step.status = 'completed';
+        step.status = "completed";
         step.durationMs = Date.now() - startTime;
-        yield { type: 'step_complete', step, run };
+        yield { type: "step_complete", step, run };
       } catch (err) {
-        step.status = 'failed';
+        step.status = "failed";
         step.error = err instanceof Error ? err.message : String(err);
         step.durationMs = Date.now() - startTime;
-        yield { type: 'step_failed', step, run, message: step.error };
+        yield { type: "step_failed", step, run, message: step.error };
 
-        run.state = 'failed';
+        run.state = "failed";
         run.error = `Step threw: ${step.error}`;
         run.endedAt = new Date().toISOString();
-        yield { type: 'run_failed', run, message: run.error };
+        yield { type: "run_failed", run, message: run.error };
         return;
       }
     }
 
     // All steps completed
-    run.state = 'completed';
+    run.state = "completed";
     run.endedAt = new Date().toISOString();
-    yield { type: 'run_complete', run };
+    yield { type: "run_complete", run };
   }
 }

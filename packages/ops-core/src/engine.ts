@@ -13,10 +13,10 @@ import type {
   StepStatus,
   WorkflowState,
   CordDecision,
-} from '@ai-operations/shared-types';
+} from "@ai-operations/shared-types";
 
-import { StateMachine, InvalidTransitionError } from './state-machine';
-import type { StepEvent } from './state-machine';
+import { StateMachine, InvalidTransitionError } from "./state-machine";
+import type { StepEvent } from "./state-machine";
 
 // ---------------------------------------------------------------------------
 // Event types
@@ -31,21 +31,21 @@ interface WorkflowEventBase {
 }
 
 export interface StepStartEvent extends WorkflowEventBase {
-  type: 'step_start';
+  type: "step_start";
   stepId: string;
   connector: string;
   operation: string;
 }
 
 export interface StepCompleteEvent extends WorkflowEventBase {
-  type: 'step_complete';
+  type: "step_complete";
   stepId: string;
   output: Record<string, unknown>;
   durationMs: number;
 }
 
 export interface StepBlockedEvent extends WorkflowEventBase {
-  type: 'step_blocked';
+  type: "step_blocked";
   stepId: string;
   cordDecision: CordDecision;
   cordScore: number;
@@ -53,17 +53,17 @@ export interface StepBlockedEvent extends WorkflowEventBase {
 }
 
 export interface StepFailedEvent extends WorkflowEventBase {
-  type: 'step_failed';
+  type: "step_failed";
   stepId: string;
   error: string;
 }
 
 export interface RunCompleteEvent extends WorkflowEventBase {
-  type: 'run_complete';
+  type: "run_complete";
 }
 
 export interface RunFailedEvent extends WorkflowEventBase {
-  type: 'run_failed';
+  type: "run_failed";
   error: string;
   failedStepId?: string;
 }
@@ -194,12 +194,12 @@ export class WorkflowEngine {
    * @yields {WorkflowEvent} Events as the run progresses.
    */
   async *execute(run: WorkflowRun): AsyncGenerator<WorkflowEvent> {
-    run.state = 'running';
+    run.state = "running";
 
     for (const step of run.steps) {
       // ---- Pause check ----
       if (this.pauseRequested) {
-        run.state = 'paused';
+        run.state = "paused";
         this.pauseRequested = false;
 
         // Create a promise that will be resolved when resume() is called
@@ -211,11 +211,11 @@ export class WorkflowEngine {
         this.resumePromise = null;
         this.resumeResolve = null;
         this.resumeRequested = false;
-        run.state = 'running';
+        run.state = "running";
       }
 
       // ---- Skip already-completed steps (for resume after block) ----
-      if (step.status === 'completed') {
+      if (step.status === "completed") {
         continue;
       }
 
@@ -224,12 +224,15 @@ export class WorkflowEngine {
       step.cordDecision = gateResult.decision;
       step.cordScore = gateResult.score;
 
-      if (gateResult.decision === 'BLOCK' || gateResult.decision === 'CHALLENGE') {
-        this.applyTransition(step, 'start');
-        this.applyTransition(step, 'block');
+      if (
+        gateResult.decision === "BLOCK" ||
+        gateResult.decision === "CHALLENGE"
+      ) {
+        this.applyTransition(step, "start");
+        this.applyTransition(step, "block");
 
         yield this.event<StepBlockedEvent>(run, {
-          type: 'step_blocked',
+          type: "step_blocked",
           stepId: step.id,
           cordDecision: gateResult.decision,
           cordScore: gateResult.score,
@@ -244,20 +247,20 @@ export class WorkflowEngine {
       const connector = this.connectors.get(step.connector);
       if (!connector) {
         const errorMsg = `Connector '${step.connector}' not found in registry`;
-        step.status = 'failed';
+        step.status = "failed";
         step.error = errorMsg;
-        run.state = 'failed';
+        run.state = "failed";
         run.error = errorMsg;
         run.endedAt = new Date().toISOString();
 
         yield this.event<StepFailedEvent>(run, {
-          type: 'step_failed',
+          type: "step_failed",
           stepId: step.id,
           error: errorMsg,
         });
 
         yield this.event<RunFailedEvent>(run, {
-          type: 'run_failed',
+          type: "run_failed",
           error: errorMsg,
           failedStepId: step.id,
         });
@@ -265,10 +268,10 @@ export class WorkflowEngine {
       }
 
       // ---- Execute step ----
-      this.applyTransition(step, 'start');
+      this.applyTransition(step, "start");
 
       yield this.event<StepStartEvent>(run, {
-        type: 'step_start',
+        type: "step_start",
         stepId: step.id,
         connector: step.connector,
         operation: step.operation,
@@ -282,10 +285,10 @@ export class WorkflowEngine {
 
         step.output = output;
         step.durationMs = durationMs;
-        this.applyTransition(step, 'complete');
+        this.applyTransition(step, "complete");
 
         yield this.event<StepCompleteEvent>(run, {
-          type: 'step_complete',
+          type: "step_complete",
           stepId: step.id,
           output,
           durationMs,
@@ -296,20 +299,20 @@ export class WorkflowEngine {
 
         step.durationMs = durationMs;
         step.error = errorMsg;
-        this.applyTransition(step, 'fail');
+        this.applyTransition(step, "fail");
 
-        run.state = 'failed';
+        run.state = "failed";
         run.error = errorMsg;
         run.endedAt = new Date().toISOString();
 
         yield this.event<StepFailedEvent>(run, {
-          type: 'step_failed',
+          type: "step_failed",
           stepId: step.id,
           error: errorMsg,
         });
 
         yield this.event<RunFailedEvent>(run, {
-          type: 'run_failed',
+          type: "run_failed",
           error: errorMsg,
           failedStepId: step.id,
         });
@@ -318,11 +321,11 @@ export class WorkflowEngine {
     }
 
     // ---- All steps completed ----
-    run.state = 'completed';
+    run.state = "completed";
     run.endedAt = new Date().toISOString();
 
     yield this.event<RunCompleteEvent>(run, {
-      type: 'run_complete',
+      type: "run_complete",
     });
   }
 
@@ -359,7 +362,7 @@ export class WorkflowEngine {
    */
   private event<T extends WorkflowEvent>(
     run: WorkflowRun,
-    partial: Omit<T, 'timestamp' | 'runId'>,
+    partial: Omit<T, "timestamp" | "runId">,
   ): T {
     return {
       ...partial,

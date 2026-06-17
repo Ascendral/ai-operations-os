@@ -6,10 +6,10 @@
  * into the LearningCore to compare predicted vs. actual results.
  */
 
-import { randomUUID } from 'node:crypto';
-import type { OutcomeSignal, ActualOutcome } from '@ai-operations/shared-types';
-import type { WorkflowStep } from '@ai-operations/shared-types';
-import type { SparkStore } from '@ai-operations/ops-storage';
+import { randomUUID } from "node:crypto";
+import type { OutcomeSignal, ActualOutcome } from "@ai-operations/shared-types";
+import type { WorkflowStep } from "@ai-operations/shared-types";
+import type { SparkStore } from "@ai-operations/ops-storage";
 
 // ── Outcome Derivation Constants ──────────────────────────────────
 
@@ -71,13 +71,14 @@ export class OutcomeTracker {
       runId,
       actualOutcome,
       actualCordScore: step.cordScore ?? 0,
-      actualCordDecision: step.cordDecision ?? 'ALLOW',
+      actualCordDecision: step.cordDecision ?? "ALLOW",
       signals: {
-        succeeded: step.status === 'completed' || step.status === 'approved',
-        escalated: wasApproved !== undefined || step.status === 'approved',
-        approvalGranted: wasApproved ?? (step.status === 'approved' ? true : undefined),
+        succeeded: step.status === "completed" || step.status === "approved",
+        escalated: wasApproved !== undefined || step.status === "approved",
+        approvalGranted:
+          wasApproved ?? (step.status === "approved" ? true : undefined),
         durationMs: step.durationMs,
-        hasError: step.status === 'failed',
+        hasError: step.status === "failed",
         errorMessage: step.error,
       },
       measuredAt: new Date().toISOString(),
@@ -94,31 +95,37 @@ export class OutcomeTracker {
    * @param wasApproved - Whether human approval was granted.
    * @returns The derived ActualOutcome category.
    */
-  private deriveOutcome(step: WorkflowStep, wasApproved?: boolean): ActualOutcome {
-    if (step.status === 'blocked') {
-      return 'blocked';
+  private deriveOutcome(
+    step: WorkflowStep,
+    wasApproved?: boolean,
+  ): ActualOutcome {
+    if (step.status === "blocked") {
+      return "blocked";
     }
 
-    if (step.status === 'failed') {
-      return 'failure';
+    if (step.status === "failed") {
+      return "failure";
     }
 
     // Step was challenged and human approved it — escalation
-    if (step.status === 'approved') {
-      return 'escalation';
+    if (step.status === "approved") {
+      return "escalation";
     }
 
-    if (wasApproved && step.status === 'completed') {
-      return 'escalation';
+    if (wasApproved && step.status === "completed") {
+      return "escalation";
     }
 
-    if (step.status === 'completed') {
-      if (step.durationMs !== undefined && step.durationMs > SLOW_STEP_THRESHOLD_MS) {
-        return 'partial';
+    if (step.status === "completed") {
+      if (
+        step.durationMs !== undefined &&
+        step.durationMs > SLOW_STEP_THRESHOLD_MS
+      ) {
+        return "partial";
       }
-      return 'success';
+      return "success";
     }
 
-    return 'partial';
+    return "partial";
   }
 }

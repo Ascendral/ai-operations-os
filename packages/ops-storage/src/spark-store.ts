@@ -3,8 +3,8 @@
  * outcomes, learning episodes, weights, and weight history.
  */
 
-import type BetterSqlite3 from 'better-sqlite3';
-import { randomUUID } from 'node:crypto';
+import type BetterSqlite3 from "better-sqlite3";
+import { randomUUID } from "node:crypto";
 import type {
   Prediction,
   OutcomeSignal,
@@ -25,7 +25,7 @@ import type {
   Essence,
   ReflectionResult,
   PersonalityProfile,
-} from '@ai-operations/shared-types';
+} from "@ai-operations/shared-types";
 
 export interface SparkEpisodeFilter {
   category?: string;
@@ -130,8 +130,12 @@ export class SparkStore {
         (@id, @stepId, @runId, @connector, @operation, @category, @predictedScore, @predictedOutcome, @confidence, @createdAt)
     `);
 
-    this.getPredictionById = this.db.prepare('SELECT * FROM spark_predictions WHERE id = ?');
-    this.getPredictionByStep = this.db.prepare('SELECT * FROM spark_predictions WHERE step_id = ?');
+    this.getPredictionById = this.db.prepare(
+      "SELECT * FROM spark_predictions WHERE id = ?",
+    );
+    this.getPredictionByStep = this.db.prepare(
+      "SELECT * FROM spark_predictions WHERE step_id = ?",
+    );
 
     // ── Outcome ───────────────────────────────────────────────
     this.insertOutcome = this.db.prepare(`
@@ -141,8 +145,12 @@ export class SparkStore {
         (@id, @stepId, @runId, @actualOutcome, @actualCordScore, @actualCordDecision, @signals, @measuredAt)
     `);
 
-    this.getOutcomeById = this.db.prepare('SELECT * FROM spark_outcomes WHERE id = ?');
-    this.getOutcomeByStep = this.db.prepare('SELECT * FROM spark_outcomes WHERE step_id = ?');
+    this.getOutcomeById = this.db.prepare(
+      "SELECT * FROM spark_outcomes WHERE id = ?",
+    );
+    this.getOutcomeByStep = this.db.prepare(
+      "SELECT * FROM spark_outcomes WHERE step_id = ?",
+    );
 
     // ── Episode ───────────────────────────────────────────────
     this.insertEpisode = this.db.prepare(`
@@ -156,7 +164,9 @@ export class SparkStore {
          @reason, @createdAt)
     `);
 
-    this.getEpisodeById = this.db.prepare('SELECT * FROM spark_episodes WHERE id = ?');
+    this.getEpisodeById = this.db.prepare(
+      "SELECT * FROM spark_episodes WHERE id = ?",
+    );
 
     // ── Weights ───────────────────────────────────────────────
     this.upsertWeight = this.db.prepare(`
@@ -166,8 +176,12 @@ export class SparkStore {
         (@category, @currentWeight, @baseWeight, @lowerBound, @upperBound, @episodeCount, @lastAdjustedAt)
     `);
 
-    this.getWeightByCategory = this.db.prepare('SELECT * FROM spark_weights WHERE category = ?');
-    this.getAllWeightsStmt = this.db.prepare('SELECT * FROM spark_weights ORDER BY category');
+    this.getWeightByCategory = this.db.prepare(
+      "SELECT * FROM spark_weights WHERE category = ?",
+    );
+    this.getAllWeightsStmt = this.db.prepare(
+      "SELECT * FROM spark_weights ORDER BY category",
+    );
 
     // ── History ───────────────────────────────────────────────
     this.insertHistory = this.db.prepare(`
@@ -191,7 +205,9 @@ export class SparkStore {
         (@id, @category, @pattern, @summary, @evidenceJson, @impact, @createdAt)
     `);
 
-    this.getInsightById = this.db.prepare('SELECT * FROM spark_insights WHERE id = ?');
+    this.getInsightById = this.db.prepare(
+      "SELECT * FROM spark_insights WHERE id = ?",
+    );
 
     // ── Beliefs ─────────────────────────────────────────────
     this.upsertBelief = this.db.prepare(`
@@ -201,8 +217,12 @@ export class SparkStore {
         (@category, @trustLevel, @stability, @calibration, @narrative, @evidenceJson, @updatedAt)
     `);
 
-    this.getBeliefByCategory = this.db.prepare('SELECT * FROM spark_beliefs WHERE category = ?');
-    this.getAllBeliefsStmt = this.db.prepare('SELECT * FROM spark_beliefs ORDER BY category');
+    this.getBeliefByCategory = this.db.prepare(
+      "SELECT * FROM spark_beliefs WHERE category = ?",
+    );
+    this.getAllBeliefsStmt = this.db.prepare(
+      "SELECT * FROM spark_beliefs ORDER BY category",
+    );
 
     // ── Conversations ───────────────────────────────────────
     this.insertConversationStmt = this.db.prepare(`
@@ -215,7 +235,9 @@ export class SparkStore {
       WHERE id = @id
     `);
 
-    this.getConversationByIdStmt = this.db.prepare('SELECT * FROM spark_conversations WHERE id = ?');
+    this.getConversationByIdStmt = this.db.prepare(
+      "SELECT * FROM spark_conversations WHERE id = ?",
+    );
 
     this.insertTurnStmt = this.db.prepare(`
       INSERT INTO spark_conversation_turns (id, conversation_id, role, content, reasoning_json, created_at)
@@ -230,7 +252,9 @@ export class SparkStore {
         (@id, @type, @tier, @essenceJson, @strength, @spiralCount, @sourceId, @mergedFromJson, @createdAt, @lastSpiralAt, @archivedAt)
     `);
 
-    this.getMemoryTokenById = this.db.prepare('SELECT * FROM spark_memory_tokens WHERE id = ?');
+    this.getMemoryTokenById = this.db.prepare(
+      "SELECT * FROM spark_memory_tokens WHERE id = ?",
+    );
 
     this.updateTokenStrengthStmt = this.db.prepare(`
       UPDATE spark_memory_tokens SET strength = @strength, spiral_count = @spiralCount, last_spiral_at = @lastSpiralAt
@@ -253,7 +277,9 @@ export class SparkStore {
         (@id, @fromTokenId, @toTokenId, @type, @weight, @reinforceCount, @createdAt, @lastReinforcedAt)
     `);
 
-    this.getMemoryEdgeById = this.db.prepare('SELECT * FROM spark_memory_edges WHERE id = ?');
+    this.getMemoryEdgeById = this.db.prepare(
+      "SELECT * FROM spark_memory_edges WHERE id = ?",
+    );
 
     this.reinforceEdgeStmt = this.db.prepare(`
       UPDATE spark_memory_edges SET weight = @weight, reinforce_count = @reinforceCount, last_reinforced_at = @lastReinforcedAt
@@ -267,7 +293,7 @@ export class SparkStore {
     `);
 
     this.deleteTopicIndexStmt = this.db.prepare(
-      'DELETE FROM spark_memory_topic_index WHERE token_id = ?'
+      "DELETE FROM spark_memory_topic_index WHERE token_id = ?",
     );
   }
 
@@ -301,25 +327,25 @@ export class SparkStore {
   }
 
   listPredictions(filter?: SparkPredictionFilter): Prediction[] {
-    let sql = 'SELECT * FROM spark_predictions WHERE 1=1';
+    let sql = "SELECT * FROM spark_predictions WHERE 1=1";
     const params: any[] = [];
 
     if (filter?.runId) {
-      sql += ' AND run_id = ?';
+      sql += " AND run_id = ?";
       params.push(filter.runId);
     }
     if (filter?.category) {
-      sql += ' AND category = ?';
+      sql += " AND category = ?";
       params.push(filter.category);
     }
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
     if (filter?.limit) {
-      sql += ' LIMIT ?';
+      sql += " LIMIT ?";
       params.push(filter.limit);
     }
 
     const rows = this.db.prepare(sql).all(...params) as any[];
-    return rows.map(r => this.rowToPrediction(r));
+    return rows.map((r) => this.rowToPrediction(r));
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -376,33 +402,33 @@ export class SparkStore {
   }
 
   listEpisodes(filter?: SparkEpisodeFilter): LearningEpisode[] {
-    let sql = 'SELECT * FROM spark_episodes WHERE 1=1';
+    let sql = "SELECT * FROM spark_episodes WHERE 1=1";
     const params: any[] = [];
 
     if (filter?.category) {
-      sql += ' AND category = ?';
+      sql += " AND category = ?";
       params.push(filter.category);
     }
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
     if (filter?.limit) {
-      sql += ' LIMIT ?';
+      sql += " LIMIT ?";
       params.push(filter.limit);
     }
     if (filter?.offset) {
-      sql += ' OFFSET ?';
+      sql += " OFFSET ?";
       params.push(filter.offset);
     }
 
     const rows = this.db.prepare(sql).all(...params) as any[];
-    return rows.map(r => this.rowToEpisode(r));
+    return rows.map((r) => this.rowToEpisode(r));
   }
 
   countEpisodes(filter?: { category?: string }): number {
-    let sql = 'SELECT COUNT(*) as count FROM spark_episodes WHERE 1=1';
+    let sql = "SELECT COUNT(*) as count FROM spark_episodes WHERE 1=1";
     const params: any[] = [];
 
     if (filter?.category) {
-      sql += ' AND category = ?';
+      sql += " AND category = ?";
       params.push(filter.category);
     }
 
@@ -421,7 +447,7 @@ export class SparkStore {
 
   getAllWeights(): SparkWeightEntry[] {
     const rows = this.getAllWeightsStmt.all() as any[];
-    return rows.map(r => this.rowToWeight(r));
+    return rows.map((r) => this.rowToWeight(r));
   }
 
   saveWeight(entry: SparkWeightEntry): void {
@@ -462,22 +488,25 @@ export class SparkStore {
     });
   }
 
-  getHistory(filter?: { category?: string; limit?: number }): WeightHistoryEntry[] {
-    let sql = 'SELECT * FROM spark_weight_history WHERE 1=1';
+  getHistory(filter?: {
+    category?: string;
+    limit?: number;
+  }): WeightHistoryEntry[] {
+    let sql = "SELECT * FROM spark_weight_history WHERE 1=1";
     const params: any[] = [];
 
     if (filter?.category) {
-      sql += ' AND category = ?';
+      sql += " AND category = ?";
       params.push(filter.category);
     }
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
     if (filter?.limit) {
-      sql += ' LIMIT ?';
+      sql += " LIMIT ?";
       params.push(filter.limit);
     }
 
     const rows = this.db.prepare(sql).all(...params) as any[];
-    return rows.map(r => this.rowToHistory(r));
+    return rows.map((r) => this.rowToHistory(r));
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -497,7 +526,9 @@ export class SparkStore {
   }
 
   restoreSnapshot(snapshotId: string): void {
-    const row = this.db.prepare('SELECT * FROM spark_snapshots WHERE id = ?').get(snapshotId) as any;
+    const row = this.db
+      .prepare("SELECT * FROM spark_snapshots WHERE id = ?")
+      .get(snapshotId) as any;
     if (!row) throw new Error(`Snapshot not found: ${snapshotId}`);
 
     const weights: SparkWeightEntry[] = JSON.parse(row.weights_json);
@@ -509,12 +540,16 @@ export class SparkStore {
     txn();
   }
 
-  listSnapshots(limit = 20): Array<{ id: string; reason: string; createdAt: string }> {
-    const rows = this.db.prepare(
-      'SELECT id, reason, created_at FROM spark_snapshots ORDER BY created_at DESC LIMIT ?'
-    ).all(limit) as any[];
+  listSnapshots(
+    limit = 20,
+  ): Array<{ id: string; reason: string; createdAt: string }> {
+    const rows = this.db
+      .prepare(
+        "SELECT id, reason, created_at FROM spark_snapshots ORDER BY created_at DESC LIMIT ?",
+      )
+      .all(limit) as any[];
 
-    return rows.map(r => ({
+    return rows.map((r) => ({
       id: r.id,
       reason: r.reason,
       createdAt: r.created_at,
@@ -548,7 +583,7 @@ export class SparkStore {
       actualOutcome: row.actual_outcome,
       actualCordScore: row.actual_cord_score,
       actualCordDecision: row.actual_cord_decision,
-      signals: JSON.parse(row.signals || '{}'),
+      signals: JSON.parse(row.signals || "{}"),
       measuredAt: row.measured_at,
     };
   }
@@ -617,29 +652,29 @@ export class SparkStore {
   }
 
   listInsights(filter?: SparkInsightFilter): Insight[] {
-    let sql = 'SELECT * FROM spark_insights WHERE 1=1';
+    let sql = "SELECT * FROM spark_insights WHERE 1=1";
     const params: any[] = [];
 
     if (filter?.category) {
-      sql += ' AND category = ?';
+      sql += " AND category = ?";
       params.push(filter.category);
     }
     if (filter?.pattern) {
-      sql += ' AND pattern = ?';
+      sql += " AND pattern = ?";
       params.push(filter.pattern);
     }
     if (filter?.minImpact !== undefined) {
-      sql += ' AND impact >= ?';
+      sql += " AND impact >= ?";
       params.push(filter.minImpact);
     }
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
     if (filter?.limit) {
-      sql += ' LIMIT ?';
+      sql += " LIMIT ?";
       params.push(filter.limit);
     }
 
     const rows = this.db.prepare(sql).all(...params) as any[];
-    return rows.map(r => this.rowToInsight(r));
+    return rows.map((r) => this.rowToInsight(r));
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -665,7 +700,7 @@ export class SparkStore {
 
   getAllBeliefs(): Belief[] {
     const rows = this.getAllBeliefsStmt.all() as any[];
-    return rows.map(r => this.rowToBelief(r));
+    return rows.map((r) => this.rowToBelief(r));
   }
 
   private rowToInsight(row: any): Insight {
@@ -674,7 +709,7 @@ export class SparkStore {
       category: row.category,
       pattern: row.pattern,
       summary: row.summary,
-      evidence: JSON.parse(row.evidence_json || '{}'),
+      evidence: JSON.parse(row.evidence_json || "{}"),
       impact: row.impact,
       createdAt: row.created_at,
     };
@@ -687,7 +722,7 @@ export class SparkStore {
       stability: row.stability,
       calibration: row.calibration,
       narrative: row.narrative,
-      evidence: JSON.parse(row.evidence_json || '{}'),
+      evidence: JSON.parse(row.evidence_json || "{}"),
       updatedAt: row.updated_at,
     };
   }
@@ -710,7 +745,11 @@ export class SparkStore {
     return row ? this.rowToConversation(row) : undefined;
   }
 
-  updateConversationActivity(id: string, lastActivityAt: string, turnCount: number): void {
+  updateConversationActivity(
+    id: string,
+    lastActivityAt: string,
+    turnCount: number,
+  ): void {
     this.updateConversationStmt.run({ id, lastActivityAt, turnCount });
   }
 
@@ -720,23 +759,29 @@ export class SparkStore {
       conversationId: turn.conversationId,
       role: turn.role,
       content: turn.content,
-      reasoningJson: turn.reasoningResult ? JSON.stringify(turn.reasoningResult) : null,
+      reasoningJson: turn.reasoningResult
+        ? JSON.stringify(turn.reasoningResult)
+        : null,
       createdAt: turn.createdAt,
     });
   }
 
   listTurns(conversationId: string, limit = 50): ConversationTurn[] {
-    const rows = this.db.prepare(
-      'SELECT * FROM spark_conversation_turns WHERE conversation_id = ? ORDER BY created_at ASC LIMIT ?'
-    ).all(conversationId, limit) as any[];
-    return rows.map(r => this.rowToTurn(r));
+    const rows = this.db
+      .prepare(
+        "SELECT * FROM spark_conversation_turns WHERE conversation_id = ? ORDER BY created_at ASC LIMIT ?",
+      )
+      .all(conversationId, limit) as any[];
+    return rows.map((r) => this.rowToTurn(r));
   }
 
   listRecentConversations(limit = 20): Conversation[] {
-    const rows = this.db.prepare(
-      'SELECT * FROM spark_conversations ORDER BY last_activity_at DESC LIMIT ?'
-    ).all(limit) as any[];
-    return rows.map(r => this.rowToConversation(r));
+    const rows = this.db
+      .prepare(
+        "SELECT * FROM spark_conversations ORDER BY last_activity_at DESC LIMIT ?",
+      )
+      .all(limit) as any[];
+    return rows.map((r) => this.rowToConversation(r));
   }
 
   private rowToConversation(row: any): Conversation {
@@ -754,7 +799,9 @@ export class SparkStore {
       conversationId: row.conversation_id,
       role: row.role,
       content: row.content,
-      reasoningResult: row.reasoning_json ? JSON.parse(row.reasoning_json) : undefined,
+      reasoningResult: row.reasoning_json
+        ? JSON.parse(row.reasoning_json)
+        : undefined,
       createdAt: row.created_at,
     };
   }
@@ -784,8 +831,18 @@ export class SparkStore {
     return row ? this.rowToMemoryToken(row) : undefined;
   }
 
-  updateMemoryTokenStrength(id: string, strength: number, spiralCount: number, lastSpiralAt: string): void {
-    this.updateTokenStrengthStmt.run({ id, strength, spiralCount, lastSpiralAt });
+  updateMemoryTokenStrength(
+    id: string,
+    strength: number,
+    spiralCount: number,
+    lastSpiralAt: string,
+  ): void {
+    this.updateTokenStrengthStmt.run({
+      id,
+      strength,
+      spiralCount,
+      lastSpiralAt,
+    });
   }
 
   updateMemoryTokenTier(id: string, tier: CompressionTier): void {
@@ -797,38 +854,38 @@ export class SparkStore {
   }
 
   listMemoryTokens(filter?: SparkMemoryTokenFilter): MemoryToken[] {
-    let sql = 'SELECT * FROM spark_memory_tokens WHERE 1=1';
+    let sql = "SELECT * FROM spark_memory_tokens WHERE 1=1";
     const params: any[] = [];
 
     if (filter?.type) {
-      sql += ' AND type = ?';
+      sql += " AND type = ?";
       params.push(filter.type);
     }
     if (filter?.tier) {
-      sql += ' AND tier = ?';
+      sql += " AND tier = ?";
       params.push(filter.tier);
     }
     if (filter?.minStrength !== undefined) {
-      sql += ' AND strength >= ?';
+      sql += " AND strength >= ?";
       params.push(filter.minStrength);
     }
     if (filter?.excludeArchived) {
-      sql += ' AND archived_at IS NULL';
+      sql += " AND archived_at IS NULL";
     }
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
     if (filter?.limit) {
-      sql += ' LIMIT ?';
+      sql += " LIMIT ?";
       params.push(filter.limit);
     }
 
     const rows = this.db.prepare(sql).all(...params) as any[];
-    return rows.map(r => this.rowToMemoryToken(r));
+    return rows.map((r) => this.rowToMemoryToken(r));
   }
 
   findTokensByTopics(topics: string[], limit = 20): MemoryToken[] {
     if (topics.length === 0) return [];
 
-    const placeholders = topics.map(() => '?').join(', ');
+    const placeholders = topics.map(() => "?").join(", ");
     const sql = `
       SELECT t.*, SUM(ti.tf_idf_score) as total_score
       FROM spark_memory_topic_index ti
@@ -840,12 +897,12 @@ export class SparkStore {
       LIMIT ?
     `;
     const rows = this.db.prepare(sql).all(...topics, limit) as any[];
-    return rows.map(r => this.rowToMemoryToken(r));
+    return rows.map((r) => this.rowToMemoryToken(r));
   }
 
   countMemoryTokens(filter?: { excludeArchived?: boolean }): number {
-    let sql = 'SELECT COUNT(*) as count FROM spark_memory_tokens WHERE 1=1';
-    if (filter?.excludeArchived) sql += ' AND archived_at IS NULL';
+    let sql = "SELECT COUNT(*) as count FROM spark_memory_tokens WHERE 1=1";
+    if (filter?.excludeArchived) sql += " AND archived_at IS NULL";
     const row = this.db.prepare(sql).get() as any;
     return row?.count ?? 0;
   }
@@ -872,51 +929,65 @@ export class SparkStore {
     return row ? this.rowToMemoryEdge(row) : undefined;
   }
 
-  reinforceEdge(id: string, weight: number, reinforceCount: number, lastReinforcedAt: string): void {
-    this.reinforceEdgeStmt.run({ id, weight, reinforceCount, lastReinforcedAt });
+  reinforceEdge(
+    id: string,
+    weight: number,
+    reinforceCount: number,
+    lastReinforcedAt: string,
+  ): void {
+    this.reinforceEdgeStmt.run({
+      id,
+      weight,
+      reinforceCount,
+      lastReinforcedAt,
+    });
   }
 
   getEdgesForToken(tokenId: string): MemoryEdge[] {
-    const rows = this.db.prepare(
-      'SELECT * FROM spark_memory_edges WHERE from_token_id = ? OR to_token_id = ?'
-    ).all(tokenId, tokenId) as any[];
-    return rows.map(r => this.rowToMemoryEdge(r));
+    const rows = this.db
+      .prepare(
+        "SELECT * FROM spark_memory_edges WHERE from_token_id = ? OR to_token_id = ?",
+      )
+      .all(tokenId, tokenId) as any[];
+    return rows.map((r) => this.rowToMemoryEdge(r));
   }
 
   getEdgesBetween(fromTokenId: string, toTokenId: string): MemoryEdge[] {
-    const rows = this.db.prepare(
-      'SELECT * FROM spark_memory_edges WHERE (from_token_id = ? AND to_token_id = ?) OR (from_token_id = ? AND to_token_id = ?)'
-    ).all(fromTokenId, toTokenId, toTokenId, fromTokenId) as any[];
-    return rows.map(r => this.rowToMemoryEdge(r));
+    const rows = this.db
+      .prepare(
+        "SELECT * FROM spark_memory_edges WHERE (from_token_id = ? AND to_token_id = ?) OR (from_token_id = ? AND to_token_id = ?)",
+      )
+      .all(fromTokenId, toTokenId, toTokenId, fromTokenId) as any[];
+    return rows.map((r) => this.rowToMemoryEdge(r));
   }
 
   listMemoryEdges(filter?: SparkMemoryEdgeFilter): MemoryEdge[] {
-    let sql = 'SELECT * FROM spark_memory_edges WHERE 1=1';
+    let sql = "SELECT * FROM spark_memory_edges WHERE 1=1";
     const params: any[] = [];
 
     if (filter?.minWeight !== undefined) {
-      sql += ' AND weight >= ?';
+      sql += " AND weight >= ?";
       params.push(filter.minWeight);
     }
     if (filter?.type) {
-      sql += ' AND type = ?';
+      sql += " AND type = ?";
       params.push(filter.type);
     }
-    sql += ' ORDER BY weight DESC';
+    sql += " ORDER BY weight DESC";
     if (filter?.limit) {
-      sql += ' LIMIT ?';
+      sql += " LIMIT ?";
       params.push(filter.limit);
     }
 
     const rows = this.db.prepare(sql).all(...params) as any[];
-    return rows.map(r => this.rowToMemoryEdge(r));
+    return rows.map((r) => this.rowToMemoryEdge(r));
   }
 
   /**
    * Delete a single memory edge by ID.
    */
   deleteMemoryEdge(id: string): void {
-    this.db.prepare('DELETE FROM spark_memory_edges WHERE id = ?').run(id);
+    this.db.prepare("DELETE FROM spark_memory_edges WHERE id = ?").run(id);
   }
 
   /**
@@ -924,7 +995,9 @@ export class SparkStore {
    * Returns the number of edges pruned.
    */
   pruneEdgesBelow(minWeight: number): number {
-    const result = this.db.prepare('DELETE FROM spark_memory_edges WHERE weight < ?').run(minWeight);
+    const result = this.db
+      .prepare("DELETE FROM spark_memory_edges WHERE weight < ?")
+      .run(minWeight);
     return result.changes;
   }
 
@@ -940,9 +1013,12 @@ export class SparkStore {
     this.deleteTopicIndexStmt.run(tokenId);
   }
 
-  lookupTopics(topics: string[], limit = 20): Array<{ tokenId: string; totalScore: number }> {
+  lookupTopics(
+    topics: string[],
+    limit = 20,
+  ): Array<{ tokenId: string; totalScore: number }> {
     if (topics.length === 0) return [];
-    const placeholders = topics.map(() => '?').join(', ');
+    const placeholders = topics.map(() => "?").join(", ");
     const sql = `
       SELECT token_id, SUM(tf_idf_score) as total_score
       FROM spark_memory_topic_index
@@ -952,13 +1028,18 @@ export class SparkStore {
       LIMIT ?
     `;
     const rows = this.db.prepare(sql).all(...topics, limit) as any[];
-    return rows.map(r => ({ tokenId: r.token_id, totalScore: r.total_score }));
+    return rows.map((r) => ({
+      tokenId: r.token_id,
+      totalScore: r.total_score,
+    }));
   }
 
   getTopicDocumentCount(): number {
-    const row = this.db.prepare(
-      'SELECT COUNT(DISTINCT token_id) as count FROM spark_memory_topic_index'
-    ).get() as any;
+    const row = this.db
+      .prepare(
+        "SELECT COUNT(DISTINCT token_id) as count FROM spark_memory_topic_index",
+      )
+      .get() as any;
     return row?.count ?? 0;
   }
 
@@ -967,9 +1048,11 @@ export class SparkStore {
    * Used for real TF-IDF calculation: idf = log(totalDocs / (1 + df))
    */
   getDocumentFrequency(term: string): number {
-    const row = this.db.prepare(
-      'SELECT COUNT(DISTINCT token_id) as count FROM spark_memory_topic_index WHERE topic = ?'
-    ).get(term) as any;
+    const row = this.db
+      .prepare(
+        "SELECT COUNT(DISTINCT token_id) as count FROM spark_memory_topic_index WHERE topic = ?",
+      )
+      .get(term) as any;
     return row?.count ?? 0;
   }
 
@@ -980,10 +1063,12 @@ export class SparkStore {
   getDocumentFrequencies(terms: string[]): Map<string, number> {
     if (terms.length === 0) return new Map();
     const result = new Map<string, number>();
-    const placeholders = terms.map(() => '?').join(', ');
-    const rows = this.db.prepare(
-      `SELECT topic, COUNT(DISTINCT token_id) as count FROM spark_memory_topic_index WHERE topic IN (${placeholders}) GROUP BY topic`
-    ).all(...terms) as any[];
+    const placeholders = terms.map(() => "?").join(", ");
+    const rows = this.db
+      .prepare(
+        `SELECT topic, COUNT(DISTINCT token_id) as count FROM spark_memory_topic_index WHERE topic IN (${placeholders}) GROUP BY topic`,
+      )
+      .all(...terms) as any[];
     for (const row of rows) {
       result.set(row.topic, row.count);
     }
@@ -1007,20 +1092,24 @@ export class SparkStore {
     highEmotionTokenIds: string[];
     lastUpdatedAt: string;
   }): void {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT OR REPLACE INTO spark_emotional_state
         (id, valence, momentum, volatility, high_emotion_count, valence_history_json, high_emotion_token_ids_json, last_updated_at)
       VALUES
         ('singleton', @valence, @momentum, @volatility, @highEmotionCount, @valenceHistoryJson, @highEmotionTokenIdsJson, @lastUpdatedAt)
-    `).run({
-      valence: state.valence,
-      momentum: state.momentum,
-      volatility: state.volatility,
-      highEmotionCount: state.highEmotionCount,
-      valenceHistoryJson: JSON.stringify(state.valenceHistory),
-      highEmotionTokenIdsJson: JSON.stringify(state.highEmotionTokenIds),
-      lastUpdatedAt: state.lastUpdatedAt,
-    });
+    `,
+      )
+      .run({
+        valence: state.valence,
+        momentum: state.momentum,
+        volatility: state.volatility,
+        highEmotionCount: state.highEmotionCount,
+        valenceHistoryJson: JSON.stringify(state.valenceHistory),
+        highEmotionTokenIdsJson: JSON.stringify(state.highEmotionTokenIds),
+        lastUpdatedAt: state.lastUpdatedAt,
+      });
   }
 
   getEmotionalState(): {
@@ -1032,15 +1121,17 @@ export class SparkStore {
     highEmotionTokenIds: string[];
     lastUpdatedAt: string;
   } | null {
-    const row = this.db.prepare('SELECT * FROM spark_emotional_state WHERE id = ?').get('singleton') as any;
+    const row = this.db
+      .prepare("SELECT * FROM spark_emotional_state WHERE id = ?")
+      .get("singleton") as any;
     if (!row) return null;
     return {
       valence: row.valence,
       momentum: row.momentum,
       volatility: row.volatility,
       highEmotionCount: row.high_emotion_count,
-      valenceHistory: JSON.parse(row.valence_history_json || '[]'),
-      highEmotionTokenIds: JSON.parse(row.high_emotion_token_ids_json || '[]'),
+      valenceHistory: JSON.parse(row.valence_history_json || "[]"),
+      highEmotionTokenIds: JSON.parse(row.high_emotion_token_ids_json || "[]"),
       lastUpdatedAt: row.last_updated_at,
     };
   }
@@ -1050,41 +1141,49 @@ export class SparkStore {
   // ═══════════════════════════════════════════════════════════════
 
   saveReflection(reflection: ReflectionResult): void {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO spark_reflections
         (id, blind_spots_json, growth_json, emotional_summary, internal_narrative, token_id, created_at)
       VALUES
         (@id, @blindSpotsJson, @growthJson, @emotionalSummary, @internalNarrative, @tokenId, @createdAt)
-    `).run({
-      id: reflection.id,
-      blindSpotsJson: JSON.stringify(reflection.blindSpots),
-      growthJson: JSON.stringify(reflection.growth),
-      emotionalSummary: reflection.emotionalSummary,
-      internalNarrative: reflection.internalNarrative,
-      tokenId: reflection.tokenId,
-      createdAt: reflection.createdAt,
-    });
+    `,
+      )
+      .run({
+        id: reflection.id,
+        blindSpotsJson: JSON.stringify(reflection.blindSpots),
+        growthJson: JSON.stringify(reflection.growth),
+        emotionalSummary: reflection.emotionalSummary,
+        internalNarrative: reflection.internalNarrative,
+        tokenId: reflection.tokenId,
+        createdAt: reflection.createdAt,
+      });
   }
 
   getLatestReflection(): ReflectionResult | null {
-    const row = this.db.prepare(
-      'SELECT * FROM spark_reflections ORDER BY created_at DESC LIMIT 1'
-    ).get() as any;
+    const row = this.db
+      .prepare(
+        "SELECT * FROM spark_reflections ORDER BY created_at DESC LIMIT 1",
+      )
+      .get() as any;
     return row ? this.rowToReflection(row) : null;
   }
 
   listReflections(limit = 20): ReflectionResult[] {
-    const rows = this.db.prepare(
-      'SELECT * FROM spark_reflections ORDER BY created_at DESC LIMIT ?'
-    ).all(limit) as any[];
-    return rows.map(r => this.rowToReflection(r));
+    const rows = this.db
+      .prepare(
+        "SELECT * FROM spark_reflections ORDER BY created_at DESC LIMIT ?",
+      )
+      .all(limit) as any[];
+    return rows.map((r) => this.rowToReflection(r));
   }
 
   private rowToReflection(row: any): ReflectionResult {
     return {
       id: row.id,
-      blindSpots: JSON.parse(row.blind_spots_json || '[]'),
-      growth: JSON.parse(row.growth_json || '{}'),
+      blindSpots: JSON.parse(row.blind_spots_json || "[]"),
+      growth: JSON.parse(row.growth_json || "{}"),
       emotionalSummary: row.emotional_summary,
       internalNarrative: row.internal_narrative,
       tokenId: row.token_id ?? null,
@@ -1097,24 +1196,28 @@ export class SparkStore {
   // ═══════════════════════════════════════════════════════════════
 
   savePersonality(profile: PersonalityProfile): void {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT OR REPLACE INTO spark_personality
         (id, curiosity, caution, warmth, directness, playfulness)
       VALUES
         ('singleton', @curiosity, @caution, @warmth, @directness, @playfulness)
-    `).run({
-      curiosity: profile.curiosity,
-      caution: profile.caution,
-      warmth: profile.warmth,
-      directness: profile.directness,
-      playfulness: profile.playfulness,
-    });
+    `,
+      )
+      .run({
+        curiosity: profile.curiosity,
+        caution: profile.caution,
+        warmth: profile.warmth,
+        directness: profile.directness,
+        playfulness: profile.playfulness,
+      });
   }
 
   getPersonality(): PersonalityProfile | null {
-    const row = this.db.prepare(
-      'SELECT * FROM spark_personality WHERE id = ?'
-    ).get('singleton') as any;
+    const row = this.db
+      .prepare("SELECT * FROM spark_personality WHERE id = ?")
+      .get("singleton") as any;
     if (!row) return null;
     return {
       curiosity: row.curiosity,
@@ -1136,7 +1239,7 @@ export class SparkStore {
       strength: row.strength,
       spiralCount: row.spiral_count,
       sourceId: row.source_id,
-      mergedFrom: JSON.parse(row.merged_from_json || '[]'),
+      mergedFrom: JSON.parse(row.merged_from_json || "[]"),
       createdAt: row.created_at,
       lastSpiralAt: row.last_spiral_at,
       archivedAt: row.archived_at ?? null,

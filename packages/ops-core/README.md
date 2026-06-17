@@ -13,10 +13,10 @@ npm install @ai-operations/ops-core
 ## Quick Start
 
 ```ts
-import { WorkflowEngine, IntentClassifier } from '@ai-operations/ops-core';
+import { WorkflowEngine, IntentClassifier } from "@ai-operations/ops-core";
 
 const classifier = new IntentClassifier();
-const intent = classifier.classify('Please reply to John about the meeting');
+const intent = classifier.classify("Please reply to John about the meeting");
 // => 'reply'
 
 const engine = new WorkflowEngine(connectorRegistry, safetyGate);
@@ -46,9 +46,9 @@ Enforces valid workflow step state transitions with O(1) lookup.
 
 ```ts
 const sm = new StateMachine();
-sm.transition('pending', 'start');           // => 'running'
-sm.canTransition('running', 'complete');     // => true
-sm.validEvents('blocked');                   // => ['approve']
+sm.transition("pending", "start"); // => 'running'
+sm.canTransition("running", "complete"); // => true
+sm.validEvents("blocked"); // => ['approve']
 ```
 
 **Step events:** `start | complete | fail | block | approve | pause | resume`
@@ -59,7 +59,7 @@ Keyword-based heuristic intent classification. Fast, deterministic first pass.
 
 ```ts
 const classifier = new IntentClassifier();
-const result = classifier.classifyDetailed('Please reply to John');
+const result = classifier.classifyDetailed("Please reply to John");
 // => { intent: 'reply', confidence: 'low', matchedKeywords: ['reply'] }
 ```
 
@@ -69,7 +69,7 @@ LLM-backed classification with heuristic fallback. Supports Anthropic, OpenAI, a
 
 ```ts
 const llm = new LLMIntentClassifier();
-const intent = await llm.classify('Can you handle the refund for order #123?');
+const intent = await llm.classify("Can you handle the refund for order #123?");
 // => 'refund' (via LLM when heuristic confidence is low)
 ```
 

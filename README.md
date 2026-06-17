@@ -56,14 +56,14 @@ An AI agent receives an email, classifies intent, checks it against your policy 
 
 **Six layers. Every action passes through all six.** No shortcuts. No exceptions.
 
-| Layer | Package | Responsibility |
-|-------|---------|----------------|
-| 1. Ingestion | `ops-connectors` | Normalize inbound events into Tasks |
-| 2. Understanding | `ops-core` | Intent classification (heuristic; optional LLM via OpenAI/Anthropic/Ollama) |
-| 3. Governance | `ops-policy` | Owner-defined rules and approval routing |
-| 4. Safety | `cord-adapter` | CORD risk scoring (ALLOW / CONTAIN / CHALLENGE / BLOCK) |
-| 5. Action | `codebot-adapter` | Map workflow steps to CodeBot tool calls |
-| 6. Audit | `shared-types` | Hash-chained, HMAC-signed ActionReceipts |
+| Layer            | Package           | Responsibility                                                              |
+| ---------------- | ----------------- | --------------------------------------------------------------------------- |
+| 1. Ingestion     | `ops-connectors`  | Normalize inbound events into Tasks                                         |
+| 2. Understanding | `ops-core`        | Intent classification (heuristic; optional LLM via OpenAI/Anthropic/Ollama) |
+| 3. Governance    | `ops-policy`      | Owner-defined rules and approval routing                                    |
+| 4. Safety        | `cord-adapter`    | CORD risk scoring (ALLOW / CONTAIN / CHALLENGE / BLOCK)                     |
+| 5. Action        | `codebot-adapter` | Map workflow steps to CodeBot tool calls                                    |
+| 6. Audit         | `shared-types`    | Hash-chained, HMAC-signed ActionReceipts                                    |
 
 ---
 
@@ -73,31 +73,31 @@ The initial release ships with four connectors covering the daily operational su
 
 ### Connectors
 
-| Connector | Status | Notes |
-|-----------|--------|-------|
-| Gmail | MVP | Read, reply, draft, send |
-| Google Calendar | MVP | Create, update, cancel events |
-| X (Twitter) | MVP | Post, reply, schedule |
-| Shopify | MVP | List orders, order details, products, customers |
+| Connector       | Status | Notes                                           |
+| --------------- | ------ | ----------------------------------------------- |
+| Gmail           | MVP    | Read, reply, draft, send                        |
+| Google Calendar | MVP    | Create, update, cancel events                   |
+| X (Twitter)     | MVP    | Post, reply, schedule                           |
+| Shopify         | MVP    | List orders, order details, products, customers |
 
 ### Autonomy Matrix
 
 What runs on its own vs. what asks you first.
 
-| Action | Mode | CORD Gate |
-|--------|------|-----------|
-| Read email | **Autonomous** | ALLOW (readonly) |
-| Draft reply to known contact | **Autonomous** | ALLOW (score < 20) |
-| Send reply to known contact | **Approval required** | CONTAIN (score 20-49) |
-| Send email to new recipient | **Approval required** | CHALLENGE (score 50-79) |
-| Delete email | **Blocked** | BLOCK (score 80+, destructive) |
-| Read calendar | **Autonomous** | ALLOW (readonly) |
-| Accept meeting from known org | **Autonomous** | ALLOW (score < 20) |
-| Create event with external attendees | **Approval required** | CONTAIN (score 20-49) |
-| Cancel event | **Approval required** | CHALLENGE (score 50-79) |
-| Post to X (draft) | **Autonomous** | ALLOW (draft only) |
-| Publish post to X | **Approval required** | CONTAIN (publication) |
-| Financial operations | **Blocked** | BLOCK (hardBlock: true) |
+| Action                               | Mode                  | CORD Gate                      |
+| ------------------------------------ | --------------------- | ------------------------------ |
+| Read email                           | **Autonomous**        | ALLOW (readonly)               |
+| Draft reply to known contact         | **Autonomous**        | ALLOW (score < 20)             |
+| Send reply to known contact          | **Approval required** | CONTAIN (score 20-49)          |
+| Send email to new recipient          | **Approval required** | CHALLENGE (score 50-79)        |
+| Delete email                         | **Blocked**           | BLOCK (score 80+, destructive) |
+| Read calendar                        | **Autonomous**        | ALLOW (readonly)               |
+| Accept meeting from known org        | **Autonomous**        | ALLOW (score < 20)             |
+| Create event with external attendees | **Approval required** | CONTAIN (score 20-49)          |
+| Cancel event                         | **Approval required** | CHALLENGE (score 50-79)        |
+| Post to X (draft)                    | **Autonomous**        | ALLOW (draft only)             |
+| Publish post to X                    | **Approval required** | CONTAIN (publication)          |
+| Financial operations                 | **Blocked**           | BLOCK (hardBlock: true)        |
 
 ---
 
@@ -165,14 +165,14 @@ Copy the example env and fill in your credentials:
 cp .env.example .env
 ```
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GMAIL_CLIENT_ID` | For Gmail | Google OAuth client ID |
-| `GMAIL_CLIENT_SECRET` | For Gmail | Google OAuth client secret |
-| `CALENDAR_API_KEY` | For Calendar | Google Calendar API key |
-| `X_API_KEY` | For X | X API bearer token |
-| `CORD_HMAC_KEY` | Yes | HMAC key for receipt signing |
-| `POLICY_VERSION` | No | Policy version identifier (default: `v1`) |
+| Variable              | Required     | Description                               |
+| --------------------- | ------------ | ----------------------------------------- |
+| `GMAIL_CLIENT_ID`     | For Gmail    | Google OAuth client ID                    |
+| `GMAIL_CLIENT_SECRET` | For Gmail    | Google OAuth client secret                |
+| `CALENDAR_API_KEY`    | For Calendar | Google Calendar API key                   |
+| `X_API_KEY`           | For X        | X API bearer token                        |
+| `CORD_HMAC_KEY`       | Yes          | HMAC key for receipt signing              |
+| `POLICY_VERSION`      | No           | Policy version identifier (default: `v1`) |
 
 ---
 
@@ -185,41 +185,41 @@ These are the core interfaces that adapters implement. If you are building a new
 Every inbound event -- email, calendar invite, social mention, store order -- becomes a `Task`. This is the lingua franca of the system.
 
 ```typescript
-type TaskSource = 'email' | 'calendar' | 'social' | 'store' | 'manual';
+type TaskSource = "email" | "calendar" | "social" | "store" | "manual";
 
 type TaskIntent =
-  | 'reply'
-  | 'schedule'
-  | 'post'
-  | 'fulfill'
-  | 'escalate'
-  | 'ignore'
-  | 'unknown';
+  | "reply"
+  | "schedule"
+  | "post"
+  | "fulfill"
+  | "escalate"
+  | "ignore"
+  | "unknown";
 
-type TaskPriority = 'urgent' | 'high' | 'normal' | 'low';
+type TaskPriority = "urgent" | "high" | "normal" | "low";
 
 type TaskStatus =
-  | 'pending'
-  | 'planned'
-  | 'running'
-  | 'awaiting_approval'
-  | 'completed'
-  | 'failed';
+  | "pending"
+  | "planned"
+  | "running"
+  | "awaiting_approval"
+  | "completed"
+  | "failed";
 
 interface Task {
-  id: string;                          // UUID v4
-  source: TaskSource;                  // Where this task originated
-  sourceId?: string;                   // External ID (Gmail messageId, etc.)
-  intent: TaskIntent;                  // Classified intent (heuristic or LLM)
-  title: string;                       // Human-readable title
-  body?: string;                       // Full content / body text
-  priority: TaskPriority;              // Urgency classification
-  status: TaskStatus;                  // Lifecycle state
-  owner?: string;                      // Assignee identifier
-  dueAt?: string;                      // ISO 8601
-  createdAt: string;                   // ISO 8601
-  updatedAt: string;                   // ISO 8601
-  metadata: Record<string, unknown>;   // Source-specific data
+  id: string; // UUID v4
+  source: TaskSource; // Where this task originated
+  sourceId?: string; // External ID (Gmail messageId, etc.)
+  intent: TaskIntent; // Classified intent (heuristic or LLM)
+  title: string; // Human-readable title
+  body?: string; // Full content / body text
+  priority: TaskPriority; // Urgency classification
+  status: TaskStatus; // Lifecycle state
+  owner?: string; // Assignee identifier
+  dueAt?: string; // ISO 8601
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+  metadata: Record<string, unknown>; // Source-specific data
 }
 ```
 
@@ -228,21 +228,27 @@ interface Task {
 A Task triggers a `WorkflowRun`. Each run has ordered `WorkflowStep`s that execute through connectors.
 
 ```typescript
-type CordDecision = 'ALLOW' | 'CONTAIN' | 'CHALLENGE' | 'BLOCK';
+type CordDecision = "ALLOW" | "CONTAIN" | "CHALLENGE" | "BLOCK";
 
-type StepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'blocked' | 'approved';
+type StepStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "blocked"
+  | "approved";
 
 interface WorkflowStep {
-  id: string;                          // UUID v4
-  connector: string;                   // Which connector handles this step
-  operation: string;                   // e.g., 'send', 'create_event', 'post'
-  input: Record<string, unknown>;      // Input data for the operation
-  output?: Record<string, unknown>;    // Populated after execution
-  status: StepStatus;                  // Current step state
-  cordDecision?: CordDecision;         // CORD safety decision
-  cordScore?: number;                  // Risk score (0-99)
-  error?: string;                      // Error message if failed
-  durationMs?: number;                 // Execution time in ms
+  id: string; // UUID v4
+  connector: string; // Which connector handles this step
+  operation: string; // e.g., 'send', 'create_event', 'post'
+  input: Record<string, unknown>; // Input data for the operation
+  output?: Record<string, unknown>; // Populated after execution
+  status: StepStatus; // Current step state
+  cordDecision?: CordDecision; // CORD safety decision
+  cordScore?: number; // Risk score (0-99)
+  error?: string; // Error message if failed
+  durationMs?: number; // Execution time in ms
 }
 ```
 
@@ -252,18 +258,18 @@ Every executed action produces a receipt. Receipts are hash-chained for tamper d
 
 ```typescript
 interface ActionReceipt {
-  id: string;                          // UUID v4
-  actionId: string;                    // The action this receipt covers
-  policyVersion: string;               // Policy version during evaluation
-  cordDecision: string;                // CORD decision for this action
-  cordScore: number;                   // Risk score (0-99)
-  cordReasons: string[];               // Risk reasons
-  input: Record<string, unknown>;      // Sanitized input (secrets redacted)
-  output?: Record<string, unknown>;    // Output summary
-  timestamp: string;                   // ISO 8601
-  hash: string;                        // SHA-256 content hash
-  signature: string;                   // HMAC-SHA256 signature
-  prevHash: string;                    // Previous receipt hash (chain link)
+  id: string; // UUID v4
+  actionId: string; // The action this receipt covers
+  policyVersion: string; // Policy version during evaluation
+  cordDecision: string; // CORD decision for this action
+  cordScore: number; // Risk score (0-99)
+  cordReasons: string[]; // Risk reasons
+  input: Record<string, unknown>; // Sanitized input (secrets redacted)
+  output?: Record<string, unknown>; // Output summary
+  timestamp: string; // ISO 8601
+  hash: string; // SHA-256 content hash
+  signature: string; // HMAC-SHA256 signature
+  prevHash: string; // Previous receipt hash (chain link)
 }
 ```
 
@@ -287,21 +293,21 @@ interface StepResult {
   output: Record<string, unknown>;
   durationMs: number;
   error?: string;
-  mock: boolean;                       // true if codebot-ai not installed
+  mock: boolean; // true if codebot-ai not installed
 }
 ```
 
 **Operation-to-tool mapping:**
 
-| Connector Operation | CodeBot Tool |
-|---------------------|-------------|
-| `send`, `reply`, `forward` | `messaging.*` |
-| `read`, `list`, `search`, `get` | `data.*` |
-| `create_event`, `update_event`, `cancel_event` | `calendar.*` |
-| `post`, `tweet` | `social.publish` |
-| `delete`, `remove`, `archive` | `resource.*` |
-| `refund`, `charge` | `commerce.*` |
-| `transfer` | `finance.transfer` |
+| Connector Operation                            | CodeBot Tool       |
+| ---------------------------------------------- | ------------------ |
+| `send`, `reply`, `forward`                     | `messaging.*`      |
+| `read`, `list`, `search`, `get`                | `data.*`           |
+| `create_event`, `update_event`, `cancel_event` | `calendar.*`       |
+| `post`, `tweet`                                | `social.publish`   |
+| `delete`, `remove`, `archive`                  | `resource.*`       |
+| `refund`, `charge`                             | `commerce.*`       |
+| `transfer`                                     | `finance.transfer` |
 
 ### CordSafetyGate
 
@@ -321,23 +327,23 @@ class CordSafetyGate {
 }
 
 interface SafetyResult {
-  decision: CordDecision;             // ALLOW | CONTAIN | CHALLENGE | BLOCK
-  score: number;                      // 0-99 risk score
-  reasons: string[];                  // Human-readable risk reasons
-  hardBlock: boolean;                 // true = cannot be overridden
+  decision: CordDecision; // ALLOW | CONTAIN | CHALLENGE | BLOCK
+  score: number; // 0-99 risk score
+  reasons: string[]; // Human-readable risk reasons
+  hardBlock: boolean; // true = cannot be overridden
 }
 ```
 
 **Operation-to-CORD-tool mapping:**
 
-| Operation Category | CORD Tool Type |
-|--------------------|----------------|
-| `send`, `reply`, `forward` | `communication` |
-| `post`, `tweet` | `publication` |
-| `delete`, `remove`, `archive` | `destructive` |
-| `create_event`, `update_event`, `cancel_event` | `scheduling` |
-| `refund`, `charge`, `transfer` | `financial` |
-| `read`, `list`, `search`, `get` | `readonly` |
+| Operation Category                             | CORD Tool Type  |
+| ---------------------------------------------- | --------------- |
+| `send`, `reply`, `forward`                     | `communication` |
+| `post`, `tweet`                                | `publication`   |
+| `delete`, `remove`, `archive`                  | `destructive`   |
+| `create_event`, `update_event`, `cancel_event` | `scheduling`    |
+| `refund`, `charge`, `transfer`                 | `financial`     |
+| `read`, `list`, `search`, `get`                | `readonly`      |
 
 ---
 
@@ -398,25 +404,25 @@ Instead of storing every conversation token verbatim, SPARK compresses interacti
 
 **Five engines, zero LLM calls:**
 
-| Engine | Purpose |
-|--------|---------|
-| **EssenceExtractor** | TF-IDF topics, lexicon sentiment, relationship patterns, decision detection |
-| **MemoryTokenManager** | Token lifecycle, tier compression (raw → recent → compressed → archival) |
-| **SpiralLoop** | Reinforcement/weakening math with diminishing returns + passive decay |
-| **ContextReconstructor** | BFS graph walk to rebuild context from essence threads |
-| **FeedbackIntegrator** | Bridges SPARK episodes, insights, and beliefs into spiral memory |
+| Engine                   | Purpose                                                                     |
+| ------------------------ | --------------------------------------------------------------------------- |
+| **EssenceExtractor**     | TF-IDF topics, lexicon sentiment, relationship patterns, decision detection |
+| **MemoryTokenManager**   | Token lifecycle, tier compression (raw → recent → compressed → archival)    |
+| **SpiralLoop**           | Reinforcement/weakening math with diminishing returns + passive decay       |
+| **ContextReconstructor** | BFS graph walk to rebuild context from essence threads                      |
+| **FeedbackIntegrator**   | Bridges SPARK episodes, insights, and beliefs into spiral memory            |
 
 ### SPARK API
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/spark/chat` | Conversational interface to SPARK |
-| `GET /api/spark/awareness` | Full awareness self-report |
-| `GET /api/spark/memory/tokens` | List spiral memory tokens |
-| `GET /api/spark/memory/graph` | Full token graph for visualization |
-| `GET /api/spark/memory/stats` | Spiral memory statistics |
-| `POST /api/spark/memory/reconstruct` | Context reconstruction from query |
-| `POST /api/spark/memory/maintenance` | Trigger decay/tier/archival pass |
+| Endpoint                             | Description                        |
+| ------------------------------------ | ---------------------------------- |
+| `POST /api/spark/chat`               | Conversational interface to SPARK  |
+| `GET /api/spark/awareness`           | Full awareness self-report         |
+| `GET /api/spark/memory/tokens`       | List spiral memory tokens          |
+| `GET /api/spark/memory/graph`        | Full token graph for visualization |
+| `GET /api/spark/memory/stats`        | Spiral memory statistics           |
+| `POST /api/spark/memory/reconstruct` | Context reconstruction from query  |
+| `POST /api/spark/memory/maintenance` | Trigger decay/tier/archival pass   |
 
 ---
 
@@ -424,16 +430,16 @@ Instead of storing every conversation token verbatim, SPARK compresses interacti
 
 All benchmarks measured on a single-node SQLite setup (Apple M-series, Node 20). No external API calls involved — these are pure local operations.
 
-| Operation | Latency | Notes |
-|-----------|---------|-------|
-| Pipeline simulate (dry-run) | ~3ms | Intent → Policy → CORD → Response |
-| CORD safety evaluation | <1ms | 14-dimension scoring, no LLM |
-| SPARK prediction | <1ms | Weight lookup + risk calculation |
-| SPARK learning episode | ~2ms | Compare → adjust → consolidate |
-| Spiral memory pass | ~1ms | Reinforce + decay + edge discovery |
-| Essence extraction | ~1ms | TF-IDF + sentiment + relationship detection |
-| Context reconstruction | ~2ms | Topic lookup → graph walk → narrative build |
-| Receipt signing (HMAC-SHA256) | <1ms | Hash-chained audit proof |
+| Operation                     | Latency | Notes                                       |
+| ----------------------------- | ------- | ------------------------------------------- |
+| Pipeline simulate (dry-run)   | ~3ms    | Intent → Policy → CORD → Response           |
+| CORD safety evaluation        | <1ms    | 14-dimension scoring, no LLM                |
+| SPARK prediction              | <1ms    | Weight lookup + risk calculation            |
+| SPARK learning episode        | ~2ms    | Compare → adjust → consolidate              |
+| Spiral memory pass            | ~1ms    | Reinforce + decay + edge discovery          |
+| Essence extraction            | ~1ms    | TF-IDF + sentiment + relationship detection |
+| Context reconstruction        | ~2ms    | Topic lookup → graph walk → narrative build |
+| Receipt signing (HMAC-SHA256) | <1ms    | Hash-chained audit proof                    |
 
 > Zero external dependencies in the hot path. The entire pipeline runs locally — no network calls until connector execution.
 

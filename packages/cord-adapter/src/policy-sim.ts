@@ -6,7 +6,7 @@
  * decide before committing to a workflow run.
  */
 
-import { CordSafetyGate, type SafetyResult } from './adapter';
+import { CordSafetyGate, type SafetyResult } from "./adapter";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -114,7 +114,7 @@ export class PolicySimulator {
       if (hardBlock) {
         hasHardBlock = true;
       }
-      if (decision !== 'ALLOW') {
+      if (decision !== "ALLOW") {
         allAllowed = false;
       }
     }

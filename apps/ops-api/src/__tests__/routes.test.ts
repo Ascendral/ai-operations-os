@@ -5,19 +5,19 @@
  * and asserts response status codes and JSON bodies.
  */
 
-import * as http from 'http';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
-import type { AddressInfo } from 'net';
+import * as http from "http";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
+import type { AddressInfo } from "net";
 
 let server: http.Server;
 let baseUrl: string;
 
 // Isolate tests from real credentials on dev machines.
 // Rename the credentials file before module import, restore after.
-const CREDS_PATH = path.join(os.homedir(), '.ai-ops', 'credentials.json');
-const CREDS_BACKUP = CREDS_PATH + '.test-backup';
+const CREDS_PATH = path.join(os.homedir(), ".ai-ops", "credentials.json");
+const CREDS_BACKUP = CREDS_PATH + ".test-backup";
 const hadCreds = fs.existsSync(CREDS_PATH);
 if (hadCreds) fs.renameSync(CREDS_PATH, CREDS_BACKUP);
 
@@ -25,17 +25,17 @@ if (hadCreds) fs.renameSync(CREDS_PATH, CREDS_BACKUP);
 // The server.ts module has a side effect: it calls server.listen(PORT).
 // Our strategy: import it, close the auto-started listener, then re-listen on port 0.
 
-const TEST_API_KEY = 'test-integration-api-key';
+const TEST_API_KEY = "test-integration-api-key";
 
 beforeAll(async () => {
   // Use an in-memory SQLite database for tests
-  process.env.OPS_DB_PATH = ':memory:';
+  process.env.OPS_DB_PATH = ":memory:";
   // Prevent the server from binding to the default port
-  process.env.OPS_PORT = '0';
+  process.env.OPS_PORT = "0";
   // Set API key for auth (must be set before importing server)
   process.env.OPS_API_KEY = TEST_API_KEY;
 
-  const mod = await import('../server');
+  const mod = await import("../server");
   server = mod.server;
 
   // The server auto-started on port 0 (due to OPS_PORT=0).
@@ -46,7 +46,7 @@ beforeAll(async () => {
     if (server.listening) {
       resolve();
     } else {
-      server.on('listening', () => resolve());
+      server.on("listening", () => resolve());
     }
   });
 
@@ -63,10 +63,12 @@ afterAll(async () => {
   // Stop the ops-worker background timers (queue polling + scheduler)
   // that get started as a side effect of importing the pipeline routes.
   try {
-    const worker = await import('@ai-operations/ops-worker') as any;
+    const worker = (await import("@ai-operations/ops-worker")) as any;
     if (worker.queue) worker.queue.stop();
     if (worker.scheduler) worker.scheduler.stop();
-  } catch { /* worker may not be loaded */ }
+  } catch {
+    /* worker may not be loaded */
+  }
 
   await new Promise<void>((resolve, reject) => {
     server.close((err) => (err ? reject(err) : resolve()));
@@ -82,9 +84,11 @@ async function api(
   options?: { skipAuth?: boolean },
 ): Promise<{ status: number; data: any; headers: http.IncomingHttpHeaders }> {
   const url = `${baseUrl}${path}`;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
   if (!options?.skipAuth) {
-    headers['Authorization'] = `Bearer ${TEST_API_KEY}`;
+    headers["Authorization"] = `Bearer ${TEST_API_KEY}`;
   }
   const opts: RequestInit = {
     method,
@@ -100,197 +104,220 @@ async function api(
   } catch {
     data = text;
   }
-  return { status: res.status, data, headers: Object.fromEntries(res.headers.entries()) };
+  return {
+    status: res.status,
+    data,
+    headers: Object.fromEntries(res.headers.entries()),
+  };
 }
 
 // ── Health Check ─────────────────────────────────────────────────────────────
 
-describe('Health Check', () => {
-  test('GET /health returns 200 with status:ok', async () => {
-    const { status, data } = await api('GET', '/health');
+describe("Health Check", () => {
+  test("GET /health returns 200 with status:ok", async () => {
+    const { status, data } = await api("GET", "/health");
     expect(status).toBe(200);
-    expect(data.status).toBe('ok');
-    expect(data).toHaveProperty('version');
-    expect(data).toHaveProperty('uptime');
+    expect(data.status).toBe("ok");
+    expect(data).toHaveProperty("version");
+    expect(data).toHaveProperty("uptime");
   });
 
-  test('GET /api/health returns 200 with status:ok', async () => {
-    const { status, data } = await api('GET', '/api/health');
+  test("GET /api/health returns 200 with status:ok", async () => {
+    const { status, data } = await api("GET", "/api/health");
     expect(status).toBe(200);
-    expect(data.status).toBe('ok');
+    expect(data.status).toBe("ok");
   });
 });
 
 // ── Task Routes ──────────────────────────────────────────────────────────────
 
-describe('Task Routes', () => {
+describe("Task Routes", () => {
   let createdTaskId: string;
 
-  test('POST /api/tasks creates a task and returns 201', async () => {
-    const { status, data } = await api('POST', '/api/tasks', {
-      source: 'email',
-      title: 'Test task from integration test',
-      body: 'This is the body of the test task',
-      intent: 'reply',
-      priority: 'high',
+  test("POST /api/tasks creates a task and returns 201", async () => {
+    const { status, data } = await api("POST", "/api/tasks", {
+      source: "email",
+      title: "Test task from integration test",
+      body: "This is the body of the test task",
+      intent: "reply",
+      priority: "high",
     });
     expect(status).toBe(201);
-    expect(data).toHaveProperty('id');
-    expect(data.source).toBe('email');
-    expect(data.title).toBe('Test task from integration test');
-    expect(data.intent).toBe('reply');
-    expect(data.priority).toBe('high');
-    expect(data.status).toBe('pending');
+    expect(data).toHaveProperty("id");
+    expect(data.source).toBe("email");
+    expect(data.title).toBe("Test task from integration test");
+    expect(data.intent).toBe("reply");
+    expect(data.priority).toBe("high");
+    expect(data.status).toBe("pending");
     createdTaskId = data.id;
   });
 
-  test('POST /api/tasks with missing fields returns 400', async () => {
-    const { status, data } = await api('POST', '/api/tasks', {
+  test("POST /api/tasks with missing fields returns 400", async () => {
+    const { status, data } = await api("POST", "/api/tasks", {
       // missing source and title
-      body: 'No source or title',
+      body: "No source or title",
     });
     expect(status).toBe(400);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/missing required field/i);
   });
 
-  test('GET /api/tasks returns task list', async () => {
-    const { status, data } = await api('GET', '/api/tasks');
+  test("GET /api/tasks returns task list", async () => {
+    const { status, data } = await api("GET", "/api/tasks");
     expect(status).toBe(200);
-    expect(data).toHaveProperty('tasks');
+    expect(data).toHaveProperty("tasks");
     expect(Array.isArray(data.tasks)).toBe(true);
     expect(data.tasks.length).toBeGreaterThanOrEqual(1);
-    expect(data).toHaveProperty('total');
-    expect(data).toHaveProperty('limit');
-    expect(data).toHaveProperty('offset');
+    expect(data).toHaveProperty("total");
+    expect(data).toHaveProperty("limit");
+    expect(data).toHaveProperty("offset");
   });
 
-  test('GET /api/tasks/:id returns a specific task', async () => {
-    const { status, data } = await api('GET', `/api/tasks/${createdTaskId}`);
+  test("GET /api/tasks/:id returns a specific task", async () => {
+    const { status, data } = await api("GET", `/api/tasks/${createdTaskId}`);
     expect(status).toBe(200);
     expect(data.id).toBe(createdTaskId);
-    expect(data.title).toBe('Test task from integration test');
+    expect(data.title).toBe("Test task from integration test");
   });
 
-  test('GET /api/tasks/:id with bad ID returns 404', async () => {
-    const { status, data } = await api('GET', '/api/tasks/nonexistent-id-12345');
+  test("GET /api/tasks/:id with bad ID returns 404", async () => {
+    const { status, data } = await api(
+      "GET",
+      "/api/tasks/nonexistent-id-12345",
+    );
     expect(status).toBe(404);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/not found/i);
   });
 
-  test('PATCH /api/tasks/:id updates task fields', async () => {
-    const { status, data } = await api('PATCH', `/api/tasks/${createdTaskId}`, {
-      title: 'Updated task title',
-      priority: 'urgent',
-      status: 'running',
+  test("PATCH /api/tasks/:id updates task fields", async () => {
+    const { status, data } = await api("PATCH", `/api/tasks/${createdTaskId}`, {
+      title: "Updated task title",
+      priority: "urgent",
+      status: "running",
     });
     expect(status).toBe(200);
-    expect(data.title).toBe('Updated task title');
-    expect(data.priority).toBe('urgent');
-    expect(data.status).toBe('running');
+    expect(data.title).toBe("Updated task title");
+    expect(data.priority).toBe("urgent");
+    expect(data.status).toBe("running");
   });
 
-  test('DELETE /api/tasks/:id soft-deletes the task', async () => {
+  test("DELETE /api/tasks/:id soft-deletes the task", async () => {
     // Create a fresh task to delete
-    const createRes = await api('POST', '/api/tasks', {
-      source: 'manual',
-      title: 'Task to delete',
+    const createRes = await api("POST", "/api/tasks", {
+      source: "manual",
+      title: "Task to delete",
     });
     const taskId = createRes.data.id;
 
-    const { status, data } = await api('DELETE', `/api/tasks/${taskId}`);
+    const { status, data } = await api("DELETE", `/api/tasks/${taskId}`);
     expect(status).toBe(200);
     expect(data.deleted).toBe(true);
     expect(data.id).toBe(taskId);
 
     // Verify the task is now in 'failed' status (soft delete)
-    const getRes = await api('GET', `/api/tasks/${taskId}`);
+    const getRes = await api("GET", `/api/tasks/${taskId}`);
     expect(getRes.status).toBe(200);
-    expect(getRes.data.status).toBe('failed');
+    expect(getRes.data.status).toBe("failed");
   });
 });
 
 // ── Approval Routes ──────────────────────────────────────────────────────────
 
-describe('Approval Routes', () => {
-  test('GET /api/approvals returns empty list initially', async () => {
-    const { status, data } = await api('GET', '/api/approvals');
+describe("Approval Routes", () => {
+  test("GET /api/approvals returns empty list initially", async () => {
+    const { status, data } = await api("GET", "/api/approvals");
     expect(status).toBe(200);
-    expect(data).toHaveProperty('approvals');
+    expect(data).toHaveProperty("approvals");
     expect(Array.isArray(data.approvals)).toBe(true);
-    expect(data).toHaveProperty('pending');
-    expect(data).toHaveProperty('total');
+    expect(data).toHaveProperty("pending");
+    expect(data).toHaveProperty("total");
   });
 
-  test('POST /api/approvals/:id/decide with approved works', async () => {
+  test("POST /api/approvals/:id/decide with approved works", async () => {
     // First, create an approval via the internal API
-    const { requestApproval } = await import('../routes/approvals');
+    const { requestApproval } = await import("../routes/approvals");
     const approval = requestApproval(
-      'test-action-1',
-      'test-task-1',
-      'medium',
-      'Test approval reason',
-      'Preview of test action',
+      "test-action-1",
+      "test-task-1",
+      "medium",
+      "Test approval reason",
+      "Preview of test action",
     );
 
-    const { status, data } = await api('POST', `/api/approvals/${approval.id}/decide`, {
-      decision: 'approved',
-      decidedBy: 'test-user',
-    });
+    const { status, data } = await api(
+      "POST",
+      `/api/approvals/${approval.id}/decide`,
+      {
+        decision: "approved",
+        decidedBy: "test-user",
+      },
+    );
     expect(status).toBe(200);
-    expect(data.decision).toBe('approved');
-    expect(data.decidedBy).toBe('test-user');
-    expect(data).toHaveProperty('decidedAt');
+    expect(data.decision).toBe("approved");
+    expect(data.decidedBy).toBe("test-user");
+    expect(data).toHaveProperty("decidedAt");
   });
 
-  test('POST /api/approvals/:id/decide with invalid decision returns 400', async () => {
+  test("POST /api/approvals/:id/decide with invalid decision returns 400", async () => {
     // Create another approval
-    const { requestApproval } = await import('../routes/approvals');
+    const { requestApproval } = await import("../routes/approvals");
     const approval = requestApproval(
-      'test-action-2',
-      'test-task-2',
-      'low',
-      'Another test',
-      'Preview',
+      "test-action-2",
+      "test-task-2",
+      "low",
+      "Another test",
+      "Preview",
     );
 
-    const { status, data } = await api('POST', `/api/approvals/${approval.id}/decide`, {
-      decision: 'maybe',
-    });
+    const { status, data } = await api(
+      "POST",
+      `/api/approvals/${approval.id}/decide`,
+      {
+        decision: "maybe",
+      },
+    );
     expect(status).toBe(400);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/must be one of/i);
   });
 
-  test('POST /api/approvals/:id/decide on nonexistent approval returns 404', async () => {
-    const { status, data } = await api('POST', '/api/approvals/nonexistent-approval/decide', {
-      decision: 'approved',
-    });
+  test("POST /api/approvals/:id/decide on nonexistent approval returns 404", async () => {
+    const { status, data } = await api(
+      "POST",
+      "/api/approvals/nonexistent-approval/decide",
+      {
+        decision: "approved",
+      },
+    );
     expect(status).toBe(404);
     expect(data.error).toMatch(/not found/i);
   });
 
-  test('POST /api/approvals/:id/decide on already decided returns 400', async () => {
+  test("POST /api/approvals/:id/decide on already decided returns 400", async () => {
     // Create and decide an approval
-    const { requestApproval } = await import('../routes/approvals');
+    const { requestApproval } = await import("../routes/approvals");
     const approval = requestApproval(
-      'test-action-3',
-      'test-task-3',
-      'high',
-      'Already decided test',
-      'Preview',
+      "test-action-3",
+      "test-task-3",
+      "high",
+      "Already decided test",
+      "Preview",
     );
 
     // Decide it first
-    await api('POST', `/api/approvals/${approval.id}/decide`, {
-      decision: 'denied',
+    await api("POST", `/api/approvals/${approval.id}/decide`, {
+      decision: "denied",
     });
 
     // Try to decide again
-    const { status, data } = await api('POST', `/api/approvals/${approval.id}/decide`, {
-      decision: 'approved',
-    });
+    const { status, data } = await api(
+      "POST",
+      `/api/approvals/${approval.id}/decide`,
+      {
+        decision: "approved",
+      },
+    );
     expect(status).toBe(400);
     expect(data.error).toMatch(/already decided/i);
   });
@@ -298,172 +325,182 @@ describe('Approval Routes', () => {
 
 // ── Pipeline Routes ──────────────────────────────────────────────────────────
 
-describe('Pipeline Routes', () => {
-  test('POST /api/pipeline/simulate returns simulation result', async () => {
-    const { status, data } = await api('POST', '/api/pipeline/simulate', {
-      source: 'manual',
-      title: 'Schedule a meeting with team',
+describe("Pipeline Routes", () => {
+  test("POST /api/pipeline/simulate returns simulation result", async () => {
+    const { status, data } = await api("POST", "/api/pipeline/simulate", {
+      source: "manual",
+      title: "Schedule a meeting with team",
     });
     expect(status).toBe(200);
     expect(data.simulation).toBe(true);
-    expect(data.source).toBe('manual');
-    expect(data).toHaveProperty('intent');
-    expect(data).toHaveProperty('steps');
-    expect(data).toHaveProperty('summary');
-    expect(data.summary).toHaveProperty('totalSteps');
+    expect(data.source).toBe("manual");
+    expect(data).toHaveProperty("intent");
+    expect(data).toHaveProperty("steps");
+    expect(data).toHaveProperty("summary");
+    expect(data.summary).toHaveProperty("totalSteps");
   });
 
-  test('POST /api/pipeline/simulate with missing source returns 400', async () => {
-    const { status, data } = await api('POST', '/api/pipeline/simulate', {
-      title: 'No source provided',
+  test("POST /api/pipeline/simulate with missing source returns 400", async () => {
+    const { status, data } = await api("POST", "/api/pipeline/simulate", {
+      title: "No source provided",
     });
     expect(status).toBe(400);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/missing.*source/i);
   });
 
-  test('POST /api/pipeline/simulate with email source returns reply intent', async () => {
-    const { status, data } = await api('POST', '/api/pipeline/simulate', {
-      source: 'email',
-      title: 'Please reply to this email about the project update',
+  test("POST /api/pipeline/simulate with email source returns reply intent", async () => {
+    const { status, data } = await api("POST", "/api/pipeline/simulate", {
+      source: "email",
+      title: "Please reply to this email about the project update",
     });
     expect(status).toBe(200);
     expect(data.simulation).toBe(true);
-    expect(data.intent).toBe('reply');
-    expect(data.workflowType).toBe('reply-workflow');
+    expect(data.intent).toBe("reply");
+    expect(data.workflowType).toBe("reply-workflow");
     expect(data.steps.length).toBeGreaterThanOrEqual(1);
     // Reply workflow should include gmail connector steps
     const connectors = data.steps.map((s: any) => s.connector);
-    expect(connectors).toContain('gmail');
+    expect(connectors).toContain("gmail");
   });
 
-  test('POST /api/pipeline/simulate detects schedule intent', async () => {
-    const { status, data } = await api('POST', '/api/pipeline/simulate', {
-      source: 'calendar',
-      title: 'Schedule a meeting for Thursday',
+  test("POST /api/pipeline/simulate detects schedule intent", async () => {
+    const { status, data } = await api("POST", "/api/pipeline/simulate", {
+      source: "calendar",
+      title: "Schedule a meeting for Thursday",
     });
     expect(status).toBe(200);
-    expect(data.intent).toBe('schedule');
-    expect(data.workflowType).toBe('schedule-workflow');
+    expect(data.intent).toBe("schedule");
+    expect(data.workflowType).toBe("schedule-workflow");
   });
 });
 
 // ── Gmail Routes ─────────────────────────────────────────────────────────────
 
-describe('Gmail Routes', () => {
-  test('GET /api/gmail/inbox without OAuth returns 401', async () => {
-    const { status, data } = await api('GET', '/api/gmail/inbox');
+describe("Gmail Routes", () => {
+  test("GET /api/gmail/inbox without OAuth returns 401", async () => {
+    const { status, data } = await api("GET", "/api/gmail/inbox");
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/not connected/i);
   });
 
-  test('POST /api/gmail/process without messageId returns 400', async () => {
-    const { status, data } = await api('POST', '/api/gmail/process', {});
+  test("POST /api/gmail/process without messageId returns 400", async () => {
+    const { status, data } = await api("POST", "/api/gmail/process", {});
     expect(status).toBe(400);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/missing.*messageId/i);
   });
 
-  test('GET /api/gmail/message/:id without OAuth returns 401', async () => {
-    const { status, data } = await api('GET', '/api/gmail/message/some-id');
+  test("GET /api/gmail/message/:id without OAuth returns 401", async () => {
+    const { status, data } = await api("GET", "/api/gmail/message/some-id");
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/not connected/i);
   });
 });
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 
-describe('CORS', () => {
-  test('OPTIONS request returns 204 with CORS headers', async () => {
-    const res = await fetch(`${baseUrl}/api/tasks`, { method: 'OPTIONS' });
+describe("CORS", () => {
+  test("OPTIONS request returns 204 with CORS headers", async () => {
+    const res = await fetch(`${baseUrl}/api/tasks`, { method: "OPTIONS" });
     expect(res.status).toBe(204);
-    expect(res.headers.get('access-control-allow-origin')).toBe('*');
-    expect(res.headers.get('access-control-allow-methods')).toMatch(/GET/);
-    expect(res.headers.get('access-control-allow-methods')).toMatch(/POST/);
-    expect(res.headers.get('access-control-allow-methods')).toMatch(/PATCH/);
-    expect(res.headers.get('access-control-allow-methods')).toMatch(/DELETE/);
-    expect(res.headers.get('access-control-allow-headers')).toMatch(/Content-Type/);
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+    expect(res.headers.get("access-control-allow-methods")).toMatch(/GET/);
+    expect(res.headers.get("access-control-allow-methods")).toMatch(/POST/);
+    expect(res.headers.get("access-control-allow-methods")).toMatch(/PATCH/);
+    expect(res.headers.get("access-control-allow-methods")).toMatch(/DELETE/);
+    expect(res.headers.get("access-control-allow-headers")).toMatch(
+      /Content-Type/,
+    );
   });
 
-  test('JSON responses include Access-Control-Allow-Origin header', async () => {
-    const { headers } = await api('GET', '/api/health');
-    expect(headers['access-control-allow-origin']).toBe('*');
+  test("JSON responses include Access-Control-Allow-Origin header", async () => {
+    const { headers } = await api("GET", "/api/health");
+    expect(headers["access-control-allow-origin"]).toBe("*");
   });
 });
 
 // ── 404 ──────────────────────────────────────────────────────────────────────
 
-describe('404 Not Found', () => {
-  test('GET /api/nonexistent returns 404', async () => {
-    const { status, data } = await api('GET', '/api/nonexistent');
+describe("404 Not Found", () => {
+  test("GET /api/nonexistent returns 404", async () => {
+    const { status, data } = await api("GET", "/api/nonexistent");
     expect(status).toBe(404);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/not found/i);
   });
 
-  test('POST /api/nonexistent returns 404', async () => {
-    const { status, data } = await api('POST', '/api/nonexistent', { foo: 'bar' });
+  test("POST /api/nonexistent returns 404", async () => {
+    const { status, data } = await api("POST", "/api/nonexistent", {
+      foo: "bar",
+    });
     expect(status).toBe(404);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 });
 
 // ── Workflow Routes ──────────────────────────────────────────────────────────
 
-describe('Workflow Routes', () => {
+describe("Workflow Routes", () => {
   let workflowRunId: string;
 
-  test('POST /api/workflows creates a workflow run and returns 201', async () => {
+  test("POST /api/workflows creates a workflow run and returns 201", async () => {
     // Create a task first so we have a valid taskId
-    const taskRes = await api('POST', '/api/tasks', {
-      source: 'email',
-      title: 'Task for workflow test',
+    const taskRes = await api("POST", "/api/tasks", {
+      source: "email",
+      title: "Task for workflow test",
     });
     const taskId = taskRes.data.id;
 
-    const { status, data } = await api('POST', '/api/workflows', {
+    const { status, data } = await api("POST", "/api/workflows", {
       taskId,
-      workflowType: 'reply-workflow',
+      workflowType: "reply-workflow",
       steps: [
-        { connector: 'gmail', operation: 'read', input: {} },
-        { connector: 'gmail', operation: 'reply', input: {} },
+        { connector: "gmail", operation: "read", input: {} },
+        { connector: "gmail", operation: "reply", input: {} },
       ],
     });
     expect(status).toBe(201);
-    expect(data).toHaveProperty('id');
+    expect(data).toHaveProperty("id");
     expect(data.taskId).toBe(taskId);
-    expect(data.workflowType).toBe('reply-workflow');
+    expect(data.workflowType).toBe("reply-workflow");
     workflowRunId = data.id;
   });
 
-  test('POST /api/workflows with missing fields returns 400', async () => {
-    const { status, data } = await api('POST', '/api/workflows', {
+  test("POST /api/workflows with missing fields returns 400", async () => {
+    const { status, data } = await api("POST", "/api/workflows", {
       // missing taskId and workflowType
     });
     expect(status).toBe(400);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/missing required field/i);
   });
 
-  test('GET /api/workflows returns workflow run list', async () => {
-    const { status, data } = await api('GET', '/api/workflows');
+  test("GET /api/workflows returns workflow run list", async () => {
+    const { status, data } = await api("GET", "/api/workflows");
     expect(status).toBe(200);
-    expect(data).toHaveProperty('runs');
+    expect(data).toHaveProperty("runs");
     expect(Array.isArray(data.runs)).toBe(true);
     expect(data.runs.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('GET /api/workflows/:id returns a specific workflow run', async () => {
-    const { status, data } = await api('GET', `/api/workflows/${workflowRunId}`);
+  test("GET /api/workflows/:id returns a specific workflow run", async () => {
+    const { status, data } = await api(
+      "GET",
+      `/api/workflows/${workflowRunId}`,
+    );
     expect(status).toBe(200);
     expect(data.id).toBe(workflowRunId);
-    expect(data.workflowType).toBe('reply-workflow');
+    expect(data.workflowType).toBe("reply-workflow");
   });
 
-  test('GET /api/workflows/:id with bad ID returns 404', async () => {
-    const { status, data } = await api('GET', '/api/workflows/nonexistent-run-id');
+  test("GET /api/workflows/:id with bad ID returns 404", async () => {
+    const { status, data } = await api(
+      "GET",
+      "/api/workflows/nonexistent-run-id",
+    );
     expect(status).toBe(404);
     expect(data.error).toMatch(/not found/i);
   });
@@ -471,256 +508,268 @@ describe('Workflow Routes', () => {
 
 // ── Webhook Routes ───────────────────────────────────────────────────────────
 
-describe('Webhook Routes', () => {
-  test('POST /api/webhooks/generic creates a task from webhook', async () => {
-    const { status, data } = await api('POST', '/api/webhooks/generic', {
-      title: 'Webhook test event',
-      source: 'manual',
-      body: 'Event body content',
+describe("Webhook Routes", () => {
+  test("POST /api/webhooks/generic creates a task from webhook", async () => {
+    const { status, data } = await api("POST", "/api/webhooks/generic", {
+      title: "Webhook test event",
+      source: "manual",
+      body: "Event body content",
     });
     expect(status).toBe(200);
     expect(data.received).toBe(true);
-    expect(data).toHaveProperty('taskId');
+    expect(data).toHaveProperty("taskId");
   });
 
-  test('POST /api/webhooks/gmail creates a task from Gmail notification', async () => {
-    const { status, data } = await api('POST', '/api/webhooks/gmail', {
-      subject: 'New important email',
-      snippet: 'Hey, please review...',
-      messageId: 'msg-123',
+  test("POST /api/webhooks/gmail creates a task from Gmail notification", async () => {
+    const { status, data } = await api("POST", "/api/webhooks/gmail", {
+      subject: "New important email",
+      snippet: "Hey, please review...",
+      messageId: "msg-123",
     });
     expect(status).toBe(200);
     expect(data.received).toBe(true);
-    expect(data).toHaveProperty('taskId');
+    expect(data).toHaveProperty("taskId");
   });
 });
 
 // ── Calendar Routes ─────────────────────────────────────────────────────────
 
-describe('Calendar Routes', () => {
-  test('GET /api/calendar/events without OAuth returns 401', async () => {
-    const { status, data } = await api('GET', '/api/calendar/events');
+describe("Calendar Routes", () => {
+  test("GET /api/calendar/events without OAuth returns 401", async () => {
+    const { status, data } = await api("GET", "/api/calendar/events");
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 
-  test('POST /api/calendar/create without OAuth returns 401', async () => {
-    const { status, data } = await api('POST', '/api/calendar/create', {
-      summary: 'Test event',
-      start: '2026-03-10T10:00:00Z',
-      end: '2026-03-10T11:00:00Z',
+  test("POST /api/calendar/create without OAuth returns 401", async () => {
+    const { status, data } = await api("POST", "/api/calendar/create", {
+      summary: "Test event",
+      start: "2026-03-10T10:00:00Z",
+      end: "2026-03-10T11:00:00Z",
     });
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 });
 
 // ── X/Twitter Routes ────────────────────────────────────────────────────────
 
-describe('X/Twitter Routes', () => {
-  test('GET /api/x/timeline without API key returns 401', async () => {
-    const { status, data } = await api('GET', '/api/x/timeline');
+describe("X/Twitter Routes", () => {
+  test("GET /api/x/timeline without API key returns 401", async () => {
+    const { status, data } = await api("GET", "/api/x/timeline");
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 
-  test('POST /api/x/post without API key returns 401', async () => {
-    const { status, data } = await api('POST', '/api/x/post', {
-      text: 'Test tweet',
+  test("POST /api/x/post without API key returns 401", async () => {
+    const { status, data } = await api("POST", "/api/x/post", {
+      text: "Test tweet",
     });
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 
-  test('POST /api/x/reply without API key returns 401', async () => {
-    const { status, data } = await api('POST', '/api/x/reply', {
-      text: 'Test reply',
-      tweetId: 'tweet-123',
+  test("POST /api/x/reply without API key returns 401", async () => {
+    const { status, data } = await api("POST", "/api/x/reply", {
+      text: "Test reply",
+      tweetId: "tweet-123",
     });
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 
-  test('POST /api/x/dm without API key returns 401', async () => {
-    const { status, data } = await api('POST', '/api/x/dm', {
-      participantId: 'user-123',
-      text: 'Hello there',
+  test("POST /api/x/dm without API key returns 401", async () => {
+    const { status, data } = await api("POST", "/api/x/dm", {
+      participantId: "user-123",
+      text: "Hello there",
     });
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 });
 
 // ── Shopify Routes ──────────────────────────────────────────────────────────
 
-describe('Shopify Routes', () => {
-  test('GET /api/shopify/orders without credentials returns 401', async () => {
-    const { status, data } = await api('GET', '/api/shopify/orders');
+describe("Shopify Routes", () => {
+  test("GET /api/shopify/orders without credentials returns 401", async () => {
+    const { status, data } = await api("GET", "/api/shopify/orders");
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 
-  test('GET /api/shopify/products without credentials returns 401', async () => {
-    const { status, data } = await api('GET', '/api/shopify/products');
+  test("GET /api/shopify/products without credentials returns 401", async () => {
+    const { status, data } = await api("GET", "/api/shopify/products");
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 
-  test('GET /api/shopify/customers without credentials returns 401', async () => {
-    const { status, data } = await api('GET', '/api/shopify/customers');
+  test("GET /api/shopify/customers without credentials returns 401", async () => {
+    const { status, data } = await api("GET", "/api/shopify/customers");
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 
-  test('POST /api/shopify/process without credentials returns 401', async () => {
-    const { status, data } = await api('POST', '/api/shopify/process', {
-      orderId: 'order-123',
+  test("POST /api/shopify/process without credentials returns 401", async () => {
+    const { status, data } = await api("POST", "/api/shopify/process", {
+      orderId: "order-123",
     });
     expect(status).toBe(401);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
   });
 });
 
 // ── SPARK Chat & Memory Routes ──────────────────────────────────────────────
 
-describe('SPARK Chat — failure cases', () => {
-  test('POST /api/spark/chat with empty body returns 400', async () => {
-    const { status, data } = await api('POST', '/api/spark/chat', {});
+describe("SPARK Chat — failure cases", () => {
+  test("POST /api/spark/chat with empty body returns 400", async () => {
+    const { status, data } = await api("POST", "/api/spark/chat", {});
     expect(status).toBe(400);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/missing.*message/i);
   });
 
-  test('POST /api/spark/chat with non-string message returns 400', async () => {
-    const { status, data } = await api('POST', '/api/spark/chat', {
+  test("POST /api/spark/chat with non-string message returns 400", async () => {
+    const { status, data } = await api("POST", "/api/spark/chat", {
       message: 12345 as any,
     });
     expect(status).toBe(400);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/must be of type string/i);
   });
 
-  test('POST /api/spark/chat with valid message returns 200 with response, reasoning, suggestions', async () => {
-    const { status, data } = await api('POST', '/api/spark/chat', {
-      message: 'What are the current SPARK weights?',
+  test("POST /api/spark/chat with valid message returns 200 with response, reasoning, suggestions", async () => {
+    const { status, data } = await api("POST", "/api/spark/chat", {
+      message: "What are the current SPARK weights?",
     });
     expect(status).toBe(200);
-    expect(data).toHaveProperty('response');
-    expect(typeof data.response).toBe('string');
-    expect(data).toHaveProperty('reasoning');
+    expect(data).toHaveProperty("response");
+    expect(typeof data.response).toBe("string");
+    expect(data).toHaveProperty("reasoning");
     expect(Array.isArray(data.reasoning)).toBe(true);
-    expect(data).toHaveProperty('suggestions');
+    expect(data).toHaveProperty("suggestions");
     expect(Array.isArray(data.suggestions)).toBe(true);
-    expect(data).toHaveProperty('conversationId');
+    expect(data).toHaveProperty("conversationId");
   });
 
-  test('POST /api/spark/chat with conversationId continues conversation', async () => {
+  test("POST /api/spark/chat with conversationId continues conversation", async () => {
     // Start a conversation
-    const first = await api('POST', '/api/spark/chat', {
-      message: 'Tell me about email weights',
+    const first = await api("POST", "/api/spark/chat", {
+      message: "Tell me about email weights",
     });
     expect(first.status).toBe(200);
     const convId = first.data.conversationId;
     expect(convId).toBeTruthy();
 
     // Continue the same conversation
-    const second = await api('POST', '/api/spark/chat', {
-      message: 'What about calendar?',
+    const second = await api("POST", "/api/spark/chat", {
+      message: "What about calendar?",
       conversationId: convId,
     });
     expect(second.status).toBe(200);
     expect(second.data.conversationId).toBe(convId);
-    expect(second.data).toHaveProperty('response');
+    expect(second.data).toHaveProperty("response");
   });
 });
 
-describe('SPARK Memory — empty state', () => {
-  test('GET /api/spark/memory/tokens returns 200 with empty tokens array initially', async () => {
-    const { status, data } = await api('GET', '/api/spark/memory/tokens');
+describe("SPARK Memory — empty state", () => {
+  test("GET /api/spark/memory/tokens returns 200 with empty tokens array initially", async () => {
+    const { status, data } = await api("GET", "/api/spark/memory/tokens");
     expect(status).toBe(200);
-    expect(data).toHaveProperty('tokens');
+    expect(data).toHaveProperty("tokens");
     expect(Array.isArray(data.tokens)).toBe(true);
-    expect(data).toHaveProperty('count');
+    expect(data).toHaveProperty("count");
   });
 
-  test('GET /api/spark/memory/edges returns 200 with empty edges array initially', async () => {
-    const { status, data } = await api('GET', '/api/spark/memory/edges');
+  test("GET /api/spark/memory/edges returns 200 with empty edges array initially", async () => {
+    const { status, data } = await api("GET", "/api/spark/memory/edges");
     expect(status).toBe(200);
-    expect(data).toHaveProperty('edges');
+    expect(data).toHaveProperty("edges");
     expect(Array.isArray(data.edges)).toBe(true);
-    expect(data).toHaveProperty('count');
+    expect(data).toHaveProperty("count");
   });
 
-  test('GET /api/spark/memory/stats returns 200 with zero counts', async () => {
-    const { status, data } = await api('GET', '/api/spark/memory/stats');
+  test("GET /api/spark/memory/stats returns 200 with zero counts", async () => {
+    const { status, data } = await api("GET", "/api/spark/memory/stats");
     expect(status).toBe(200);
-    expect(data).toHaveProperty('totalTokens');
-    expect(data).toHaveProperty('activeTokens');
-    expect(data).toHaveProperty('archivedTokens');
-    expect(data).toHaveProperty('totalEdges');
-    expect(data).toHaveProperty('topicDocumentCount');
+    expect(data).toHaveProperty("totalTokens");
+    expect(data).toHaveProperty("activeTokens");
+    expect(data).toHaveProperty("archivedTokens");
+    expect(data).toHaveProperty("totalEdges");
+    expect(data).toHaveProperty("topicDocumentCount");
   });
 
-  test('GET /api/spark/memory/graph returns 200 with empty arrays', async () => {
-    const { status, data } = await api('GET', '/api/spark/memory/graph');
+  test("GET /api/spark/memory/graph returns 200 with empty arrays", async () => {
+    const { status, data } = await api("GET", "/api/spark/memory/graph");
     expect(status).toBe(200);
-    expect(data).toHaveProperty('tokens');
+    expect(data).toHaveProperty("tokens");
     expect(Array.isArray(data.tokens)).toBe(true);
-    expect(data).toHaveProperty('edges');
+    expect(data).toHaveProperty("edges");
     expect(Array.isArray(data.edges)).toBe(true);
-    expect(data).toHaveProperty('tokenCount');
-    expect(data).toHaveProperty('edgeCount');
+    expect(data).toHaveProperty("tokenCount");
+    expect(data).toHaveProperty("edgeCount");
   });
 
-  test('GET /api/spark/memory/tokens/:id with bad ID returns 404', async () => {
-    const { status, data } = await api('GET', '/api/spark/memory/tokens/nonexistent-token-id');
+  test("GET /api/spark/memory/tokens/:id with bad ID returns 404", async () => {
+    const { status, data } = await api(
+      "GET",
+      "/api/spark/memory/tokens/nonexistent-token-id",
+    );
     expect(status).toBe(404);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/not found/i);
   });
 });
 
-describe('SPARK Memory — reconstruction & maintenance', () => {
-  test('POST /api/spark/memory/reconstruct without query returns 400', async () => {
-    const { status, data } = await api('POST', '/api/spark/memory/reconstruct', {});
+describe("SPARK Memory — reconstruction & maintenance", () => {
+  test("POST /api/spark/memory/reconstruct without query returns 400", async () => {
+    const { status, data } = await api(
+      "POST",
+      "/api/spark/memory/reconstruct",
+      {},
+    );
     expect(status).toBe(400);
-    expect(data).toHaveProperty('error');
+    expect(data).toHaveProperty("error");
     expect(data.error).toMatch(/missing.*query/i);
   });
 
-  test('POST /api/spark/memory/reconstruct with valid query returns 200', async () => {
-    const { status, data } = await api('POST', '/api/spark/memory/reconstruct', {
-      query: 'email handling performance',
-    });
+  test("POST /api/spark/memory/reconstruct with valid query returns 200", async () => {
+    const { status, data } = await api(
+      "POST",
+      "/api/spark/memory/reconstruct",
+      {
+        query: "email handling performance",
+      },
+    );
     expect(status).toBe(200);
     // The reconstruct endpoint returns a context reconstruction result
     expect(data).toBeDefined();
   });
 
-  test('POST /api/spark/memory/maintenance returns 200', async () => {
-    const { status, data } = await api('POST', '/api/spark/memory/maintenance');
+  test("POST /api/spark/memory/maintenance returns 200", async () => {
+    const { status, data } = await api("POST", "/api/spark/memory/maintenance");
     expect(status).toBe(200);
     expect(data).toBeDefined();
   });
 });
 
-describe('SPARK Chat — generates spiral memory tokens', () => {
-  test('After chat, memory tokens should be created', async () => {
+describe("SPARK Chat — generates spiral memory tokens", () => {
+  test("After chat, memory tokens should be created", async () => {
     // Send a chat message that should trigger token creation via FeedbackIntegrator
-    const chatRes = await api('POST', '/api/spark/chat', {
-      message: 'Analyze the email connector performance trends and suggest improvements',
+    const chatRes = await api("POST", "/api/spark/chat", {
+      message:
+        "Analyze the email connector performance trends and suggest improvements",
     });
     expect(chatRes.status).toBe(200);
 
     // Now check that spiral memory tokens were generated
-    const tokenRes = await api('GET', '/api/spark/memory/tokens');
+    const tokenRes = await api("GET", "/api/spark/memory/tokens");
     expect(tokenRes.status).toBe(200);
     expect(tokenRes.data.tokens.length).toBeGreaterThan(0);
     expect(tokenRes.data.count).toBeGreaterThan(0);
   });
 
-  test('After chat, memory stats should show activeTokens > 0', async () => {
-    const { status, data } = await api('GET', '/api/spark/memory/stats');
+  test("After chat, memory stats should show activeTokens > 0", async () => {
+    const { status, data } = await api("GET", "/api/spark/memory/stats");
     expect(status).toBe(200);
     expect(data.activeTokens).toBeGreaterThan(0);
   });

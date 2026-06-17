@@ -8,10 +8,10 @@
  * POST   /api/workflows/:id/resume   Resume a paused workflow
  */
 
-import { createWorkflowRun, createStep } from '@ai-operations/shared-types';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
-import { stores } from '../storage';
+import { createWorkflowRun, createStep } from "@ai-operations/shared-types";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
+import { stores } from "../storage";
 
 // ── Route handlers ───────────────────────────────────────────────────────────
 
@@ -20,12 +20,14 @@ async function triggerWorkflow(ctx: any): Promise<void> {
   const { res, body } = ctx;
 
   if (!body.taskId || !body.workflowType) {
-    sendError(res, 400, 'Missing required fields: taskId, workflowType');
+    sendError(res, 400, "Missing required fields: taskId, workflowType");
     return;
   }
 
   const steps = Array.isArray(body.steps)
-    ? (body.steps as any[]).map((s: any) => createStep(s.connector, s.operation, s.input || {}))
+    ? (body.steps as any[]).map((s: any) =>
+        createStep(s.connector, s.operation, s.input || {}),
+      )
     : [];
 
   const run = createWorkflowRun(
@@ -42,8 +44,8 @@ async function triggerWorkflow(ctx: any): Promise<void> {
 async function listWorkflows(ctx: any): Promise<void> {
   const { res, query } = ctx;
 
-  const limit = parseInt(query.limit || '50', 10);
-  const offset = parseInt(query.offset || '0', 10);
+  const limit = parseInt(query.limit || "50", 10);
+  const offset = parseInt(query.offset || "0", 10);
 
   const result = stores.workflows.listRuns({
     taskId: query.taskId,
@@ -77,11 +79,11 @@ async function pauseWorkflow(ctx: any): Promise<void> {
     sendError(res, 404, `Workflow run not found: ${params.id}`);
     return;
   }
-  if (run.state !== 'running') {
+  if (run.state !== "running") {
     sendError(res, 400, `Cannot pause workflow in state: ${run.state}`);
     return;
   }
-  stores.workflows.updateRun(params.id, { state: 'paused' });
+  stores.workflows.updateRun(params.id, { state: "paused" });
   const updated = stores.workflows.getRun(params.id);
   sendJson(res, 200, updated);
 }
@@ -94,11 +96,11 @@ async function resumeWorkflow(ctx: any): Promise<void> {
     sendError(res, 404, `Workflow run not found: ${params.id}`);
     return;
   }
-  if (run.state !== 'paused') {
+  if (run.state !== "paused") {
     sendError(res, 400, `Cannot resume workflow in state: ${run.state}`);
     return;
   }
-  stores.workflows.updateRun(params.id, { state: 'running' });
+  stores.workflows.updateRun(params.id, { state: "running" });
   const updated = stores.workflows.getRun(params.id);
   sendJson(res, 200, updated);
 }
@@ -106,9 +108,9 @@ async function resumeWorkflow(ctx: any): Promise<void> {
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const workflowRoutes: Route[] = [
-  pathToRoute('POST', '/api/workflows', triggerWorkflow),
-  pathToRoute('GET', '/api/workflows', listWorkflows),
-  pathToRoute('GET', '/api/workflows/:id', getWorkflow),
-  pathToRoute('POST', '/api/workflows/:id/pause', pauseWorkflow),
-  pathToRoute('POST', '/api/workflows/:id/resume', resumeWorkflow),
+  pathToRoute("POST", "/api/workflows", triggerWorkflow),
+  pathToRoute("GET", "/api/workflows", listWorkflows),
+  pathToRoute("GET", "/api/workflows/:id", getWorkflow),
+  pathToRoute("POST", "/api/workflows/:id/pause", pauseWorkflow),
+  pathToRoute("POST", "/api/workflows/:id/resume", resumeWorkflow),
 ];

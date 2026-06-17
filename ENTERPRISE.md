@@ -6,11 +6,11 @@ AI Operations OS is designed for teams that need autonomous workflow orchestrati
 
 ## Deployment Modes
 
-| Mode | Description | Use Case |
-|------|-------------|----------|
-| **Single-node** | API + Worker + SQLite on one machine | Solo founders, small teams, dev/staging |
-| **Distributed** | API and Worker as separate processes, PostgreSQL | Teams needing horizontal scale |
-| **Air-gapped** | No outbound network; all LLM inference local (Ollama) | Regulated industries, on-prem |
+| Mode            | Description                                           | Use Case                                |
+| --------------- | ----------------------------------------------------- | --------------------------------------- |
+| **Single-node** | API + Worker + SQLite on one machine                  | Solo founders, small teams, dev/staging |
+| **Distributed** | API and Worker as separate processes, PostgreSQL      | Teams needing horizontal scale          |
+| **Air-gapped**  | No outbound network; all LLM inference local (Ollama) | Regulated industries, on-prem           |
 
 ### Single-node (default)
 
@@ -55,10 +55,10 @@ Set `OPS_API_KEY` to enforce authentication. In dev mode (no key set), all reque
 
 Connector credentials are managed via the OAuth2 flow:
 
-| Connector | Auth Method | Scopes Required |
-|-----------|-------------|-----------------|
-| Gmail | OAuth2 (Google) | `gmail.readonly`, `gmail.send`, `gmail.modify` |
-| Calendar | OAuth2 (Google) | `calendar.readonly`, `calendar.events` |
+| Connector   | Auth Method           | Scopes Required                                    |
+| ----------- | --------------------- | -------------------------------------------------- |
+| Gmail       | OAuth2 (Google)       | `gmail.readonly`, `gmail.send`, `gmail.modify`     |
+| Calendar    | OAuth2 (Google)       | `calendar.readonly`, `calendar.events`             |
 | X (Twitter) | Bearer token (API v2) | `tweet.read`, `tweet.write`, `dm.read`, `dm.write` |
 
 Credentials stored at `~/.ai-ops/credentials.json` with `0o600` permissions.
@@ -67,12 +67,12 @@ Credentials stored at `~/.ai-ops/credentials.json` with `0o600` permissions.
 
 Planned role model:
 
-| Role | Permissions |
-|------|-------------|
-| **Admin** | Full access, policy configuration, connector management |
-| **Operator** | View tasks, approve/deny actions, view audit trail |
-| **Viewer** | Read-only dashboard access |
-| **Connector** | Webhook-only access (for inbound events) |
+| Role          | Permissions                                             |
+| ------------- | ------------------------------------------------------- |
+| **Admin**     | Full access, policy configuration, connector management |
+| **Operator**  | View tasks, approve/deny actions, view audit trail      |
+| **Viewer**    | Read-only dashboard access                              |
+| **Connector** | Webhook-only access (for inbound events)                |
 
 ---
 
@@ -108,13 +108,13 @@ Receipts are hash-chained — each receipt's `prevHash` points to the previous r
 
 ### Compliance Mapping
 
-| Requirement | How AI Ops OS Addresses It |
-|-------------|---------------------------|
-| **SOC 2 CC6.1** (Logical access) | Bearer token auth, planned RBAC |
-| **SOC 2 CC7.2** (System monitoring) | Real-time SSE dashboard, audit trail |
-| **SOC 2 CC8.1** (Change management) | Policy versioning, signed receipts |
+| Requirement                            | How AI Ops OS Addresses It                           |
+| -------------------------------------- | ---------------------------------------------------- |
+| **SOC 2 CC6.1** (Logical access)       | Bearer token auth, planned RBAC                      |
+| **SOC 2 CC7.2** (System monitoring)    | Real-time SSE dashboard, audit trail                 |
+| **SOC 2 CC8.1** (Change management)    | Policy versioning, signed receipts                   |
 | **GDPR Art. 22** (Automated decisions) | Human-in-the-loop approval gate for write operations |
-| **ISO 27001 A.12.4** (Logging) | Hash-chained, tamper-evident audit log |
+| **ISO 27001 A.12.4** (Logging)         | Hash-chained, tamper-evident audit log               |
 
 ---
 
@@ -125,9 +125,9 @@ Policies control what runs autonomously vs. what requires human approval:
 ```typescript
 interface PolicyConfig {
   version: string;
-  defaultAutonomy: 'auto' | 'approve' | 'deny';
+  defaultAutonomy: "auto" | "approve" | "deny";
   rules: PolicyRule[];
-  timeWindows: TimeWindow[];   // Business hours enforcement
+  timeWindows: TimeWindow[]; // Business hours enforcement
   amountLimits: AmountLimit[]; // Financial thresholds
 }
 ```
@@ -155,10 +155,10 @@ All read operations are autonomous. All writes require approval. Deletes are blo
 
 ## Upgrade Policy
 
-| Channel | Cadence | Breaking Changes |
-|---------|---------|-----------------|
-| **Patch** (0.1.x) | As needed | Never |
-| **Minor** (0.x.0) | Monthly | Rare, with migration notes |
+| Channel           | Cadence   | Breaking Changes               |
+| ----------------- | --------- | ------------------------------ |
+| **Patch** (0.1.x) | As needed | Never                          |
+| **Minor** (0.x.0) | Monthly   | Rare, with migration notes     |
 | **Major** (x.0.0) | Quarterly | Possible, with migration guide |
 
 All releases include changelogs. Breaking changes are documented with before/after examples.
@@ -167,11 +167,11 @@ All releases include changelogs. Breaking changes are documented with before/aft
 
 ## Support
 
-| Tier | Response Time | Channel |
-|------|---------------|---------|
-| **Community** | Best effort | GitHub Issues |
-| **Priority** | 48 hours | alex@zanderpinkdesign.com |
-| **Enterprise** | SLA-backed | Contact for pricing |
+| Tier           | Response Time | Channel                   |
+| -------------- | ------------- | ------------------------- |
+| **Community**  | Best effort   | GitHub Issues             |
+| **Priority**   | 48 hours      | alex@zanderpinkdesign.com |
+| **Enterprise** | SLA-backed    | Contact for pricing       |
 
 ---
 

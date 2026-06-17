@@ -1,4 +1,4 @@
-import { randomUUID } from './uuid';
+import { randomUUID } from "./uuid";
 
 /**
  * WorkflowRun + WorkflowStep — Execution tracking for multi-step automations.
@@ -7,17 +7,22 @@ import { randomUUID } from './uuid';
  * through connectors (Gmail, Calendar, X, Shopify, etc.).
  */
 
-export type WorkflowState = 'queued' | 'running' | 'paused' | 'completed' | 'failed';
+export type WorkflowState =
+  | "queued"
+  | "running"
+  | "paused"
+  | "completed"
+  | "failed";
 
 export type StepStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'blocked'
-  | 'approved';
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "blocked"
+  | "approved";
 
-export type CordDecision = 'ALLOW' | 'CONTAIN' | 'CHALLENGE' | 'BLOCK';
+export type CordDecision = "ALLOW" | "CONTAIN" | "CHALLENGE" | "BLOCK";
 
 export interface WorkflowStep {
   /** Step identifier (UUID v4) */
@@ -83,7 +88,7 @@ export interface WorkflowRun {
 export function createWorkflowRun(
   taskId: string,
   workflowType: string,
-  steps: Omit<WorkflowStep, 'id' | 'status'>[],
+  steps: Omit<WorkflowStep, "id" | "status">[],
 ): WorkflowRun {
   return {
     id: randomUUID(),
@@ -92,9 +97,9 @@ export function createWorkflowRun(
     steps: steps.map((s) => ({
       ...s,
       id: randomUUID(),
-      status: 'pending' as const,
+      status: "pending" as const,
     })),
-    state: 'queued',
+    state: "queued",
     startedAt: new Date().toISOString(),
   };
 }
@@ -106,6 +111,6 @@ export function createStep(
   connector: string,
   operation: string,
   input: Record<string, unknown> = {},
-): Omit<WorkflowStep, 'id' | 'status'> {
+): Omit<WorkflowStep, "id" | "status"> {
   return { connector, operation, input };
 }

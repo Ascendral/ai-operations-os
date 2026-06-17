@@ -1,6 +1,6 @@
-import { BaseConnector, ConnectorConfig, ConnectorResult } from './base';
+import { BaseConnector, ConnectorConfig, ConnectorResult } from "./base";
 
-const X_API = 'https://api.x.com/2';
+const X_API = "https://api.x.com/2";
 
 /**
  * X (Twitter) connector — posts tweets, replies, likes, reposts,
@@ -26,10 +26,10 @@ export class XTwitterConnector extends BaseConnector {
     super({
       enabled: !!config?.credentials?.bearerToken,
       ...config,
-      name: config?.name ?? 'x-twitter',
+      name: config?.name ?? "x-twitter",
     });
-    this.bearerToken = config?.credentials?.bearerToken || '';
-    this.userId = config?.credentials?.userId || '';
+    this.bearerToken = config?.credentials?.bearerToken || "";
+    this.userId = config?.credentials?.userId || "";
   }
 
   /**
@@ -43,7 +43,15 @@ export class XTwitterConnector extends BaseConnector {
    * - `timeline` : Fetch the authenticated user's tweets
    */
   get supportedOperations(): string[] {
-    return ['post', 'reply', 'like', 'repost', 'dm_send', 'dm_read', 'timeline'];
+    return [
+      "post",
+      "reply",
+      "like",
+      "repost",
+      "dm_send",
+      "dm_read",
+      "timeline",
+    ];
   }
 
   /**
@@ -65,7 +73,10 @@ export class XTwitterConnector extends BaseConnector {
     input: Record<string, unknown>,
   ): Promise<ConnectorResult> {
     if (!this.bearerToken) {
-      return { success: false, error: 'No X/Twitter bearer token configured. Run setup first.' };
+      return {
+        success: false,
+        error: "No X/Twitter bearer token configured. Run setup first.",
+      };
     }
     if (!this.supportsOperation(operation)) {
       return { success: false, error: `Unsupported operation: ${operation}` };
@@ -73,14 +84,22 @@ export class XTwitterConnector extends BaseConnector {
 
     try {
       switch (operation) {
-        case 'post': return await this.postTweet(input);
-        case 'reply': return await this.replyToTweet(input);
-        case 'like': return await this.likeTweet(input);
-        case 'repost': return await this.repostTweet(input);
-        case 'dm_send': return await this.sendDm(input);
-        case 'dm_read': return await this.readDms(input);
-        case 'timeline': return await this.getTimeline(input);
-        default: return { success: false, error: `Unknown operation: ${operation}` };
+        case "post":
+          return await this.postTweet(input);
+        case "reply":
+          return await this.replyToTweet(input);
+        case "like":
+          return await this.likeTweet(input);
+        case "repost":
+          return await this.repostTweet(input);
+        case "dm_send":
+          return await this.sendDm(input);
+        case "dm_read":
+          return await this.readDms(input);
+        case "timeline":
+          return await this.getTimeline(input);
+        default:
+          return { success: false, error: `Unknown operation: ${operation}` };
       }
     } catch (err) {
       return {
@@ -103,12 +122,14 @@ export class XTwitterConnector extends BaseConnector {
     if (!this.bearerToken) return false;
     try {
       // Try the /users/me endpoint (works with user-context tokens)
-      const res = await this.xFetch('/users/me');
+      const res = await this.xFetch("/users/me");
       if (res.ok) return true;
 
       // If /users/me fails (e.g. app-only token), try a simple search-like
       // endpoint to verify the token is at least valid
-      const fallback = await this.xFetch('/tweets/search/recent?query=test&max_results=10');
+      const fallback = await this.xFetch(
+        "/tweets/search/recent?query=test&max_results=10",
+      );
       return fallback.ok;
     } catch {
       return false;
@@ -118,14 +139,16 @@ export class XTwitterConnector extends BaseConnector {
   // ── Operations ────────────────────────────────────────────────────────
 
   /** Post a new tweet */
-  private async postTweet(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async postTweet(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const text = input.text as string;
     if (!text) {
-      return { success: false, error: 'text is required' };
+      return { success: false, error: "text is required" };
     }
 
-    const res = await this.xFetch('/tweets', {
-      method: 'POST',
+    const res = await this.xFetch("/tweets", {
+      method: "POST",
       body: JSON.stringify({ text }),
     });
     if (!res.ok) return this.apiError(res);
@@ -141,15 +164,17 @@ export class XTwitterConnector extends BaseConnector {
   }
 
   /** Reply to an existing tweet */
-  private async replyToTweet(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async replyToTweet(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const text = input.text as string;
     const tweetId = input.tweetId as string;
     if (!text || !tweetId) {
-      return { success: false, error: 'text and tweetId are required' };
+      return { success: false, error: "text and tweetId are required" };
     }
 
-    const res = await this.xFetch('/tweets', {
-      method: 'POST',
+    const res = await this.xFetch("/tweets", {
+      method: "POST",
       body: JSON.stringify({
         text,
         reply: { in_reply_to_tweet_id: tweetId },
@@ -169,19 +194,24 @@ export class XTwitterConnector extends BaseConnector {
   }
 
   /** Like a tweet */
-  private async likeTweet(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async likeTweet(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const tweetId = input.tweetId as string;
     if (!tweetId) {
-      return { success: false, error: 'tweetId is required' };
+      return { success: false, error: "tweetId is required" };
     }
 
     const uid = (input.userId as string) || this.userId;
     if (!uid) {
-      return { success: false, error: 'userId is required (set in credentials or pass as input)' };
+      return {
+        success: false,
+        error: "userId is required (set in credentials or pass as input)",
+      };
     }
 
     const res = await this.xFetch(`/users/${encodeURIComponent(uid)}/likes`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ tweet_id: tweetId }),
     });
     if (!res.ok) return this.apiError(res);
@@ -197,21 +227,29 @@ export class XTwitterConnector extends BaseConnector {
   }
 
   /** Repost (retweet) a tweet */
-  private async repostTweet(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async repostTweet(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const tweetId = input.tweetId as string;
     if (!tweetId) {
-      return { success: false, error: 'tweetId is required' };
+      return { success: false, error: "tweetId is required" };
     }
 
     const uid = (input.userId as string) || this.userId;
     if (!uid) {
-      return { success: false, error: 'userId is required (set in credentials or pass as input)' };
+      return {
+        success: false,
+        error: "userId is required (set in credentials or pass as input)",
+      };
     }
 
-    const res = await this.xFetch(`/users/${encodeURIComponent(uid)}/retweets`, {
-      method: 'POST',
-      body: JSON.stringify({ tweet_id: tweetId }),
-    });
+    const res = await this.xFetch(
+      `/users/${encodeURIComponent(uid)}/retweets`,
+      {
+        method: "POST",
+        body: JSON.stringify({ tweet_id: tweetId }),
+      },
+    );
     if (!res.ok) return this.apiError(res);
 
     const data = (await res.json()) as any;
@@ -229,17 +267,19 @@ export class XTwitterConnector extends BaseConnector {
    *
    * Note: The DM API requires elevated access on X API v2.
    */
-  private async sendDm(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async sendDm(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const participantId = input.participantId as string;
     const text = input.text as string;
     if (!participantId || !text) {
-      return { success: false, error: 'participantId and text are required' };
+      return { success: false, error: "participantId and text are required" };
     }
 
     const res = await this.xFetch(
       `/dm_conversations/with/${encodeURIComponent(participantId)}/messages`,
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ text }),
       },
     );
@@ -260,12 +300,14 @@ export class XTwitterConnector extends BaseConnector {
    *
    * Note: The DM API requires elevated access on X API v2.
    */
-  private async readDms(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async readDms(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const maxResults = (input.maxResults as number) || 20;
 
     const params = new URLSearchParams({
-      event_types: 'MessageCreate',
-      'dm_event.fields': 'id,text,sender_id,created_at,dm_conversation_id',
+      event_types: "MessageCreate",
+      "dm_event.fields": "id,text,sender_id,created_at,dm_conversation_id",
       max_results: String(Math.min(maxResults, 100)),
     });
 
@@ -292,20 +334,27 @@ export class XTwitterConnector extends BaseConnector {
   }
 
   /** Fetch tweets from a user's timeline */
-  private async getTimeline(input: Record<string, unknown>): Promise<ConnectorResult> {
+  private async getTimeline(
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     const uid = (input.userId as string) || this.userId;
     if (!uid) {
-      return { success: false, error: 'userId is required (set in credentials or pass as input)' };
+      return {
+        success: false,
+        error: "userId is required (set in credentials or pass as input)",
+      };
     }
 
     const maxResults = (input.maxResults as number) || 10;
 
     const params = new URLSearchParams({
       max_results: String(Math.min(Math.max(maxResults, 5), 100)),
-      'tweet.fields': 'id,text,created_at,public_metrics,author_id',
+      "tweet.fields": "id,text,created_at,public_metrics,author_id",
     });
 
-    const res = await this.xFetch(`/users/${encodeURIComponent(uid)}/tweets?${params}`);
+    const res = await this.xFetch(
+      `/users/${encodeURIComponent(uid)}/tweets?${params}`,
+    );
     if (!res.ok) return this.apiError(res);
 
     const data = (await res.json()) as any;
@@ -333,8 +382,8 @@ export class XTwitterConnector extends BaseConnector {
     return fetch(`${X_API}${path}`, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.bearerToken}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.bearerToken}`,
+        "Content-Type": "application/json",
         ...((options?.headers as Record<string, string>) || {}),
       },
     });
@@ -347,12 +396,18 @@ export class XTwitterConnector extends BaseConnector {
       // X API v2 returns errors in different shapes
       if (data.detail) {
         msg = data.detail;
-      } else if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
-        msg = data.errors.map((e: any) => e.message || e.detail).join('; ');
+      } else if (
+        data.errors &&
+        Array.isArray(data.errors) &&
+        data.errors.length > 0
+      ) {
+        msg = data.errors.map((e: any) => e.message || e.detail).join("; ");
       } else if (data.title) {
         msg = `${data.title}: ${data.detail || res.status}`;
       }
-    } catch { /* ignore parse errors */ }
+    } catch {
+      /* ignore parse errors */
+    }
     return { success: false, error: msg };
   }
 }

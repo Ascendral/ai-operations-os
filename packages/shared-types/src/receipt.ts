@@ -5,7 +5,7 @@
  * for tamper detection. Auditors can verify the chain independently.
  */
 
-import * as crypto from 'crypto';
+import * as crypto from "crypto";
 
 export interface ActionReceipt {
   /** Receipt identifier (UUID v4) */
@@ -46,12 +46,14 @@ export interface ActionReceipt {
 }
 
 /** Genesis hash for the first receipt in a chain */
-export const GENESIS_HASH = 'genesis';
+export const GENESIS_HASH = "genesis";
 
 /**
  * Compute the content hash for a receipt (excludes hash and signature fields).
  */
-export function computeReceiptHash(receipt: Omit<ActionReceipt, 'hash' | 'signature'>): string {
+export function computeReceiptHash(
+  receipt: Omit<ActionReceipt, "hash" | "signature">,
+): string {
   const payload = JSON.stringify({
     id: receipt.id,
     actionId: receipt.actionId,
@@ -64,14 +66,14 @@ export function computeReceiptHash(receipt: Omit<ActionReceipt, 'hash' | 'signat
     timestamp: receipt.timestamp,
     prevHash: receipt.prevHash,
   });
-  return crypto.createHash('sha256').update(payload).digest('hex');
+  return crypto.createHash("sha256").update(payload).digest("hex");
 }
 
 /**
  * Sign a receipt hash with an HMAC key.
  */
 export function signReceipt(hash: string, key: string): string {
-  return crypto.createHmac('sha256', key).update(hash).digest('hex');
+  return crypto.createHmac("sha256", key).update(hash).digest("hex");
 }
 
 /**
@@ -95,10 +97,18 @@ export function verifyReceiptChain(
   for (let i = 0; i < receipts.length; i++) {
     const r = receipts[i];
     if (r.prevHash !== prevHash) {
-      return { valid: false, brokenAt: i, reason: `Chain break at index ${i}: expected prevHash ${prevHash}, got ${r.prevHash}` };
+      return {
+        valid: false,
+        brokenAt: i,
+        reason: `Chain break at index ${i}: expected prevHash ${prevHash}, got ${r.prevHash}`,
+      };
     }
     if (!verifyReceipt(r, key)) {
-      return { valid: false, brokenAt: i, reason: `Invalid signature at index ${i}` };
+      return {
+        valid: false,
+        brokenAt: i,
+        reason: `Invalid signature at index ${i}`,
+      };
     }
     prevHash = r.hash;
   }

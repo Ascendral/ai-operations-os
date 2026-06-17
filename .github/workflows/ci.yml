@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: 'npm'
+          cache: "npm"
 
       - run: npm ci
       - run: npx turbo build
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
 
       - run: npm ci
       - run: npx turbo build
@@ -43,7 +43,7 @@ jobs:
       - name: Start API server
         run: node apps/ops-api/dist/server.js &
         env:
-          OPS_PORT: '3100'
+          OPS_PORT: "3100"
 
       - name: Wait for server
         run: |
@@ -86,7 +86,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
       - run: npm ci
       - run: npx turbo build
       - name: Run tests with coverage
@@ -104,6 +104,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
       - run: npm ci
       - run: npx turbo build

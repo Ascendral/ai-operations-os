@@ -8,11 +8,11 @@
  * evaluation logic, keeping the API layer thin.
  */
 
-import { CordSafetyGate } from '@ai-operations/cord-adapter';
+import { CordSafetyGate } from "@ai-operations/cord-adapter";
 
 export interface GateResult {
   allowed: boolean;
-  decision: 'ALLOW' | 'CONTAIN' | 'CHALLENGE' | 'BLOCK';
+  decision: "ALLOW" | "CONTAIN" | "CHALLENGE" | "BLOCK";
   score: number;
   reasons: string[];
   requiresApproval: boolean;
@@ -35,10 +35,10 @@ export function evaluateAction(
   const result = safetyGate.evaluateAction(connector, operation, input);
 
   return {
-    allowed: result.decision !== 'BLOCK',
+    allowed: result.decision !== "BLOCK",
     decision: result.decision,
     score: result.score,
     reasons: result.reasons,
-    requiresApproval: result.decision === 'CHALLENGE' || result.hardBlock,
+    requiresApproval: result.decision === "CHALLENGE" || result.hardBlock,
   };
 }

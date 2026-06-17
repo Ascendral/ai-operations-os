@@ -2,7 +2,9 @@
   "name": "@ai-operations/cli",
   "version": "0.1.0",
   "description": "CLI for AI Operations OS",
-  "bin": { "ai-ops": "./dist/bin.js" },
+  "bin": {
+    "ai-ops": "./dist/bin.js"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

@@ -5,8 +5,8 @@
  * and workflows are scoped to the user who created them via the `owner` field.
  */
 
-import { randomUUID, randomBytes } from 'node:crypto';
-import type BetterSqlite3 from 'better-sqlite3';
+import { randomUUID, randomBytes } from "node:crypto";
+import type BetterSqlite3 from "better-sqlite3";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,7 +18,7 @@ export interface User {
   name: string;
   apiKey: string;
   passwordHash?: string;
-  role: 'admin' | 'operator' | 'viewer';
+  role: "admin" | "operator" | "viewer";
   createdAt: string;
   lastLoginAt?: string;
   settings: Record<string, unknown>;
@@ -28,7 +28,7 @@ export type CreateUserInput = {
   email: string;
   name: string;
   passwordHash?: string;
-  role?: 'admin' | 'operator' | 'viewer';
+  role?: "admin" | "operator" | "viewer";
   settings?: Record<string, unknown>;
 };
 
@@ -67,7 +67,7 @@ export class UserStore {
 
   /** Generate a secure API key. */
   static generateApiKey(): string {
-    return `aops_${randomBytes(32).toString('hex')}`;
+    return `aops_${randomBytes(32).toString("hex")}`;
   }
 
   /** Create a new user with a generated API key. */
@@ -78,7 +78,7 @@ export class UserStore {
       name: input.name,
       apiKey: UserStore.generateApiKey(),
       passwordHash: input.passwordHash,
-      role: input.role ?? 'operator',
+      role: input.role ?? "operator",
       createdAt: new Date().toISOString(),
       settings: input.settings ?? {},
     };
@@ -105,14 +105,14 @@ export class UserStore {
   /** Update a user's password hash. */
   setPasswordHash(id: string, passwordHash: string): void {
     this.db
-      .prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+      .prepare("UPDATE users SET password_hash = ? WHERE id = ?")
       .run(passwordHash, id);
   }
 
   /** Look up a user by API key. Returns undefined if not found. */
   getByApiKey(apiKey: string): User | undefined {
     const row = this.db
-      .prepare('SELECT * FROM users WHERE api_key = ?')
+      .prepare("SELECT * FROM users WHERE api_key = ?")
       .get(apiKey) as Record<string, unknown> | undefined;
 
     if (!row) return undefined;
@@ -121,9 +121,9 @@ export class UserStore {
 
   /** Look up a user by ID. */
   get(id: string): User | undefined {
-    const row = this.db
-      .prepare('SELECT * FROM users WHERE id = ?')
-      .get(id) as Record<string, unknown> | undefined;
+    const row = this.db.prepare("SELECT * FROM users WHERE id = ?").get(id) as
+      | Record<string, unknown>
+      | undefined;
 
     if (!row) return undefined;
     return this.rowToUser(row);
@@ -132,7 +132,7 @@ export class UserStore {
   /** Look up a user by email. */
   getByEmail(email: string): User | undefined {
     const row = this.db
-      .prepare('SELECT * FROM users WHERE email = ?')
+      .prepare("SELECT * FROM users WHERE email = ?")
       .get(email) as Record<string, unknown> | undefined;
 
     if (!row) return undefined;
@@ -142,7 +142,7 @@ export class UserStore {
   /** List all users. */
   list(): User[] {
     const rows = this.db
-      .prepare('SELECT * FROM users ORDER BY created_at DESC')
+      .prepare("SELECT * FROM users ORDER BY created_at DESC")
       .all() as Record<string, unknown>[];
 
     return rows.map((r) => this.rowToUser(r));
@@ -151,7 +151,7 @@ export class UserStore {
   /** Update last login timestamp. */
   recordLogin(id: string): void {
     this.db
-      .prepare('UPDATE users SET last_login_at = ? WHERE id = ?')
+      .prepare("UPDATE users SET last_login_at = ? WHERE id = ?")
       .run(new Date().toISOString(), id);
   }
 
@@ -162,26 +162,25 @@ export class UserStore {
 
     const newKey = UserStore.generateApiKey();
     this.db
-      .prepare('UPDATE users SET api_key = ? WHERE id = ?')
+      .prepare("UPDATE users SET api_key = ? WHERE id = ?")
       .run(newKey, id);
 
     return newKey;
   }
 
   /** Update user role. */
-  updateRole(id: string, role: 'admin' | 'operator' | 'viewer'): User | undefined {
-    this.db
-      .prepare('UPDATE users SET role = ? WHERE id = ?')
-      .run(role, id);
+  updateRole(
+    id: string,
+    role: "admin" | "operator" | "viewer",
+  ): User | undefined {
+    this.db.prepare("UPDATE users SET role = ? WHERE id = ?").run(role, id);
 
     return this.get(id);
   }
 
   /** Delete a user. */
   delete(id: string): boolean {
-    const result = this.db
-      .prepare('DELETE FROM users WHERE id = ?')
-      .run(id);
+    const result = this.db.prepare("DELETE FROM users WHERE id = ?").run(id);
 
     return result.changes > 0;
   }
@@ -189,7 +188,7 @@ export class UserStore {
   /** Count total users. */
   count(): number {
     const row = this.db
-      .prepare('SELECT COUNT(*) as count FROM users')
+      .prepare("SELECT COUNT(*) as count FROM users")
       .get() as { count: number };
 
     return row.count;
@@ -206,10 +205,10 @@ export class UserStore {
       name: row.name as string,
       apiKey: row.api_key as string,
       passwordHash: (row.password_hash as string) || undefined,
-      role: row.role as 'admin' | 'operator' | 'viewer',
+      role: row.role as "admin" | "operator" | "viewer",
       createdAt: row.created_at as string,
       lastLoginAt: (row.last_login_at as string) || undefined,
-      settings: JSON.parse((row.settings as string) || '{}'),
+      settings: JSON.parse((row.settings as string) || "{}"),
     };
   }
 }

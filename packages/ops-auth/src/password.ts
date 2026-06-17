@@ -6,7 +6,7 @@
  * Zero external dependencies.
  */
 
-import * as crypto from 'node:crypto';
+import * as crypto from "node:crypto";
 
 /** Length of the derived key in bytes. */
 const KEY_LENGTH = 64;
@@ -16,9 +16,9 @@ const SALT_LENGTH = 16;
 
 /** scrypt cost parameters — tuned for security while keeping hashing under 100ms. */
 const SCRYPT_OPTIONS: crypto.ScryptOptions = {
-  N: 16384,      // CPU/memory cost
-  r: 8,          // Block size
-  p: 1,          // Parallelization
+  N: 16384, // CPU/memory cost
+  r: 8, // Block size
+  p: 1, // Parallelization
   maxmem: 128 * 16384 * 8 * 2, // 32 MiB
 };
 
@@ -30,8 +30,13 @@ const SCRYPT_OPTIONS: crypto.ScryptOptions = {
  */
 export function hashPassword(password: string): string {
   const salt = crypto.randomBytes(SALT_LENGTH);
-  const derivedKey = crypto.scryptSync(password, salt, KEY_LENGTH, SCRYPT_OPTIONS);
-  return `${salt.toString('hex')}:${derivedKey.toString('hex')}`;
+  const derivedKey = crypto.scryptSync(
+    password,
+    salt,
+    KEY_LENGTH,
+    SCRYPT_OPTIONS,
+  );
+  return `${salt.toString("hex")}:${derivedKey.toString("hex")}`;
 }
 
 /**
@@ -42,12 +47,17 @@ export function hashPassword(password: string): string {
  * @returns true if password matches
  */
 export function verifyPassword(password: string, hash: string): boolean {
-  const [saltHex, keyHex] = hash.split(':');
+  const [saltHex, keyHex] = hash.split(":");
   if (!saltHex || !keyHex) return false;
 
-  const salt = Buffer.from(saltHex, 'hex');
-  const storedKey = Buffer.from(keyHex, 'hex');
-  const derivedKey = crypto.scryptSync(password, salt, KEY_LENGTH, SCRYPT_OPTIONS);
+  const salt = Buffer.from(saltHex, "hex");
+  const storedKey = Buffer.from(keyHex, "hex");
+  const derivedKey = crypto.scryptSync(
+    password,
+    salt,
+    KEY_LENGTH,
+    SCRYPT_OPTIONS,
+  );
 
   return crypto.timingSafeEqual(derivedKey, storedKey);
 }

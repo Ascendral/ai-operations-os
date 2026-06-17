@@ -7,14 +7,14 @@
  * GET    /api/approvals/stream       SSE stream of new approval requests
  */
 
-import type { Approval, ApprovalDecision } from '@ai-operations/shared-types';
-import { createApproval } from '@ai-operations/shared-types';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
-import { stores } from '../storage';
-import { resolvePendingApproval } from '../middleware/spark-lifecycle';
-import { validateBody, approvalDecisionSchema } from '../middleware/validate';
-import type * as http from 'http';
+import type { Approval, ApprovalDecision } from "@ai-operations/shared-types";
+import { createApproval } from "@ai-operations/shared-types";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
+import { stores } from "../storage";
+import { resolvePendingApproval } from "../middleware/spark-lifecycle";
+import { validateBody, approvalDecisionSchema } from "../middleware/validate";
+import type * as http from "http";
 
 // SSE subscribers for real-time updates
 const sseClients = new Set<http.ServerResponse>();
@@ -39,11 +39,13 @@ async function listApprovals(ctx: any): Promise<void> {
   let result: Approval[];
 
   // By default, show only pending (undecided) approvals
-  if (query.status === 'all') {
+  if (query.status === "all") {
     result = stores.approvals.listAll({ risk: query.risk });
-  } else if (query.status === 'decided') {
+  } else if (query.status === "decided") {
     // Get all and filter to decided ones
-    result = stores.approvals.listAll({ risk: query.risk }).filter((a: Approval) => a.decision !== undefined);
+    result = stores.approvals
+      .listAll({ risk: query.risk })
+      .filter((a: Approval) => a.decision !== undefined);
   } else {
     result = stores.approvals.listPending();
     // Apply risk filter on pending if needed
@@ -92,18 +94,20 @@ async function decideApproval(ctx: any): Promise<void> {
 
   const decision = body.decision as ApprovalDecision;
 
-  const decidedBy = (body.decidedBy as string) || 'user';
+  const decidedBy = (body.decidedBy as string) || "user";
 
   stores.approvals.decide(
     params.id,
     decision,
     decidedBy,
-    decision === 'modified' ? (body.modifications as Record<string, unknown>) : undefined,
+    decision === "modified"
+      ? (body.modifications as Record<string, unknown>)
+      : undefined,
   );
 
-  stores.audit.log('approval.decided', {
+  stores.audit.log("approval.decided", {
     actorId: decidedBy,
-    resourceType: 'approval',
+    resourceType: "approval",
     resourceId: params.id,
     details: { decision, taskId: approval.taskId, risk: approval.risk },
   });
@@ -115,18 +119,20 @@ async function decideApproval(ctx: any): Promise<void> {
   const updated = stores.approvals.get(params.id);
   sendJson(res, 200, {
     ...updated,
-    spark: sparkResult ? {
-      episode: sparkResult.episode,
-      insights: sparkResult.insights,
-      learned: true,
-    } : undefined,
+    spark: sparkResult
+      ? {
+          episode: sparkResult.episode,
+          insights: sparkResult.insights,
+          learned: true,
+        }
+      : undefined,
   });
 }
 
 /** Get approval history (decided approvals) */
 async function getApprovalHistory(ctx: any): Promise<void> {
   const { res, query } = ctx;
-  const limit = parseInt(query.limit || '50', 10);
+  const limit = parseInt(query.limit || "50", 10);
   const allApprovals = stores.approvals.listAll({});
   const decided = allApprovals
     .filter((a: Approval) => a.decision !== undefined)
@@ -150,7 +156,8 @@ async function getApprovalCount(ctx: any): Promise<void> {
   const allApprovals = stores.approvals.listAll({});
   sendJson(res, 200, {
     pending,
-    decided: allApprovals.filter((a: Approval) => a.decision !== undefined).length,
+    decided: allApprovals.filter((a: Approval) => a.decision !== undefined)
+      .length,
     total: allApprovals.length,
   });
 }
@@ -160,17 +167,17 @@ async function streamApprovals(ctx: any): Promise<void> {
   const { res } = ctx;
 
   res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "Access-Control-Allow-Origin": "*",
   });
 
-  res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+  res.write(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
 
   sseClients.add(res);
 
-  res.on('close', () => {
+  res.on("close", () => {
     sseClients.delete(res);
   });
 }
@@ -183,7 +190,7 @@ async function streamApprovals(ctx: any): Promise<void> {
 export function requestApproval(
   actionId: string,
   taskId: string,
-  risk: 'low' | 'medium' | 'high' | 'critical',
+  risk: "low" | "medium" | "high" | "critical",
   reason: string,
   preview: string,
 ): Approval {
@@ -212,10 +219,10 @@ export async function waitForDecision(
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const approvalRoutes: Route[] = [
-  pathToRoute('GET', '/api/approvals', listApprovals),
-  pathToRoute('GET', '/api/approvals/history', getApprovalHistory),
-  pathToRoute('GET', '/api/approvals/count', getApprovalCount),
-  pathToRoute('GET', '/api/approvals/stream', streamApprovals),
-  pathToRoute('GET', '/api/approvals/:id', getApproval),
-  pathToRoute('POST', '/api/approvals/:id/decide', decideApproval),
+  pathToRoute("GET", "/api/approvals", listApprovals),
+  pathToRoute("GET", "/api/approvals/history", getApprovalHistory),
+  pathToRoute("GET", "/api/approvals/count", getApprovalCount),
+  pathToRoute("GET", "/api/approvals/stream", streamApprovals),
+  pathToRoute("GET", "/api/approvals/:id", getApproval),
+  pathToRoute("POST", "/api/approvals/:id/decide", decideApproval),
 ];

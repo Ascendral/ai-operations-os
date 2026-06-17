@@ -7,8 +7,12 @@
  * is returned.
  */
 
-import type { PolicyConfig, PolicyRule, AutonomyLevel } from '@ai-operations/shared-types';
-import type { RiskLevel } from '@ai-operations/shared-types';
+import type {
+  PolicyConfig,
+  PolicyRule,
+  AutonomyLevel,
+} from "@ai-operations/shared-types";
+import type { RiskLevel } from "@ai-operations/shared-types";
 
 /** Context provided when evaluating a rule. */
 export interface EvaluationContext {
@@ -87,8 +91,8 @@ export class RuleEngine {
         context.amount > rule.maxAmount
       ) {
         return {
-          autonomy: 'deny',
-          risk: rule.risk ?? 'high',
+          autonomy: "deny",
+          risk: rule.risk ?? "high",
           matchedRule: rule,
           reason: `Amount $${context.amount} exceeds limit of $${rule.maxAmount} (rule: ${rule.id})`,
         };
@@ -96,7 +100,7 @@ export class RuleEngine {
 
       return {
         autonomy: rule.action,
-        risk: rule.risk ?? 'low',
+        risk: rule.risk ?? "low",
         matchedRule: rule,
         reason: `Matched rule "${rule.id}": ${rule.description}`,
       };
@@ -105,7 +109,7 @@ export class RuleEngine {
     // No rules matched — fall back to default
     return {
       autonomy: this.config.defaultAutonomy,
-      risk: 'low',
+      risk: "low",
       reason: `No matching rule found; using default autonomy: ${this.config.defaultAutonomy}`,
     };
   }
@@ -125,19 +129,35 @@ export class RuleEngine {
   ): boolean {
     const { match } = rule;
 
-    if (match.connector && match.connector !== '*' && match.connector !== connector) {
+    if (
+      match.connector &&
+      match.connector !== "*" &&
+      match.connector !== connector
+    ) {
       return false;
     }
 
-    if (match.operation && match.operation !== '*' && match.operation !== operation) {
+    if (
+      match.operation &&
+      match.operation !== "*" &&
+      match.operation !== operation
+    ) {
       return false;
     }
 
-    if (match.source && match.source !== '*' && match.source !== context?.source) {
+    if (
+      match.source &&
+      match.source !== "*" &&
+      match.source !== context?.source
+    ) {
       return false;
     }
 
-    if (match.intent && match.intent !== '*' && match.intent !== context?.intent) {
+    if (
+      match.intent &&
+      match.intent !== "*" &&
+      match.intent !== context?.intent
+    ) {
       return false;
     }
 
@@ -150,7 +170,9 @@ export class RuleEngine {
    * @param timeWindow - The time window constraints from the rule.
    * @returns True if the current time is within the allowed window.
    */
-  private isWithinTimeWindow(timeWindow: NonNullable<PolicyRule['timeWindow']>): boolean {
+  private isWithinTimeWindow(
+    timeWindow: NonNullable<PolicyRule["timeWindow"]>,
+  ): boolean {
     const now = new Date();
 
     // Resolve current time in the specified timezone, or system default
@@ -158,21 +180,29 @@ export class RuleEngine {
     let currentDay: number;
 
     if (timeWindow.timezone) {
-      const formatter = new Intl.DateTimeFormat('en-US', {
+      const formatter = new Intl.DateTimeFormat("en-US", {
         timeZone: timeWindow.timezone,
-        hour: 'numeric',
+        hour: "numeric",
         hour12: false,
-        weekday: 'short',
+        weekday: "short",
       });
       const parts = formatter.formatToParts(now);
-      const hourPart = parts.find((p) => p.type === 'hour');
-      const dayPart = parts.find((p) => p.type === 'weekday');
+      const hourPart = parts.find((p) => p.type === "hour");
+      const dayPart = parts.find((p) => p.type === "weekday");
 
       currentHour = hourPart ? parseInt(hourPart.value, 10) : now.getHours();
       const dayMap: Record<string, number> = {
-        Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+        Sun: 0,
+        Mon: 1,
+        Tue: 2,
+        Wed: 3,
+        Thu: 4,
+        Fri: 5,
+        Sat: 6,
       };
-      currentDay = dayPart ? (dayMap[dayPart.value] ?? now.getDay()) : now.getDay();
+      currentDay = dayPart
+        ? (dayMap[dayPart.value] ?? now.getDay())
+        : now.getDay();
     } else {
       currentHour = now.getHours();
       currentDay = now.getDay();
@@ -184,7 +214,10 @@ export class RuleEngine {
     }
 
     // Check hour range
-    if (timeWindow.startHour !== undefined && currentHour < timeWindow.startHour) {
+    if (
+      timeWindow.startHour !== undefined &&
+      currentHour < timeWindow.startHour
+    ) {
       return false;
     }
     if (timeWindow.endHour !== undefined && currentHour >= timeWindow.endHour) {

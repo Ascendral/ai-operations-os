@@ -8,14 +8,14 @@
  * POST   /api/webhooks/generic     Generic webhook (custom integrations)
  */
 
-import { randomUUID } from 'node:crypto';
-import { createTask } from '@ai-operations/shared-types';
-import type { TaskSource } from '@ai-operations/shared-types';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
-import { createLogger } from '@ai-operations/ops-core';
+import { randomUUID } from "node:crypto";
+import { createTask } from "@ai-operations/shared-types";
+import type { TaskSource } from "@ai-operations/shared-types";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
+import { createLogger } from "@ai-operations/ops-core";
 
-const log = createLogger('webhooks');
+const log = createLogger("webhooks");
 
 // ── Webhook event log ────────────────────────────────────────────────────────
 
@@ -37,15 +37,15 @@ async function handleGmailWebhook(ctx: any): Promise<void> {
 
   const event: WebhookEvent = {
     id: randomUUID(),
-    source: 'gmail',
+    source: "gmail",
     receivedAt: new Date().toISOString(),
     payload: body,
   };
 
   // Create a task from the webhook
   const task = createTask({
-    source: 'email',
-    title: (body.subject as string) || 'New email received',
+    source: "email",
+    title: (body.subject as string) || "New email received",
     body: (body.snippet as string) || undefined,
     sourceId: (body.messageId as string) || undefined,
     metadata: body,
@@ -54,7 +54,7 @@ async function handleGmailWebhook(ctx: any): Promise<void> {
   event.taskCreated = task.id;
   webhookLog.push(event);
 
-  log.info('Webhook received', { source: 'gmail', taskId: task.id });
+  log.info("Webhook received", { source: "gmail", taskId: task.id });
   sendJson(res, 200, { received: true, taskId: task.id });
 }
 
@@ -64,24 +64,24 @@ async function handleCalendarWebhook(ctx: any): Promise<void> {
 
   const event: WebhookEvent = {
     id: randomUUID(),
-    source: 'calendar',
+    source: "calendar",
     receivedAt: new Date().toISOString(),
     payload: body,
   };
 
   const task = createTask({
-    source: 'calendar',
-    title: (body.summary as string) || 'Calendar event update',
+    source: "calendar",
+    title: (body.summary as string) || "Calendar event update",
     body: (body.description as string) || undefined,
     sourceId: (body.eventId as string) || undefined,
-    intent: 'schedule',
+    intent: "schedule",
     metadata: body,
   });
 
   event.taskCreated = task.id;
   webhookLog.push(event);
 
-  log.info('Webhook received', { source: 'calendar', taskId: task.id });
+  log.info("Webhook received", { source: "calendar", taskId: task.id });
   sendJson(res, 200, { received: true, taskId: task.id });
 }
 
@@ -91,15 +91,15 @@ async function handleShopifyWebhook(ctx: any): Promise<void> {
 
   const event: WebhookEvent = {
     id: randomUUID(),
-    source: 'shopify',
+    source: "shopify",
     receivedAt: new Date().toISOString(),
     payload: body,
   };
 
   const task = createTask({
-    source: 'store',
-    title: `Order ${(body.order_number as string) || 'received'}`,
-    intent: 'fulfill',
+    source: "store",
+    title: `Order ${(body.order_number as string) || "received"}`,
+    intent: "fulfill",
     sourceId: (body.id as string)?.toString() || undefined,
     metadata: body,
   });
@@ -107,7 +107,7 @@ async function handleShopifyWebhook(ctx: any): Promise<void> {
   event.taskCreated = task.id;
   webhookLog.push(event);
 
-  log.info('Webhook received', { source: 'shopify', taskId: task.id });
+  log.info("Webhook received", { source: "shopify", taskId: task.id });
   sendJson(res, 200, { received: true, taskId: task.id });
 }
 
@@ -117,14 +117,14 @@ async function handleStripeWebhook(ctx: any): Promise<void> {
 
   const event: WebhookEvent = {
     id: randomUUID(),
-    source: 'stripe',
+    source: "stripe",
     receivedAt: new Date().toISOString(),
     payload: body,
   };
 
-  const eventType = (body.type as string) || 'unknown';
+  const eventType = (body.type as string) || "unknown";
   const task = createTask({
-    source: 'store',
+    source: "store",
     title: `Stripe: ${eventType}`,
     sourceId: (body.id as string) || undefined,
     metadata: body,
@@ -133,7 +133,11 @@ async function handleStripeWebhook(ctx: any): Promise<void> {
   event.taskCreated = task.id;
   webhookLog.push(event);
 
-  log.info('Webhook received', { source: 'stripe', eventType, taskId: task.id });
+  log.info("Webhook received", {
+    source: "stripe",
+    eventType,
+    taskId: task.id,
+  });
   sendJson(res, 200, { received: true, taskId: task.id });
 }
 
@@ -141,17 +145,17 @@ async function handleStripeWebhook(ctx: any): Promise<void> {
 async function handleGenericWebhook(ctx: any): Promise<void> {
   const { res, body } = ctx;
 
-  const source = (body.source as TaskSource) || 'manual';
+  const source = (body.source as TaskSource) || "manual";
   const event: WebhookEvent = {
     id: randomUUID(),
-    source: 'generic',
+    source: "generic",
     receivedAt: new Date().toISOString(),
     payload: body,
   };
 
   const task = createTask({
     source,
-    title: (body.title as string) || 'Webhook event',
+    title: (body.title as string) || "Webhook event",
     body: (body.body as string) || undefined,
     metadata: body,
   });
@@ -159,16 +163,16 @@ async function handleGenericWebhook(ctx: any): Promise<void> {
   event.taskCreated = task.id;
   webhookLog.push(event);
 
-  log.info('Webhook received', { source: 'generic', taskId: task.id });
+  log.info("Webhook received", { source: "generic", taskId: task.id });
   sendJson(res, 200, { received: true, taskId: task.id });
 }
 
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const webhookRoutes: Route[] = [
-  pathToRoute('POST', '/api/webhooks/gmail', handleGmailWebhook),
-  pathToRoute('POST', '/api/webhooks/calendar', handleCalendarWebhook),
-  pathToRoute('POST', '/api/webhooks/shopify', handleShopifyWebhook),
-  pathToRoute('POST', '/api/webhooks/stripe', handleStripeWebhook),
-  pathToRoute('POST', '/api/webhooks/generic', handleGenericWebhook),
+  pathToRoute("POST", "/api/webhooks/gmail", handleGmailWebhook),
+  pathToRoute("POST", "/api/webhooks/calendar", handleCalendarWebhook),
+  pathToRoute("POST", "/api/webhooks/shopify", handleShopifyWebhook),
+  pathToRoute("POST", "/api/webhooks/stripe", handleStripeWebhook),
+  pathToRoute("POST", "/api/webhooks/generic", handleGenericWebhook),
 ];

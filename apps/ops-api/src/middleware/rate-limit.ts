@@ -5,7 +5,7 @@
  * using a sliding window algorithm with automatic cleanup.
  */
 
-import type * as http from 'http';
+import type * as http from "http";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -54,17 +54,20 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
   const store = new Map<string, RateLimitEntry>();
 
   // Auto-cleanup of old entries every 5 minutes
-  const cleanupInterval = setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of store.entries()) {
-      // Remove timestamps outside the window
-      entry.timestamps = entry.timestamps.filter((ts) => now - ts < windowMs);
-      // Remove the entry entirely if empty
-      if (entry.timestamps.length === 0) {
-        store.delete(key);
+  const cleanupInterval = setInterval(
+    () => {
+      const now = Date.now();
+      for (const [key, entry] of store.entries()) {
+        // Remove timestamps outside the window
+        entry.timestamps = entry.timestamps.filter((ts) => now - ts < windowMs);
+        // Remove the entry entirely if empty
+        if (entry.timestamps.length === 0) {
+          store.delete(key);
+        }
       }
-    }
-  }, 5 * 60 * 1000);
+    },
+    5 * 60 * 1000,
+  );
 
   // Allow the timer to not prevent process exit
   if (cleanupInterval.unref) {
@@ -90,9 +93,10 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
 
     // Calculate reset time: earliest timestamp in window + windowMs,
     // or now + windowMs if no previous requests
-    const resetAt = entry.timestamps.length > 0
-      ? entry.timestamps[0] + windowMs
-      : now + windowMs;
+    const resetAt =
+      entry.timestamps.length > 0
+        ? entry.timestamps[0] + windowMs
+        : now + windowMs;
 
     if (entry.timestamps.length >= maxRequests) {
       return {
@@ -118,9 +122,12 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
    * Set standard rate-limit response headers.
    */
   function setHeaders(res: http.ServerResponse, result: RateLimitResult): void {
-    res.setHeader('X-RateLimit-Limit', String(result.limit));
-    res.setHeader('X-RateLimit-Remaining', String(result.remaining));
-    res.setHeader('X-RateLimit-Reset', String(Math.ceil(result.resetAt / 1000)));
+    res.setHeader("X-RateLimit-Limit", String(result.limit));
+    res.setHeader("X-RateLimit-Remaining", String(result.remaining));
+    res.setHeader(
+      "X-RateLimit-Reset",
+      String(Math.ceil(result.resetAt / 1000)),
+    );
   }
 
   /**
@@ -147,9 +154,9 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
  */
 function defaultKeyExtractor(req: http.IncomingMessage): string {
   // Check common proxy headers first
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') {
-    return forwarded.split(',')[0].trim();
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") {
+    return forwarded.split(",")[0].trim();
   }
-  return req.socket?.remoteAddress || 'unknown';
+  return req.socket?.remoteAddress || "unknown";
 }

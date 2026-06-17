@@ -26,18 +26,18 @@ node scripts/demo.js
 
 ## Project Structure
 
-| Package | Purpose |
-|---------|---------|
-| `packages/shared-types` | Core TypeScript interfaces |
-| `packages/ops-core` | Workflow engine + intent classification |
-| `packages/ops-policy` | Policy rules + autonomy levels |
-| `packages/ops-connectors` | Gmail, Calendar, X, Shopify connectors |
-| `packages/cord-adapter` | CORD safety gate bridge |
-| `packages/codebot-adapter` | CodeBot execution bridge |
-| `packages/ops-storage` | SQLite persistence layer |
-| `apps/ops-api` | HTTP/SSE API server |
-| `apps/ops-worker` | Pipeline engine + background processor |
-| `apps/ops-web` | Approval dashboard UI |
+| Package                    | Purpose                                 |
+| -------------------------- | --------------------------------------- |
+| `packages/shared-types`    | Core TypeScript interfaces              |
+| `packages/ops-core`        | Workflow engine + intent classification |
+| `packages/ops-policy`      | Policy rules + autonomy levels          |
+| `packages/ops-connectors`  | Gmail, Calendar, X, Shopify connectors  |
+| `packages/cord-adapter`    | CORD safety gate bridge                 |
+| `packages/codebot-adapter` | CodeBot execution bridge                |
+| `packages/ops-storage`     | SQLite persistence layer                |
+| `apps/ops-api`             | HTTP/SSE API server                     |
+| `apps/ops-worker`          | Pipeline engine + background processor  |
+| `apps/ops-web`             | Approval dashboard UI                   |
 
 ## How to Contribute
 

@@ -44,7 +44,6 @@ tags:
 # ──────────────────────────────────────────────────────────────────────────────
 
 paths:
-
   # ── Health ────────────────────────────────────────────────────────────────
 
   /health:
@@ -54,12 +53,12 @@ paths:
       summary: Health check
       description: Returns server status, version, and uptime in seconds.
       responses:
-        '200':
+        "200":
           description: Server is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
+                $ref: "#/components/schemas/HealthResponse"
 
   /api/health:
     get:
@@ -68,12 +67,12 @@ paths:
       summary: Health check (prefixed)
       description: Alias for /health under the /api prefix.
       responses:
-        '200':
+        "200":
           description: Server is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
+                $ref: "#/components/schemas/HealthResponse"
 
   # ── Tasks ─────────────────────────────────────────────────────────────────
 
@@ -89,19 +88,19 @@ paths:
         - name: status
           in: query
           schema:
-            $ref: '#/components/schemas/TaskStatus'
+            $ref: "#/components/schemas/TaskStatus"
         - name: source
           in: query
           schema:
-            $ref: '#/components/schemas/TaskSource'
+            $ref: "#/components/schemas/TaskSource"
         - name: intent
           in: query
           schema:
-            $ref: '#/components/schemas/TaskIntent'
+            $ref: "#/components/schemas/TaskIntent"
         - name: priority
           in: query
           schema:
-            $ref: '#/components/schemas/TaskPriority'
+            $ref: "#/components/schemas/TaskPriority"
         - name: limit
           in: query
           schema:
@@ -113,7 +112,7 @@ paths:
             type: integer
             default: 0
       responses:
-        '200':
+        "200":
           description: Paginated task list
           content:
             application/json:
@@ -124,7 +123,7 @@ paths:
                   tasks:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Task'
+                      $ref: "#/components/schemas/Task"
                   total:
                     type: integer
                   limit:
@@ -146,15 +145,15 @@ paths:
               required: [source, title]
               properties:
                 source:
-                  $ref: '#/components/schemas/TaskSource'
+                  $ref: "#/components/schemas/TaskSource"
                 title:
                   type: string
                 body:
                   type: string
                 intent:
-                  $ref: '#/components/schemas/TaskIntent'
+                  $ref: "#/components/schemas/TaskIntent"
                 priority:
-                  $ref: '#/components/schemas/TaskPriority'
+                  $ref: "#/components/schemas/TaskPriority"
                 sourceId:
                   type: string
                 owner:
@@ -166,18 +165,18 @@ paths:
                   type: object
                   additionalProperties: true
       responses:
-        '201':
+        "201":
           description: Task created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /api/tasks/{id}:
     parameters:
-      - $ref: '#/components/parameters/ResourceId'
+      - $ref: "#/components/parameters/ResourceId"
 
     get:
       operationId: getTask
@@ -185,14 +184,14 @@ paths:
       summary: Get a task
       description: Returns a single task by its UUID.
       responses:
-        '200':
+        "200":
           description: Task found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/Task"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     patch:
       operationId: updateTask
@@ -209,15 +208,15 @@ paths:
               type: object
               properties:
                 intent:
-                  $ref: '#/components/schemas/TaskIntent'
+                  $ref: "#/components/schemas/TaskIntent"
                 title:
                   type: string
                 body:
                   type: string
                 priority:
-                  $ref: '#/components/schemas/TaskPriority'
+                  $ref: "#/components/schemas/TaskPriority"
                 status:
-                  $ref: '#/components/schemas/TaskStatus'
+                  $ref: "#/components/schemas/TaskStatus"
                 owner:
                   type: string
                 dueAt:
@@ -227,14 +226,14 @@ paths:
                   type: object
                   additionalProperties: true
       responses:
-        '200':
+        "200":
           description: Task updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/Task"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     delete:
       operationId: deleteTask
@@ -242,7 +241,7 @@ paths:
       summary: Delete a task (soft)
       description: Soft-deletes a task by setting its status to `failed`.
       responses:
-        '200':
+        "200":
           description: Task soft-deleted
           content:
             application/json:
@@ -256,8 +255,8 @@ paths:
                   id:
                     type: string
                     format: uuid
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ── Approvals ─────────────────────────────────────────────────────────────
 
@@ -282,9 +281,9 @@ paths:
           in: query
           description: Filter by risk level
           schema:
-            $ref: '#/components/schemas/RiskLevel'
+            $ref: "#/components/schemas/RiskLevel"
       responses:
-        '200':
+        "200":
           description: Approval list
           content:
             application/json:
@@ -295,7 +294,7 @@ paths:
                   approvals:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Approval'
+                      $ref: "#/components/schemas/Approval"
                   pending:
                     type: integer
                     description: Total number of pending approvals
@@ -311,7 +310,7 @@ paths:
         Opens a Server-Sent Events stream. Emits a `connected` event on
         open and broadcasts new approval requests as they arrive.
       responses:
-        '200':
+        "200":
           description: SSE event stream
           content:
             text/event-stream:
@@ -320,7 +319,7 @@ paths:
 
   /api/approvals/{id}:
     parameters:
-      - $ref: '#/components/parameters/ResourceId'
+      - $ref: "#/components/parameters/ResourceId"
 
     get:
       operationId: getApproval
@@ -328,18 +327,18 @@ paths:
       summary: Get an approval
       description: Returns a single approval request by its UUID.
       responses:
-        '200':
+        "200":
           description: Approval found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Approval'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/Approval"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/approvals/{id}/decide:
     parameters:
-      - $ref: '#/components/parameters/ResourceId'
+      - $ref: "#/components/parameters/ResourceId"
 
     post:
       operationId: decideApproval
@@ -357,7 +356,7 @@ paths:
               required: [decision]
               properties:
                 decision:
-                  $ref: '#/components/schemas/ApprovalDecision'
+                  $ref: "#/components/schemas/ApprovalDecision"
                 decidedBy:
                   type: string
                   default: user
@@ -366,16 +365,16 @@ paths:
                   additionalProperties: true
                   description: Required when decision is `modified`
       responses:
-        '200':
+        "200":
           description: Decision recorded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Approval'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/Approval"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ── Workflows ─────────────────────────────────────────────────────────────
 
@@ -415,14 +414,14 @@ paths:
                         type: object
                         additionalProperties: true
       responses:
-        '201':
+        "201":
           description: Workflow run created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkflowRun'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                $ref: "#/components/schemas/WorkflowRun"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
     get:
       operationId: listWorkflows
@@ -438,7 +437,7 @@ paths:
         - name: state
           in: query
           schema:
-            $ref: '#/components/schemas/WorkflowState'
+            $ref: "#/components/schemas/WorkflowState"
         - name: limit
           in: query
           schema:
@@ -450,7 +449,7 @@ paths:
             type: integer
             default: 0
       responses:
-        '200':
+        "200":
           description: Workflow run list
           content:
             application/json:
@@ -461,13 +460,13 @@ paths:
                   runs:
                     type: array
                     items:
-                      $ref: '#/components/schemas/WorkflowRun'
+                      $ref: "#/components/schemas/WorkflowRun"
                   total:
                     type: integer
 
   /api/workflows/{id}:
     parameters:
-      - $ref: '#/components/parameters/ResourceId'
+      - $ref: "#/components/parameters/ResourceId"
 
     get:
       operationId: getWorkflow
@@ -475,18 +474,18 @@ paths:
       summary: Get a workflow run
       description: Returns a single workflow run by its UUID, including all steps.
       responses:
-        '200':
+        "200":
           description: Workflow run found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkflowRun'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/WorkflowRun"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/workflows/{id}/pause:
     parameters:
-      - $ref: '#/components/parameters/ResourceId'
+      - $ref: "#/components/parameters/ResourceId"
 
     post:
       operationId: pauseWorkflow
@@ -496,20 +495,20 @@ paths:
         Transitions a workflow from `running` to `paused`. Returns 400
         if the workflow is not currently running.
       responses:
-        '200':
+        "200":
           description: Workflow paused
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkflowRun'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/WorkflowRun"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/workflows/{id}/resume:
     parameters:
-      - $ref: '#/components/parameters/ResourceId'
+      - $ref: "#/components/parameters/ResourceId"
 
     post:
       operationId: resumeWorkflow
@@ -519,16 +518,16 @@ paths:
         Transitions a workflow from `paused` to `running`. Returns 400
         if the workflow is not currently paused.
       responses:
-        '200':
+        "200":
           description: Workflow resumed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkflowRun'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/WorkflowRun"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ── Pipeline ──────────────────────────────────────────────────────────────
 
@@ -551,20 +550,20 @@ paths:
               required: [source]
               properties:
                 source:
-                  $ref: '#/components/schemas/TaskSource'
+                  $ref: "#/components/schemas/TaskSource"
                 event:
                   type: object
                   additionalProperties: true
                   description: Source-specific event payload
       responses:
-        '200':
+        "200":
           description: SSE event stream of pipeline stages
           content:
             text/event-stream:
               schema:
                 type: string
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /api/pipeline/simulate:
     post:
@@ -584,7 +583,7 @@ paths:
               required: [source]
               properties:
                 source:
-                  $ref: '#/components/schemas/TaskSource'
+                  $ref: "#/components/schemas/TaskSource"
                 title:
                   type: string
                 subject:
@@ -592,14 +591,14 @@ paths:
                 body:
                   type: string
       responses:
-        '200':
+        "200":
           description: Simulation result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PipelineSimulationResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                $ref: "#/components/schemas/PipelineSimulationResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   # ── Gmail ─────────────────────────────────────────────────────────────────
 
@@ -628,21 +627,21 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Inbox messages
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   /api/gmail/message/{id}:
     parameters:
-      - $ref: '#/components/parameters/ResourceId'
+      - $ref: "#/components/parameters/ResourceId"
 
     get:
       operationId: getGmailMessage
@@ -650,17 +649,17 @@ paths:
       summary: Read a specific message
       description: Returns the full content of a single Gmail message by ID.
       responses:
-        '200':
+        "200":
           description: Message content
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   /api/gmail/process:
     post:
@@ -685,18 +684,18 @@ paths:
                   type: boolean
                   default: false
       responses:
-        '200':
+        "200":
           description: Pipeline result with receipt chain
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PipelineResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+                $ref: "#/components/schemas/PipelineResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   /api/gmail/process/latest:
     post:
@@ -716,22 +715,22 @@ paths:
                   type: boolean
                   default: false
       responses:
-        '200':
+        "200":
           description: Pipeline result or no-message indicator
           content:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/PipelineResult'
+                  - $ref: "#/components/schemas/PipelineResult"
                   - type: object
                     properties:
                       message:
                         type: string
                         const: No unread messages in inbox
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   # ── Calendar (placeholder) ────────────────────────────────────────────────
 
@@ -762,15 +761,15 @@ paths:
             type: integer
             default: 25
       responses:
-        '200':
+        "200":
           description: Calendar events
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /api/calendar/create:
     post:
@@ -806,17 +805,17 @@ paths:
                 location:
                   type: string
       responses:
-        '201':
+        "201":
           description: Event created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /api/calendar/availability:
     post:
@@ -846,17 +845,17 @@ paths:
                     type: string
                     format: email
       responses:
-        '200':
+        "200":
           description: Availability result
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   # ── X / Twitter (placeholder) ─────────────────────────────────────────────
 
@@ -875,15 +874,15 @@ paths:
             type: integer
             default: 20
       responses:
-        '200':
+        "200":
           description: Timeline posts
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /api/x/post:
     post:
@@ -909,17 +908,17 @@ paths:
                   items:
                     type: string
       responses:
-        '201':
+        "201":
           description: Post created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /api/x/reply:
     post:
@@ -943,17 +942,17 @@ paths:
                   type: string
                   maxLength: 280
       responses:
-        '201':
+        "201":
           description: Reply posted
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /api/x/dm:
     get:
@@ -970,15 +969,15 @@ paths:
             type: integer
             default: 20
       responses:
-        '200':
+        "200":
           description: Direct messages
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     post:
       operationId: sendXDirectMessage
@@ -1000,17 +999,17 @@ paths:
                 text:
                   type: string
       responses:
-        '201':
+        "201":
           description: Direct message sent
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   # ── Shopify ───────────────────────────────────────────────────────────────
 
@@ -1043,21 +1042,21 @@ paths:
             type: string
             format: date-time
       responses:
-        '200':
+        "200":
           description: Order list
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   /api/shopify/orders/{id}:
     parameters:
-      - $ref: '#/components/parameters/ResourceId'
+      - $ref: "#/components/parameters/ResourceId"
 
     get:
       operationId: getShopifyOrder
@@ -1065,17 +1064,17 @@ paths:
       summary: Get a specific order
       description: Returns full details for a single Shopify order.
       responses:
-        '200':
+        "200":
           description: Order details
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   /api/shopify/products:
     get:
@@ -1098,17 +1097,17 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Product list
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   /api/shopify/customers:
     get:
@@ -1128,17 +1127,17 @@ paths:
             type: integer
             default: 50
       responses:
-        '200':
+        "200":
           description: Customer list
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   /api/shopify/process:
     post:
@@ -1163,18 +1162,18 @@ paths:
                   type: boolean
                   default: false
       responses:
-        '200':
+        "200":
           description: Pipeline result with receipt chain
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PipelineResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '502':
-          $ref: '#/components/responses/BadGateway'
+                $ref: "#/components/schemas/PipelineResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
 
   # ── Webhooks ──────────────────────────────────────────────────────────────
 
@@ -1201,12 +1200,12 @@ paths:
                   type: string
               additionalProperties: true
       responses:
-        '200':
+        "200":
           description: Webhook received and task created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResponse'
+                $ref: "#/components/schemas/WebhookResponse"
 
   /api/webhooks/calendar:
     post:
@@ -1231,12 +1230,12 @@ paths:
                   type: string
               additionalProperties: true
       responses:
-        '200':
+        "200":
           description: Webhook received and task created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResponse'
+                $ref: "#/components/schemas/WebhookResponse"
 
   /api/webhooks/shopify:
     post:
@@ -1259,12 +1258,12 @@ paths:
                   type: string
               additionalProperties: true
       responses:
-        '200':
+        "200":
           description: Webhook received and task created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResponse'
+                $ref: "#/components/schemas/WebhookResponse"
 
   /api/webhooks/stripe:
     post:
@@ -1287,12 +1286,12 @@ paths:
                   type: string
               additionalProperties: true
       responses:
-        '200':
+        "200":
           description: Webhook received and task created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResponse'
+                $ref: "#/components/schemas/WebhookResponse"
 
   /api/webhooks/generic:
     post:
@@ -1310,19 +1309,19 @@ paths:
               type: object
               properties:
                 source:
-                  $ref: '#/components/schemas/TaskSource'
+                  $ref: "#/components/schemas/TaskSource"
                 title:
                   type: string
                 body:
                   type: string
               additionalProperties: true
       responses:
-        '200':
+        "200":
           description: Webhook received and task created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResponse'
+                $ref: "#/components/schemas/WebhookResponse"
 
   # ── OAuth ─────────────────────────────────────────────────────────────────
 
@@ -1352,7 +1351,7 @@ paths:
             type: string
             default: http://localhost:3100/api/oauth/google/callback
       responses:
-        '200':
+        "200":
           description: Authorization URL and instructions
           content:
             application/json:
@@ -1365,8 +1364,8 @@ paths:
                     format: uri
                   instructions:
                     type: string
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /api/oauth/google/callback:
     get:
@@ -1389,14 +1388,14 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: HTML success page confirming connection
           content:
             text/html:
               schema:
                 type: string
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /api/oauth/status:
     get:
@@ -1407,7 +1406,7 @@ paths:
         Returns the connection status for all supported OAuth
         connectors (Google, X/Twitter).
       responses:
-        '200':
+        "200":
           description: Connector status map
           content:
             application/json:
@@ -1443,7 +1442,7 @@ paths:
         Manually triggers a refresh of the Google OAuth2 access token
         using the stored refresh token.
       responses:
-        '200':
+        "200":
           description: Token refreshed
           content:
             application/json:
@@ -1457,10 +1456,10 @@ paths:
                   expiresAt:
                     type: string
                     format: date-time
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalError'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /api/oauth/x/token:
     post:
@@ -1483,7 +1482,7 @@ paths:
                 userId:
                   type: string
       responses:
-        '200':
+        "200":
           description: Token saved
           content:
             application/json:
@@ -1494,15 +1493,14 @@ paths:
                   success:
                     type: boolean
                     const: true
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Components
 # ──────────────────────────────────────────────────────────────────────────────
 
 components:
-
   # ── Parameters ────────────────────────────────────────────────────────────
 
   parameters:
@@ -1522,40 +1520,39 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
 
     Unauthorized:
       description: Connector not authenticated — OAuth token missing or expired
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
 
     NotFound:
       description: Resource not found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
 
     BadGateway:
       description: Upstream connector or external service error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
 
     InternalError:
       description: Unexpected server error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
 
   # ── Schemas ───────────────────────────────────────────────────────────────
 
   schemas:
-
     # ── Error ─────────────────────────────────────────────────────────────
 
     Error:
@@ -1577,7 +1574,7 @@ components:
           const: ok
         version:
           type: string
-          example: '0.1.0'
+          example: "0.1.0"
         uptime:
           type: number
           description: Server uptime in seconds
@@ -1602,19 +1599,30 @@ components:
 
     Task:
       type: object
-      required: [id, source, intent, title, priority, status, createdAt, updatedAt, metadata]
+      required:
+        [
+          id,
+          source,
+          intent,
+          title,
+          priority,
+          status,
+          createdAt,
+          updatedAt,
+          metadata,
+        ]
       properties:
         id:
           type: string
           format: uuid
           description: Unique identifier (UUID v4)
         source:
-          $ref: '#/components/schemas/TaskSource'
+          $ref: "#/components/schemas/TaskSource"
         sourceId:
           type: string
           description: External ID from the source system
         intent:
-          $ref: '#/components/schemas/TaskIntent'
+          $ref: "#/components/schemas/TaskIntent"
         title:
           type: string
           description: Short human-readable title
@@ -1622,9 +1630,9 @@ components:
           type: string
           description: Full content or body text
         priority:
-          $ref: '#/components/schemas/TaskPriority'
+          $ref: "#/components/schemas/TaskPriority"
         status:
-          $ref: '#/components/schemas/TaskStatus'
+          $ref: "#/components/schemas/TaskStatus"
         owner:
           type: string
           description: Owner or assignee identifier
@@ -1671,7 +1679,7 @@ components:
           format: uuid
           description: Parent task for context
         risk:
-          $ref: '#/components/schemas/RiskLevel'
+          $ref: "#/components/schemas/RiskLevel"
         reason:
           type: string
           description: Human-readable reason why approval is needed
@@ -1683,7 +1691,7 @@ components:
           format: date-time
           description: When approval was requested (ISO 8601)
         decision:
-          $ref: '#/components/schemas/ApprovalDecision'
+          $ref: "#/components/schemas/ApprovalDecision"
         decidedBy:
           type: string
           description: Who made the decision
@@ -1698,7 +1706,7 @@ components:
         ttlMs:
           type:
             - integer
-            - 'null'
+            - "null"
           description: Auto-deny timeout in milliseconds (null = wait forever)
 
     # ── ActionReceipt ─────────────────────────────────────────────────────
@@ -1800,9 +1808,9 @@ components:
           additionalProperties: true
           description: Output data (populated after execution)
         status:
-          $ref: '#/components/schemas/StepStatus'
+          $ref: "#/components/schemas/StepStatus"
         cordDecision:
-          $ref: '#/components/schemas/CordDecision'
+          $ref: "#/components/schemas/CordDecision"
         cordScore:
           type: integer
           minimum: 0
@@ -1833,9 +1841,9 @@ components:
         steps:
           type: array
           items:
-            $ref: '#/components/schemas/WorkflowStep'
+            $ref: "#/components/schemas/WorkflowStep"
         state:
-          $ref: '#/components/schemas/WorkflowState'
+          $ref: "#/components/schemas/WorkflowState"
         startedAt:
           type: string
           format: date-time
@@ -1858,12 +1866,12 @@ components:
         safety check, approval status, execution result, and receipt chain.
       properties:
         task:
-          $ref: '#/components/schemas/Task'
+          $ref: "#/components/schemas/Task"
         intent:
           type: object
           properties:
             intent:
-              $ref: '#/components/schemas/TaskIntent'
+              $ref: "#/components/schemas/TaskIntent"
             confidence:
               type: number
             matchedKeywords:
@@ -1877,14 +1885,14 @@ components:
               type: string
               enum: [auto, approve, deny]
             risk:
-              $ref: '#/components/schemas/RiskLevel'
+              $ref: "#/components/schemas/RiskLevel"
             reason:
               type: string
         safety:
           type: object
           properties:
             decision:
-              $ref: '#/components/schemas/CordDecision'
+              $ref: "#/components/schemas/CordDecision"
             score:
               type: integer
               minimum: 0
@@ -1927,7 +1935,7 @@ components:
         receipts:
           type: array
           items:
-            $ref: '#/components/schemas/ActionReceipt'
+            $ref: "#/components/schemas/ActionReceipt"
         receiptChainValid:
           type: boolean
           description: Whether the receipt hash chain is intact
@@ -1940,7 +1948,7 @@ components:
           type: boolean
           const: true
         source:
-          $ref: '#/components/schemas/TaskSource'
+          $ref: "#/components/schemas/TaskSource"
         intent:
           type: string
         workflowType:

@@ -5,7 +5,7 @@
  * Separate from CORD (which handles safety); this handles business logic.
  */
 
-export type AutonomyLevel = 'auto' | 'approve' | 'deny';
+export type AutonomyLevel = "auto" | "approve" | "deny";
 
 export interface PolicyRule {
   /** Rule identifier */
@@ -30,7 +30,7 @@ export interface PolicyRule {
   action: AutonomyLevel;
 
   /** Risk level override */
-  risk?: 'low' | 'medium' | 'high' | 'critical';
+  risk?: "low" | "medium" | "high" | "critical";
 
   /** Maximum dollar amount for financial operations */
   maxAmount?: number;
@@ -75,61 +75,61 @@ export interface PolicyConfig {
  * Default policy — conservative (approve everything except reads).
  */
 export const DEFAULT_POLICY: PolicyConfig = {
-  version: '1.0.0',
-  defaultAutonomy: 'approve',
+  version: "1.0.0",
+  defaultAutonomy: "approve",
   dailySpendLimit: 100,
   hourlyActionLimit: 50,
   rules: [
     {
-      id: 'allow-reads',
-      description: 'Allow all read operations autonomously',
-      match: { operation: 'read' },
-      action: 'auto',
+      id: "allow-reads",
+      description: "Allow all read operations autonomously",
+      match: { operation: "read" },
+      action: "auto",
       priority: 10,
       enabled: true,
     },
     {
-      id: 'allow-list',
-      description: 'Allow listing operations autonomously',
-      match: { operation: 'list' },
-      action: 'auto',
+      id: "allow-list",
+      description: "Allow listing operations autonomously",
+      match: { operation: "list" },
+      action: "auto",
       priority: 10,
       enabled: true,
     },
     {
-      id: 'approve-sends',
-      description: 'Require approval before sending any messages',
-      match: { operation: 'send' },
-      action: 'approve',
-      risk: 'medium',
+      id: "approve-sends",
+      description: "Require approval before sending any messages",
+      match: { operation: "send" },
+      action: "approve",
+      risk: "medium",
       priority: 20,
       enabled: true,
     },
     {
-      id: 'approve-posts',
-      description: 'Require approval before publishing to social media',
-      match: { operation: 'post' },
-      action: 'approve',
-      risk: 'high',
+      id: "approve-posts",
+      description: "Require approval before publishing to social media",
+      match: { operation: "post" },
+      action: "approve",
+      risk: "high",
       priority: 20,
       enabled: true,
     },
     {
-      id: 'deny-delete',
-      description: 'Block all delete operations',
-      match: { operation: 'delete' },
-      action: 'deny',
-      risk: 'critical',
+      id: "deny-delete",
+      description: "Block all delete operations",
+      match: { operation: "delete" },
+      action: "deny",
+      risk: "critical",
       priority: 100,
       enabled: true,
     },
     {
-      id: 'deny-financial',
-      description: 'Block financial transactions over $50',
-      match: { connector: 'shopify', operation: 'refund' },
-      action: 'deny',
+      id: "deny-financial",
+      description: "Block financial transactions over $50",
+      match: { connector: "shopify", operation: "refund" },
+      action: "deny",
       maxAmount: 50,
-      risk: 'critical',
+      risk: "critical",
       priority: 100,
       enabled: true,
     },

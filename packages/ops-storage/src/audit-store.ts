@@ -5,20 +5,20 @@
  * credential operations, and auth rejections. Backed by SQLite.
  */
 
-import { randomUUID } from 'node:crypto';
-import type BetterSqlite3 from 'better-sqlite3';
+import { randomUUID } from "node:crypto";
+import type BetterSqlite3 from "better-sqlite3";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export type AuditEventType =
-  | 'auth.register'
-  | 'auth.login'
-  | 'auth.login_failed'
-  | 'auth.rejected'
-  | 'approval.decided'
-  | 'credential.created'
-  | 'credential.deleted'
-  | 'webhook.received';
+  | "auth.register"
+  | "auth.login"
+  | "auth.login_failed"
+  | "auth.rejected"
+  | "approval.decided"
+  | "credential.created"
+  | "credential.deleted"
+  | "webhook.received";
 
 export interface AuditEntry {
   id: string;
@@ -106,27 +106,27 @@ export class AuditStore {
     const limit = filter.limit || 100;
     const offset = filter.offset || 0;
 
-    let sql = 'SELECT * FROM audit_log';
+    let sql = "SELECT * FROM audit_log";
     const conditions: string[] = [];
     const params: unknown[] = [];
 
     if (filter.eventType) {
-      conditions.push('event_type = ?');
+      conditions.push("event_type = ?");
       params.push(filter.eventType);
     }
     if (filter.actorId) {
-      conditions.push('actor_id = ?');
+      conditions.push("actor_id = ?");
       params.push(filter.actorId);
     }
     if (filter.resourceType) {
-      conditions.push('resource_type = ?');
+      conditions.push("resource_type = ?");
       params.push(filter.resourceType);
     }
 
     if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
+      sql += " WHERE " + conditions.join(" AND ");
     }
-    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    sql += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
     params.push(limit, offset);
 
     const rows = this.db.prepare(sql).all(...params) as any[];
@@ -147,7 +147,7 @@ export class AuditStore {
       actorId: row.actor_id,
       resourceType: row.resource_type,
       resourceId: row.resource_id,
-      details: JSON.parse(row.details || '{}'),
+      details: JSON.parse(row.details || "{}"),
       ipAddress: row.ip_address,
       createdAt: row.created_at,
     };

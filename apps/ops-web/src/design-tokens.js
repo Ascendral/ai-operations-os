@@ -12,7 +12,7 @@
 /* eslint-disable no-unused-vars */
 
 var DesignTokens = (function () {
-  'use strict';
+  "use strict";
 
   // ── Cached computed style ──────────────────────────────────────────
 
@@ -25,7 +25,9 @@ var DesignTokens = (function () {
    */
   function css(name) {
     if (_cacheValid && _cache[name] !== undefined) return _cache[name];
-    var val = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    var val = getComputedStyle(document.documentElement)
+      .getPropertyValue(name)
+      .trim();
     _cache[name] = val;
     return val;
   }
@@ -39,7 +41,7 @@ var DesignTokens = (function () {
   // Invalidate on theme change (observed via MutationObserver on <html>)
   var observer = new MutationObserver(function (mutations) {
     for (var i = 0; i < mutations.length; i++) {
-      if (mutations[i].attributeName === 'data-theme') {
+      if (mutations[i].attributeName === "data-theme") {
         invalidate();
         break;
       }
@@ -52,47 +54,48 @@ var DesignTokens = (function () {
   /** Get the current theme's palette as plain color strings. */
   function colors() {
     return {
-      bgPrimary:     css('--bg-primary'),
-      bgSecondary:   css('--bg-secondary'),
-      bgTertiary:    css('--bg-tertiary'),
-      surface:       css('--surface-solid'),
-      border:        css('--border'),
-      textPrimary:   css('--text-primary'),
-      textSecondary: css('--text-secondary'),
-      textMuted:     css('--text-muted'),
-      accent:        css('--accent'),
-      accentEnd:     css('--accent-end'),
-      accentSubtle:  css('--accent-subtle'),
-      green:         css('--green'),
-      greenSubtle:   css('--green-subtle'),
-      yellow:        css('--yellow'),
-      yellowSubtle:  css('--yellow-subtle'),
-      red:           css('--red'),
-      redSubtle:     css('--red-subtle'),
-      orange:        css('--orange'),
-      blue:          css('--blue'),
-      cyan:          css('--cyan'),
+      bgPrimary: css("--bg-primary"),
+      bgSecondary: css("--bg-secondary"),
+      bgTertiary: css("--bg-tertiary"),
+      surface: css("--surface-solid"),
+      border: css("--border"),
+      textPrimary: css("--text-primary"),
+      textSecondary: css("--text-secondary"),
+      textMuted: css("--text-muted"),
+      accent: css("--accent"),
+      accentEnd: css("--accent-end"),
+      accentSubtle: css("--accent-subtle"),
+      green: css("--green"),
+      greenSubtle: css("--green-subtle"),
+      yellow: css("--yellow"),
+      yellowSubtle: css("--yellow-subtle"),
+      red: css("--red"),
+      redSubtle: css("--red-subtle"),
+      orange: css("--orange"),
+      blue: css("--blue"),
+      cyan: css("--cyan"),
     };
   }
 
   /** Create a gradient from accent to accent-end. */
   function accentGradient(ctx, x0, y0, x1, y1) {
     var g = ctx.createLinearGradient(x0, y0, x1, y1);
-    g.addColorStop(0, css('--accent'));
-    g.addColorStop(1, css('--accent-end'));
+    g.addColorStop(0, css("--accent"));
+    g.addColorStop(1, css("--accent-end"));
     return g;
   }
 
   // ── Font helpers ───────────────────────────────────────────────────
 
-  var FONT_BODY = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
+  var FONT_BODY =
+    "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
   var FONT_MONO = "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace";
 
   function fontBody(size) {
-    return (size || 13) + 'px ' + FONT_BODY;
+    return (size || 13) + "px " + FONT_BODY;
   }
   function fontMono(size) {
-    return (size || 12) + 'px ' + FONT_MONO;
+    return (size || 12) + "px " + FONT_MONO;
   }
 
   // ── Canvas DPI scaling ─────────────────────────────────────────────
@@ -105,9 +108,9 @@ var DesignTokens = (function () {
     var dpr = window.devicePixelRatio || 1;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
-    var ctx = canvas.getContext('2d');
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    var ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
     return { ctx: ctx, width: width, height: height, dpr: dpr };
   }
@@ -138,8 +141,8 @@ var DesignTokens = (function () {
   function drawSparkline(ctx, data, w, h, opts) {
     if (!data || data.length < 2) return;
     opts = opts || {};
-    var color = opts.color || css('--accent');
-    var fillColor = opts.fillColor || css('--accent-subtle');
+    var color = opts.color || css("--accent");
+    var fillColor = opts.fillColor || css("--accent-subtle");
     var lineWidth = opts.lineWidth || 1.5;
 
     var padding = 2;
@@ -164,8 +167,8 @@ var DesignTokens = (function () {
     // Stroke
     ctx.strokeStyle = color;
     ctx.lineWidth = lineWidth;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
     ctx.stroke();
 
     // Fill under curve with gradient fade
@@ -174,7 +177,7 @@ var DesignTokens = (function () {
     ctx.closePath();
     var grad = ctx.createLinearGradient(0, padding, 0, padding + drawH);
     grad.addColorStop(0, fillColor);
-    grad.addColorStop(1, 'transparent');
+    grad.addColorStop(1, "transparent");
     ctx.fillStyle = grad;
     ctx.fill();
   }
@@ -235,13 +238,13 @@ var DesignTokens = (function () {
     ctx.closePath();
 
     // Fill with subtle accent
-    ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';
+    ctx.fillStyle = "rgba(99, 102, 241, 0.1)";
     ctx.fill();
 
     // Stroke
     ctx.strokeStyle = c.accent;
     ctx.lineWidth = 1.5;
-    ctx.lineJoin = 'round';
+    ctx.lineJoin = "round";
     ctx.stroke();
 
     // Draw value dots
@@ -269,8 +272,8 @@ var DesignTokens = (function () {
   function animateCounter(el, target, opts) {
     opts = opts || {};
     var duration = opts.duration || 800;
-    var prefix = opts.prefix || '';
-    var suffix = opts.suffix || '';
+    var prefix = opts.prefix || "";
+    var suffix = opts.suffix || "";
     var decimals = opts.decimals || 0;
     var start = 0;
     var startTime = null;

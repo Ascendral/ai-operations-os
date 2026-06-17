@@ -15,13 +15,16 @@ npm install @ai-operations/cord-adapter
 ## Quick Start
 
 ```ts
-import { CordSafetyGate, PolicySimulator } from '@ai-operations/cord-adapter';
+import { CordSafetyGate, PolicySimulator } from "@ai-operations/cord-adapter";
 
 const gate = new CordSafetyGate();
-const result = gate.evaluateAction('gmail', 'send', { to: 'user@example.com', subject: 'Hi' });
+const result = gate.evaluateAction("gmail", "send", {
+  to: "user@example.com",
+  subject: "Hi",
+});
 
-if (result.decision === 'BLOCK') {
-  console.error('Action blocked:', result.reasons);
+if (result.decision === "BLOCK") {
+  console.error("Action blocked:", result.reasons);
 }
 ```
 
@@ -54,11 +57,11 @@ simulate(actions: ProjectedAction[]): SimulationReport
 ```ts
 const sim = new PolicySimulator();
 const report = sim.simulate([
-  { connector: 'gmail', operation: 'send', input: { to: 'a@b.com' } },
-  { connector: 'shopify', operation: 'refund', input: { amount: 200 } },
+  { connector: "gmail", operation: "send", input: { to: "a@b.com" } },
+  { connector: "shopify", operation: "refund", input: { amount: 200 } },
 ]);
-console.log(report.summary);     // { ALLOW: 1, CONTAIN: 1 }
-console.log(report.allAllowed);   // false
+console.log(report.summary); // { ALLOW: 1, CONTAIN: 1 }
+console.log(report.allAllowed); // false
 console.log(report.hasHardBlock); // false
 ```
 

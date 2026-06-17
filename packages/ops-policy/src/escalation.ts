@@ -13,7 +13,7 @@ export interface EscalationTarget {
   /** Notification channel (e.g., 'email', 'slack', 'sms') */
   channel: string;
   /** Urgency level for the notification */
-  urgency: 'low' | 'normal' | 'high' | 'critical';
+  urgency: "low" | "normal" | "high" | "critical";
 }
 
 /** Configuration for escalation thresholds and targets. */
@@ -50,25 +50,25 @@ const DEFAULT_ESCALATION_CONFIG: EscalationConfig = {
     {
       denialCount: 3,
       target: {
-        role: 'owner',
-        channel: 'email',
-        urgency: 'normal',
+        role: "owner",
+        channel: "email",
+        urgency: "normal",
       },
     },
     {
       denialCount: 5,
       target: {
-        role: 'owner',
-        channel: 'sms',
-        urgency: 'high',
+        role: "owner",
+        channel: "sms",
+        urgency: "high",
       },
     },
     {
       denialCount: 10,
       target: {
-        role: 'admin',
-        channel: 'sms',
-        urgency: 'critical',
+        role: "admin",
+        channel: "sms",
+        urgency: "critical",
       },
     },
   ],
@@ -118,10 +118,14 @@ export class EscalationManager {
     const taskState = this.state.get(taskId);
     if (taskState?.escalated && taskState.escalatedTo) {
       const escalatedThreshold = this.sortedThresholds.find(
-        (t) => t.target.role === taskState.escalatedTo!.role &&
-               t.target.urgency === taskState.escalatedTo!.urgency,
+        (t) =>
+          t.target.role === taskState.escalatedTo!.role &&
+          t.target.urgency === taskState.escalatedTo!.urgency,
       );
-      if (escalatedThreshold && escalatedThreshold.denialCount >= threshold.denialCount) {
+      if (
+        escalatedThreshold &&
+        escalatedThreshold.denialCount >= threshold.denialCount
+      ) {
         return false; // Already escalated at this level or higher
       }
     }
@@ -221,7 +225,9 @@ export class EscalationManager {
   /**
    * Find the highest threshold that the denial count meets or exceeds.
    */
-  private findMatchingThreshold(denialCount: number): EscalationThreshold | undefined {
+  private findMatchingThreshold(
+    denialCount: number,
+  ): EscalationThreshold | undefined {
     // Walk thresholds in reverse (highest first) to find the best match
     for (let i = this.sortedThresholds.length - 1; i >= 0; i--) {
       if (denialCount >= this.sortedThresholds[i].denialCount) {

@@ -11,23 +11,23 @@ import type {
   LearningEpisode,
   Insight,
   ReasoningResult,
-} from '@ai-operations/shared-types';
-import type { SparkStore } from '@ai-operations/ops-storage';
-import { Predictor } from './predictor';
-import { OutcomeTracker } from './outcome-tracker';
-import { LearningCore } from './learning-core';
-import { WeightManager } from './weight-manager';
-import { MemoryCore } from './memory-core';
-import { AwarenessCore } from './awareness-core';
-import { ReasoningCore } from './reasoning-core';
-import { EssenceExtractor } from './essence-extractor';
-import { MemoryTokenManager } from './memory-token-manager';
-import { SpiralLoop } from './spiral-loop';
-import { ContextReconstructor } from './context-reconstructor';
-import { FeedbackIntegrator } from './feedback-integrator';
-import { EmotionalStateEngine } from './emotional-state';
-import { SelfReflectionEngine } from './self-reflection';
-import { PersonalityEngine } from './personality-engine';
+} from "@ai-operations/shared-types";
+import type { SparkStore } from "@ai-operations/ops-storage";
+import { Predictor } from "./predictor";
+import { OutcomeTracker } from "./outcome-tracker";
+import { LearningCore } from "./learning-core";
+import { WeightManager } from "./weight-manager";
+import { MemoryCore } from "./memory-core";
+import { AwarenessCore } from "./awareness-core";
+import { ReasoningCore } from "./reasoning-core";
+import { EssenceExtractor } from "./essence-extractor";
+import { MemoryTokenManager } from "./memory-token-manager";
+import { SpiralLoop } from "./spiral-loop";
+import { ContextReconstructor } from "./context-reconstructor";
+import { FeedbackIntegrator } from "./feedback-integrator";
+import { EmotionalStateEngine } from "./emotional-state";
+import { SelfReflectionEngine } from "./self-reflection";
+import { PersonalityEngine } from "./personality-engine";
 
 // ── SparkOrchestrator ───────────────────────────────────────────
 
@@ -130,9 +130,19 @@ export class SparkOrchestrator {
     // Spiral Memory engines
     this.essenceExtractor = new EssenceExtractor(store);
     this.tokenManager = new MemoryTokenManager(store, this.essenceExtractor);
-    this.spiral = new SpiralLoop(store, this.tokenManager, this.essenceExtractor, this.emotionalState);
+    this.spiral = new SpiralLoop(
+      store,
+      this.tokenManager,
+      this.essenceExtractor,
+      this.emotionalState,
+    );
     this.reconstructor = new ContextReconstructor(store, this.essenceExtractor);
-    this.feedbackIntegrator = new FeedbackIntegrator(store, this.tokenManager, this.spiral, this.emotionalState);
+    this.feedbackIntegrator = new FeedbackIntegrator(
+      store,
+      this.tokenManager,
+      this.spiral,
+      this.emotionalState,
+    );
 
     // Self-Reflection engine
     this.reflection = new SelfReflectionEngine(store);
@@ -169,7 +179,11 @@ export class SparkOrchestrator {
     outcome: OutcomeSignal,
   ): { episode: LearningEpisode; insights: Insight[] } {
     // Persist outcome to DB (was missing — outcomes were built but never saved)
-    try { this.store.saveOutcome(outcome); } catch { /* non-fatal */ }
+    try {
+      this.store.saveOutcome(outcome);
+    } catch {
+      /* non-fatal */
+    }
 
     const episode = this.learner.learn(prediction, outcome);
     const insights = this.memory.consolidate(episode);

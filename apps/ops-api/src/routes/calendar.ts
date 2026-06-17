@@ -11,28 +11,28 @@
  * so the Calendar connector is always initialized with the freshest token.
  */
 
-import { CalendarConnector } from '@ai-operations/ops-connectors';
-import { IntentClassifier } from '@ai-operations/ops-core';
-import { RuleEngine } from '@ai-operations/ops-policy';
+import { CalendarConnector } from "@ai-operations/ops-connectors";
+import { IntentClassifier } from "@ai-operations/ops-core";
+import { RuleEngine } from "@ai-operations/ops-policy";
 import {
   DEFAULT_POLICY,
   createTask,
   createApproval,
   verifyReceiptChain,
-} from '@ai-operations/shared-types';
-import type { TaskSource, CordDecision } from '@ai-operations/shared-types';
-import { ReceiptBuilder } from '@ai-operations/codebot-adapter';
-import { evaluateAction } from '../middleware/cord-gate';
-import { requestApproval } from './approvals';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
-import { getGoogleAccessToken } from './oauth';
+} from "@ai-operations/shared-types";
+import type { TaskSource, CordDecision } from "@ai-operations/shared-types";
+import { ReceiptBuilder } from "@ai-operations/codebot-adapter";
+import { evaluateAction } from "../middleware/cord-gate";
+import { requestApproval } from "./approvals";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
+import { getGoogleAccessToken } from "./oauth";
 
 // -- Singletons ---------------------------------------------------------------
 
 const classifier = new IntentClassifier();
 const ruleEngine = new RuleEngine(DEFAULT_POLICY);
-const HMAC_KEY = process.env.CORD_HMAC_KEY || 'ai-ops-dev-key';
+const HMAC_KEY = process.env.CORD_HMAC_KEY || "ai-ops-dev-key";
 
 /**
  * Create a Calendar connector with fresh OAuth credentials.
@@ -58,19 +58,23 @@ async function listEvents(ctx: any): Promise<void> {
 
   const calendar = await getCalendarConnector();
   if (!calendar) {
-    sendError(res, 401, 'Calendar not connected. Authorize at GET /api/oauth/google/url');
+    sendError(
+      res,
+      401,
+      "Calendar not connected. Authorize at GET /api/oauth/google/url",
+    );
     return;
   }
 
-  const result = await calendar.execute('list_events', {
-    calendarId: query.calendarId || 'primary',
-    maxResults: parseInt(query.maxResults || '25', 10),
+  const result = await calendar.execute("list_events", {
+    calendarId: query.calendarId || "primary",
+    maxResults: parseInt(query.maxResults || "25", 10),
     timeMin: query.timeMin,
     timeMax: query.timeMax,
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to list events');
+    sendError(res, 502, result.error || "Failed to list events");
     return;
   }
 
@@ -86,7 +90,11 @@ async function getEvent(ctx: any): Promise<void> {
 
   const calendar = await getCalendarConnector();
   if (!calendar) {
-    sendError(res, 401, 'Calendar not connected. Authorize at GET /api/oauth/google/url');
+    sendError(
+      res,
+      401,
+      "Calendar not connected. Authorize at GET /api/oauth/google/url",
+    );
     return;
   }
 
@@ -102,7 +110,7 @@ async function getEvent(ctx: any): Promise<void> {
   // if the connector doesn't support it directly.
   const eventId = params.id;
   if (!eventId) {
-    sendError(res, 400, 'Missing event ID');
+    sendError(res, 400, "Missing event ID");
     return;
   }
 
@@ -110,7 +118,11 @@ async function getEvent(ctx: any): Promise<void> {
   // make a targeted list call. The event ID won't directly filter via
   // list_events, but we keep the route available for future connector
   // expansion. For now return 501.
-  sendError(res, 501, 'Get single event is not yet supported by the Calendar connector. Use GET /api/calendar/events to list events.');
+  sendError(
+    res,
+    501,
+    "Get single event is not yet supported by the Calendar connector. Use GET /api/calendar/events to list events.",
+  );
 }
 
 /**
@@ -137,22 +149,30 @@ async function processCalendarRequest(ctx: any): Promise<void> {
   const { res, body } = ctx;
   const autoApprove = body.autoApprove === true;
 
-  const summary = body.summary as string || '';
-  const description = body.description as string || '';
-  const start = body.start as string || '';
-  const end = body.end as string || '';
-  const location = body.location as string || '';
-  const attendees = body.attendees as string[] || [];
+  const summary = (body.summary as string) || "";
+  const description = (body.description as string) || "";
+  const start = (body.start as string) || "";
+  const end = (body.end as string) || "";
+  const location = (body.location as string) || "";
+  const attendees = (body.attendees as string[]) || [];
   const eventId = body.eventId as string | undefined;
 
   if (!summary && !eventId) {
-    sendError(res, 400, 'Missing required field: summary (or eventId for updates)');
+    sendError(
+      res,
+      400,
+      "Missing required field: summary (or eventId for updates)",
+    );
     return;
   }
 
   const calendar = await getCalendarConnector();
   if (!calendar) {
-    sendError(res, 401, 'Calendar not connected. Authorize at GET /api/oauth/google/url');
+    sendError(
+      res,
+      401,
+      "Calendar not connected. Authorize at GET /api/oauth/google/url",
+    );
     return;
   }
 
@@ -164,10 +184,10 @@ async function processCalendarRequest(ctx: any): Promise<void> {
   const classification = classifier.classifyDetailed(intentText);
 
   // Determine operation: update if eventId present, otherwise create
-  const operation = eventId ? 'update_event' : 'create_event';
+  const operation = eventId ? "update_event" : "create_event";
 
   const task = createTask({
-    source: 'api' as TaskSource,
+    source: "api" as TaskSource,
     title: summary || `Calendar ${operation}: ${eventId}`,
     body: description || `${operation} event: ${summary}`,
     sourceId: eventId || `new-event-${Date.now()}`,
@@ -186,14 +206,16 @@ async function processCalendarRequest(ctx: any): Promise<void> {
   });
 
   // -- Step 2: Evaluate policy ------------------------------------------------
-  const policyResult = ruleEngine.evaluate('calendar', operation, { source: 'api' });
+  const policyResult = ruleEngine.evaluate("calendar", operation, {
+    source: "api",
+  });
 
   // -- Step 3: Evaluate CORD safety -------------------------------------------
   const actionInput = eventId
     ? { eventId, summary, start, end, description, location, attendees }
     : { summary, start, end, description, location, attendees };
 
-  const cordSafety = evaluateAction('calendar', operation, actionInput);
+  const cordSafety = evaluateAction("calendar", operation, actionInput);
 
   // Receipt for classification step
   receiptBuilder.addStep({
@@ -203,13 +225,16 @@ async function processCalendarRequest(ctx: any): Promise<void> {
     cordScore: cordSafety.score,
     cordReasons: cordSafety.reasons,
     input: { summary, operation },
-    output: { intent: classification.intent, confidence: classification.confidence },
+    output: {
+      intent: classification.intent,
+      confidence: classification.confidence,
+    },
   });
 
-  const needsApproval = cordSafety.decision === 'CHALLENGE'
-    || policyResult.autonomy === 'approve';
-  const isBlocked = cordSafety.decision === 'BLOCK'
-    || policyResult.autonomy === 'deny';
+  const needsApproval =
+    cordSafety.decision === "CHALLENGE" || policyResult.autonomy === "approve";
+  const isBlocked =
+    cordSafety.decision === "BLOCK" || policyResult.autonomy === "deny";
 
   // -- Step 4: Handle blocked --------------------------------------------------
   if (isBlocked) {
@@ -223,16 +248,21 @@ async function processCalendarRequest(ctx: any): Promise<void> {
         reasons: cordSafety.reasons,
       },
       blocked: true,
-      reason: policyResult.autonomy === 'deny'
-        ? `Policy denied: ${policyResult.reason}`
-        : `CORD blocked: ${cordSafety.reasons.join(', ')}`,
+      reason:
+        policyResult.autonomy === "deny"
+          ? `Policy denied: ${policyResult.reason}`
+          : `CORD blocked: ${cordSafety.reasons.join(", ")}`,
       receipts: receiptBuilder.finalize(HMAC_KEY),
     });
     return;
   }
 
   // -- Step 5: Approval gate --------------------------------------------------
-  let approvalResult: { needed: boolean; decision?: string; approvalId?: string } = {
+  let approvalResult: {
+    needed: boolean;
+    decision?: string;
+    approvalId?: string;
+  } = {
     needed: needsApproval,
   };
 
@@ -240,8 +270,8 @@ async function processCalendarRequest(ctx: any): Promise<void> {
     const approval = requestApproval(
       `${operation}-${task.sourceId}`,
       task.id,
-      policyResult.risk as 'low' | 'medium' | 'high' | 'critical',
-      needsApproval && cordSafety.decision === 'CHALLENGE'
+      policyResult.risk as "low" | "medium" | "high" | "critical",
+      needsApproval && cordSafety.decision === "CHALLENGE"
         ? `CORD challenge (score: ${cordSafety.score})`
         : `Policy requires approval: ${policyResult.reason}`,
       `${operation}: ${summary || eventId}`,
@@ -249,7 +279,7 @@ async function processCalendarRequest(ctx: any): Promise<void> {
 
     approvalResult = {
       needed: true,
-      decision: 'pending',
+      decision: "pending",
       approvalId: approval.id,
     };
 
@@ -263,17 +293,21 @@ async function processCalendarRequest(ctx: any): Promise<void> {
         reasons: cordSafety.reasons,
       },
       approval: approvalResult,
-      message: 'Approval required. Decide at POST /api/approvals/:id/decide',
+      message: "Approval required. Decide at POST /api/approvals/:id/decide",
       receipts: receiptBuilder.finalize(HMAC_KEY),
     });
     return;
   }
 
   // -- Step 6: Execute calendar operation -------------------------------------
-  let execution: { success: boolean; data?: Record<string, unknown>; error?: string };
+  let execution: {
+    success: boolean;
+    data?: Record<string, unknown>;
+    error?: string;
+  };
 
-  if (operation === 'update_event') {
-    const updateResult = await calendar.execute('update_event', {
+  if (operation === "update_event") {
+    const updateResult = await calendar.execute("update_event", {
       eventId,
       summary: summary || undefined,
       start: start || undefined,
@@ -290,11 +324,15 @@ async function processCalendarRequest(ctx: any): Promise<void> {
     };
   } else {
     if (!start || !end) {
-      sendError(res, 400, 'Missing required fields: start and end are required for create_event');
+      sendError(
+        res,
+        400,
+        "Missing required fields: start and end are required for create_event",
+      );
       return;
     }
 
-    const createResult = await calendar.execute('create_event', {
+    const createResult = await calendar.execute("create_event", {
       summary,
       start,
       end,
@@ -353,24 +391,28 @@ async function checkAvailability(ctx: any): Promise<void> {
   const timeMax = body.timeMax as string;
 
   if (!timeMin || !timeMax) {
-    sendError(res, 400, 'Missing required fields: timeMin and timeMax');
+    sendError(res, 400, "Missing required fields: timeMin and timeMax");
     return;
   }
 
   const calendar = await getCalendarConnector();
   if (!calendar) {
-    sendError(res, 401, 'Calendar not connected. Authorize at GET /api/oauth/google/url');
+    sendError(
+      res,
+      401,
+      "Calendar not connected. Authorize at GET /api/oauth/google/url",
+    );
     return;
   }
 
-  const result = await calendar.execute('check_availability', {
+  const result = await calendar.execute("check_availability", {
     timeMin,
     timeMax,
-    items: body.items || [{ id: 'primary' }],
+    items: body.items || [{ id: "primary" }],
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to check availability');
+    sendError(res, 502, result.error || "Failed to check availability");
     return;
   }
 
@@ -400,20 +442,24 @@ async function createEvent(ctx: any): Promise<void> {
   const end = body.end as string;
 
   if (!summary || !start || !end) {
-    sendError(res, 400, 'Missing required fields: summary, start, and end');
+    sendError(res, 400, "Missing required fields: summary, start, and end");
     return;
   }
 
   const calendar = await getCalendarConnector();
   if (!calendar) {
-    sendError(res, 401, 'Calendar not connected. Authorize at GET /api/oauth/google/url');
+    sendError(
+      res,
+      401,
+      "Calendar not connected. Authorize at GET /api/oauth/google/url",
+    );
     return;
   }
 
   const autoApprove = body.autoApprove === true;
-  const description = body.description as string || '';
-  const location = body.location as string || '';
-  const attendees = body.attendees as string[] || [];
+  const description = (body.description as string) || "";
+  const location = (body.location as string) || "";
+  const attendees = (body.attendees as string[]) || [];
 
   const receiptBuilder = new ReceiptBuilder();
   const policyVersion = DEFAULT_POLICY.version;
@@ -423,7 +469,7 @@ async function createEvent(ctx: any): Promise<void> {
   const classification = classifier.classifyDetailed(intentText);
 
   const task = createTask({
-    source: 'api' as TaskSource,
+    source: "api" as TaskSource,
     title: `Create event: ${summary}`,
     body: description || `Create calendar event: ${summary}`,
     sourceId: `new-event-${Date.now()}`,
@@ -440,11 +486,13 @@ async function createEvent(ctx: any): Promise<void> {
   });
 
   // -- Step 2: Evaluate policy ------------------------------------------------
-  const policyResult = ruleEngine.evaluate('calendar', 'create_event', { source: 'api' });
+  const policyResult = ruleEngine.evaluate("calendar", "create_event", {
+    source: "api",
+  });
 
   // -- Step 3: Evaluate CORD safety -------------------------------------------
   const actionInput = { summary, start, end, description, location, attendees };
-  const cordSafety = evaluateAction('calendar', 'create_event', actionInput);
+  const cordSafety = evaluateAction("calendar", "create_event", actionInput);
 
   // Receipt for classification step
   receiptBuilder.addStep({
@@ -453,14 +501,17 @@ async function createEvent(ctx: any): Promise<void> {
     cordDecision: cordSafety.decision as CordDecision,
     cordScore: cordSafety.score,
     cordReasons: cordSafety.reasons,
-    input: { summary, operation: 'create_event' },
-    output: { intent: classification.intent, confidence: classification.confidence },
+    input: { summary, operation: "create_event" },
+    output: {
+      intent: classification.intent,
+      confidence: classification.confidence,
+    },
   });
 
-  const needsApproval = cordSafety.decision === 'CHALLENGE'
-    || policyResult.autonomy === 'approve';
-  const isBlocked = cordSafety.decision === 'BLOCK'
-    || policyResult.autonomy === 'deny';
+  const needsApproval =
+    cordSafety.decision === "CHALLENGE" || policyResult.autonomy === "approve";
+  const isBlocked =
+    cordSafety.decision === "BLOCK" || policyResult.autonomy === "deny";
 
   // -- Step 4: Handle blocked --------------------------------------------------
   if (isBlocked) {
@@ -474,16 +525,21 @@ async function createEvent(ctx: any): Promise<void> {
         reasons: cordSafety.reasons,
       },
       blocked: true,
-      reason: policyResult.autonomy === 'deny'
-        ? `Policy denied: ${policyResult.reason}`
-        : `CORD blocked: ${cordSafety.reasons.join(', ')}`,
+      reason:
+        policyResult.autonomy === "deny"
+          ? `Policy denied: ${policyResult.reason}`
+          : `CORD blocked: ${cordSafety.reasons.join(", ")}`,
       receipts: receiptBuilder.finalize(HMAC_KEY),
     });
     return;
   }
 
   // -- Step 5: Approval gate --------------------------------------------------
-  let approvalResult: { needed: boolean; decision?: string; approvalId?: string } = {
+  let approvalResult: {
+    needed: boolean;
+    decision?: string;
+    approvalId?: string;
+  } = {
     needed: needsApproval,
   };
 
@@ -491,8 +547,8 @@ async function createEvent(ctx: any): Promise<void> {
     const approval = requestApproval(
       `create_event-${task.sourceId}`,
       task.id,
-      policyResult.risk as 'low' | 'medium' | 'high' | 'critical',
-      needsApproval && cordSafety.decision === 'CHALLENGE'
+      policyResult.risk as "low" | "medium" | "high" | "critical",
+      needsApproval && cordSafety.decision === "CHALLENGE"
         ? `CORD challenge (score: ${cordSafety.score})`
         : `Policy requires approval: ${policyResult.reason}`,
       `Create event: ${summary}`,
@@ -500,7 +556,7 @@ async function createEvent(ctx: any): Promise<void> {
 
     approvalResult = {
       needed: true,
-      decision: 'pending',
+      decision: "pending",
       approvalId: approval.id,
     };
 
@@ -514,14 +570,14 @@ async function createEvent(ctx: any): Promise<void> {
         reasons: cordSafety.reasons,
       },
       approval: approvalResult,
-      message: 'Approval required. Decide at POST /api/approvals/:id/decide',
+      message: "Approval required. Decide at POST /api/approvals/:id/decide",
       receipts: receiptBuilder.finalize(HMAC_KEY),
     });
     return;
   }
 
   // -- Step 6: Execute create -------------------------------------------------
-  const createResult = await calendar.execute('create_event', {
+  const createResult = await calendar.execute("create_event", {
     summary,
     start,
     end,
@@ -570,9 +626,9 @@ async function createEvent(ctx: any): Promise<void> {
 // -- Export routes -------------------------------------------------------------
 
 export const calendarRoutes: Route[] = [
-  pathToRoute('GET', '/api/calendar/events', listEvents),
-  pathToRoute('GET', '/api/calendar/events/:id', getEvent),
-  pathToRoute('POST', '/api/calendar/process', processCalendarRequest),
-  pathToRoute('POST', '/api/calendar/availability', checkAvailability),
-  pathToRoute('POST', '/api/calendar/create', createEvent),
+  pathToRoute("GET", "/api/calendar/events", listEvents),
+  pathToRoute("GET", "/api/calendar/events/:id", getEvent),
+  pathToRoute("POST", "/api/calendar/process", processCalendarRequest),
+  pathToRoute("POST", "/api/calendar/availability", checkAvailability),
+  pathToRoute("POST", "/api/calendar/create", createEvent),
 ];

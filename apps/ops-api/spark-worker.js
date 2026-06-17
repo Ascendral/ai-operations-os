@@ -15,11 +15,11 @@
  *   4. Wait INTERVAL_MS before next cycle
  */
 
-const http = require('http');
+const http = require("http");
 
-const API_BASE = 'http://localhost:3100';
-const INTERVAL_MS = parseInt(process.env.SPARK_INTERVAL || '60000', 10); // 1 minute
-const BATCH_SIZE = parseInt(process.env.SPARK_BATCH || '5', 10);
+const API_BASE = "http://localhost:3100";
+const INTERVAL_MS = parseInt(process.env.SPARK_INTERVAL || "60000", 10); // 1 minute
+const BATCH_SIZE = parseInt(process.env.SPARK_BATCH || "5", 10);
 
 // Track processed message IDs to avoid re-processing
 const processed = new Set();
@@ -33,14 +33,14 @@ function request(method, path, data) {
       port: url.port,
       path: url.pathname + url.search,
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     };
-    if (body) opts.headers['Content-Length'] = Buffer.byteLength(body);
+    if (body) opts.headers["Content-Length"] = Buffer.byteLength(body);
 
     const req = http.request(opts, (res) => {
-      let d = '';
-      res.on('data', (c) => (d += c));
-      res.on('end', () => {
+      let d = "";
+      res.on("data", (c) => (d += c));
+      res.on("end", () => {
         try {
           resolve({ status: res.statusCode, data: JSON.parse(d) });
         } catch {
@@ -48,7 +48,7 @@ function request(method, path, data) {
         }
       });
     });
-    req.on('error', reject);
+    req.on("error", reject);
     if (body) req.write(body);
     req.end();
   });
@@ -60,9 +60,14 @@ function ts() {
 
 async function cycle() {
   // 1. Fetch inbox
-  const inbox = await request('GET', '/api/gmail/inbox?limit=20&query=is:unread');
+  const inbox = await request(
+    "GET",
+    "/api/gmail/inbox?limit=20&query=is:unread",
+  );
   if (inbox.status !== 200) {
-    console.log(`[${ts()}] ⚠ Inbox fetch failed: ${inbox.data?.error || inbox.status}`);
+    console.log(
+      `[${ts()}] ⚠ Inbox fetch failed: ${inbox.data?.error || inbox.status}`,
+    );
     return;
   }
 
@@ -70,17 +75,21 @@ async function cycle() {
   const unprocessed = messages.filter((m) => !processed.has(m.id));
 
   if (unprocessed.length === 0) {
-    console.log(`[${ts()}] 💤 No new unread messages (${processed.size} already processed)`);
+    console.log(
+      `[${ts()}] 💤 No new unread messages (${processed.size} already processed)`,
+    );
     return;
   }
 
   const batch = unprocessed.slice(0, BATCH_SIZE);
-  console.log(`[${ts()}] 📬 Found ${unprocessed.length} new messages, processing ${batch.length}`);
+  console.log(
+    `[${ts()}] 📬 Found ${unprocessed.length} new messages, processing ${batch.length}`,
+  );
 
   for (const msg of batch) {
-    const subject = (msg.subject || '').slice(0, 60);
+    const subject = (msg.subject || "").slice(0, 60);
     try {
-      const result = await request('POST', '/api/gmail/process', {
+      const result = await request("POST", "/api/gmail/process", {
         messageId: msg.id,
         autoApprove: true,
       });
@@ -88,7 +97,9 @@ async function cycle() {
       processed.add(msg.id);
 
       if (result.status !== 200) {
-        console.log(`[${ts()}]   ❌ "${subject}" — ${result.data?.error || result.status}`);
+        console.log(
+          `[${ts()}]   ❌ "${subject}" — ${result.data?.error || result.status}`,
+        );
         continue;
       }
 
@@ -103,13 +114,13 @@ async function cycle() {
           `[${ts()}]   ✅ "${subject}"` +
             ` | ${pred.category} | conf: ${pred.confidence}` +
             ` | w: ${ep.weightBefore}→${ep.weightAfter} (${ep.adjustmentDirection})` +
-            (insights.length ? ` | ${insights.length} insight(s)` : ''),
+            (insights.length ? ` | ${insights.length} insight(s)` : ""),
         );
       } else {
         console.log(
           `[${ts()}]   ✅ "${subject}"` +
             ` | ${pred.category} | conf: ${pred.confidence}` +
-            ` | ${d.blocked ? 'BLOCKED' : d.approval?.decision || 'processed'}`,
+            ` | ${d.blocked ? "BLOCKED" : d.approval?.decision || "processed"}`,
         );
       }
     } catch (err) {
@@ -140,6 +151,6 @@ async function run() {
 }
 
 run().catch((err) => {
-  console.error('Fatal:', err);
+  console.error("Fatal:", err);
   process.exit(1);
 });

@@ -18,7 +18,7 @@
 
 let codebot: any = null;
 try {
-  codebot = require('codebot-ai');
+  codebot = require("codebot-ai");
 } catch {
   /* codebot-ai not installed — simulation mode will be used */
 }
@@ -28,7 +28,7 @@ try {
 // ---------------------------------------------------------------------------
 
 /** Event types emitted during CodeBot execution. */
-export type ExecutionEventType = 'progress' | 'tool_call' | 'result' | 'error';
+export type ExecutionEventType = "progress" | "tool_call" | "result" | "error";
 
 /** An event emitted during CodeBot agent execution. */
 export interface ExecutionEvent {
@@ -67,7 +67,7 @@ function delay(ms: number): Promise<void> {
 function promptSummary(prompt: string): string {
   const firstSentence = prompt.split(/[.\n]/)[0]?.trim() ?? prompt;
   return firstSentence.length > 120
-    ? firstSentence.substring(0, 117) + '...'
+    ? firstSentence.substring(0, 117) + "..."
     : firstSentence;
 }
 
@@ -83,54 +83,67 @@ function inferSimulatedToolCalls(
   projectRoot: string,
 ): Array<{ tool: string; description: string; delayMs: number }> {
   const lower = prompt.toLowerCase();
-  const calls: Array<{ tool: string; description: string; delayMs: number }> = [];
+  const calls: Array<{ tool: string; description: string; delayMs: number }> =
+    [];
 
   // Phase 1 — Reconnaissance: the agent typically reads relevant files first
-  if (lower.includes('refactor') || lower.includes('rewrite') || lower.includes('update')) {
+  if (
+    lower.includes("refactor") ||
+    lower.includes("rewrite") ||
+    lower.includes("update")
+  ) {
     calls.push({
-      tool: 'file.search',
+      tool: "file.search",
       description: `file.search({ pattern: "src/**/*.ts", cwd: "${projectRoot}" })`,
       delayMs: 80,
     });
     calls.push({
-      tool: 'file.read',
+      tool: "file.read",
       description: `file.read({ path: "${projectRoot}/src/index.ts" })`,
       delayMs: 40,
     });
   }
 
-  if (lower.includes('test') || lower.includes('spec')) {
+  if (lower.includes("test") || lower.includes("spec")) {
     calls.push({
-      tool: 'file.search',
+      tool: "file.search",
       description: `file.search({ pattern: "**/*.test.ts", cwd: "${projectRoot}" })`,
       delayMs: 60,
     });
   }
 
-  if (lower.includes('bug') || lower.includes('fix') || lower.includes('error')) {
+  if (
+    lower.includes("bug") ||
+    lower.includes("fix") ||
+    lower.includes("error")
+  ) {
     calls.push({
-      tool: 'file.search',
+      tool: "file.search",
       description: `file.search({ pattern: "src/**/*", cwd: "${projectRoot}" })`,
       delayMs: 70,
     });
     calls.push({
-      tool: 'file.read',
+      tool: "file.read",
       description: `file.read({ path: "${projectRoot}/src/index.ts" })`,
       delayMs: 35,
     });
   }
 
-  if (lower.includes('send') || lower.includes('email') || lower.includes('message')) {
+  if (
+    lower.includes("send") ||
+    lower.includes("email") ||
+    lower.includes("message")
+  ) {
     calls.push({
-      tool: 'messaging.send',
-      description: 'messaging.send({ draft: true })',
+      tool: "messaging.send",
+      description: "messaging.send({ draft: true })",
       delayMs: 90,
     });
   }
 
-  if (lower.includes('deploy') || lower.includes('publish')) {
+  if (lower.includes("deploy") || lower.includes("publish")) {
     calls.push({
-      tool: 'shell.exec',
+      tool: "shell.exec",
       description: 'shell.exec({ command: "npm run build" })',
       delayMs: 150,
     });
@@ -140,17 +153,17 @@ function inferSimulatedToolCalls(
   if (calls.length === 0) {
     calls.push(
       {
-        tool: 'file.search',
+        tool: "file.search",
         description: `file.search({ pattern: "**/*", cwd: "${projectRoot}" })`,
         delayMs: 60,
       },
       {
-        tool: 'file.read',
+        tool: "file.read",
         description: `file.read({ path: "${projectRoot}/package.json" })`,
         delayMs: 30,
       },
       {
-        tool: 'agent.analyze',
+        tool: "agent.analyze",
         description: `agent.analyze({ prompt: "${promptSummary(prompt)}" })`,
         delayMs: 100,
       },
@@ -185,7 +198,7 @@ export class CodeBotExecutor {
     this.codebotAvailable = codebot !== null;
     if (!this.codebotAvailable) {
       console.warn(
-        '[CodeBotExecutor] codebot-ai is not installed. Runs will use simulation mode.',
+        "[CodeBotExecutor] codebot-ai is not installed. Runs will use simulation mode.",
       );
     }
   }
@@ -213,11 +226,11 @@ export class CodeBotExecutor {
     const useSimulation = options?.forceSimulation || !this.codebotAvailable;
 
     yield {
-      type: 'progress',
+      type: "progress",
       message: `Starting CodeBot agent (project: ${projectRoot})`,
       metadata: {
         projectRoot,
-        mode: useSimulation ? 'simulation' : 'live',
+        mode: useSimulation ? "simulation" : "live",
         codebotAvailable: this.codebotAvailable,
       },
     };
@@ -257,7 +270,7 @@ export class CodeBotExecutor {
 
     try {
       yield {
-        type: 'progress',
+        type: "progress",
         message: `Initializing CodeBot agent with prompt: "${promptSummary(prompt)}"`,
         metadata: { timeoutMs: timeout },
       };
@@ -269,46 +282,46 @@ export class CodeBotExecutor {
       });
 
       for await (const event of agent.stream()) {
-        if (event.type === 'tool_use') {
+        if (event.type === "tool_use") {
           yield {
-            type: 'tool_call',
+            type: "tool_call",
             message: `Tool call: ${event.tool}(${JSON.stringify(event.input).substring(0, 200)})`,
             metadata: { tool: event.tool, input: event.input },
           };
-        } else if (event.type === 'text') {
+        } else if (event.type === "text") {
           yield {
-            type: 'progress',
+            type: "progress",
             message: event.text,
           };
-        } else if (event.type === 'result') {
+        } else if (event.type === "result") {
           yield {
-            type: 'result',
+            type: "result",
             message:
-              typeof event.output === 'string'
+              typeof event.output === "string"
                 ? event.output
                 : JSON.stringify(event.output),
             metadata: { output: event.output },
           };
-        } else if (event.type === 'error') {
+        } else if (event.type === "error") {
           yield {
-            type: 'error',
-            message: event.message ?? 'Unknown CodeBot error',
+            type: "error",
+            message: event.message ?? "Unknown CodeBot error",
             metadata: { code: event.code },
           };
         }
       }
 
       yield {
-        type: 'result',
-        message: 'CodeBot agent completed successfully.',
+        type: "result",
+        message: "CodeBot agent completed successfully.",
       };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       yield {
-        type: 'error',
+        type: "error",
         message: `CodeBot agent failed: ${message}`,
         metadata: {
-          errorName: error instanceof Error ? error.name : 'UnknownError',
+          errorName: error instanceof Error ? error.name : "UnknownError",
           stack: error instanceof Error ? error.stack : undefined,
         },
       };
@@ -338,9 +351,9 @@ export class CodeBotExecutor {
     const summary = promptSummary(prompt);
 
     yield {
-      type: 'progress',
+      type: "progress",
       message: `[Simulation] Analyzing prompt: "${summary}"`,
-      metadata: { simulated: true, phase: 'analysis' },
+      metadata: { simulated: true, phase: "analysis" },
     };
 
     await delay(50);
@@ -349,9 +362,13 @@ export class CodeBotExecutor {
     const toolCalls = inferSimulatedToolCalls(prompt, projectRoot);
 
     yield {
-      type: 'progress',
+      type: "progress",
       message: `[Simulation] Planning ${toolCalls.length} tool invocation(s)`,
-      metadata: { simulated: true, phase: 'planning', toolCount: toolCalls.length },
+      metadata: {
+        simulated: true,
+        phase: "planning",
+        toolCount: toolCalls.length,
+      },
     };
 
     await delay(30);
@@ -361,15 +378,15 @@ export class CodeBotExecutor {
       const call = toolCalls[i];
 
       yield {
-        type: 'progress',
+        type: "progress",
         message: `[Simulation] Step ${i + 1}/${toolCalls.length}: invoking ${call.tool}`,
-        metadata: { simulated: true, phase: 'execution', stepIndex: i },
+        metadata: { simulated: true, phase: "execution", stepIndex: i },
       };
 
       await delay(call.delayMs);
 
       yield {
-        type: 'tool_call',
+        type: "tool_call",
         message: `[Simulation] ${call.description}`,
         metadata: {
           simulated: true,
@@ -382,22 +399,22 @@ export class CodeBotExecutor {
     }
 
     yield {
-      type: 'progress',
-      message: '[Simulation] Synthesizing results',
-      metadata: { simulated: true, phase: 'synthesis' },
+      type: "progress",
+      message: "[Simulation] Synthesizing results",
+      metadata: { simulated: true, phase: "synthesis" },
     };
 
     await delay(40);
 
     yield {
-      type: 'result',
+      type: "result",
       message:
         `[Simulation] CodeBot agent completed (simulation mode). ` +
         `Executed ${toolCalls.length} simulated tool call(s) for prompt: "${summary}". ` +
         `Install codebot-ai for real execution.`,
       metadata: {
         simulated: true,
-        phase: 'done',
+        phase: "done",
         toolCallCount: toolCalls.length,
         prompt: summary,
       },

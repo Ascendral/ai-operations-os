@@ -95,6 +95,7 @@ cp .env.example .env
 ```
 
 Edit `.env`:
+
 ```
 GOOGLE_CLIENT_ID=your-client-id-here
 GOOGLE_CLIENT_SECRET=your-client-secret-here
@@ -137,38 +138,42 @@ The API runs on port 3100 with a persistent volume for the SQLite database.
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `OPS_PORT` | No | `3100` | API server port |
-| `OPS_DB_PATH` | No | `~/.ai-ops/data.db` | SQLite database path |
-| `OPS_API_KEY` | No | (none) | API key for auth (dev mode if unset) |
-| `OPS_LOG_LEVEL` | No | `INFO` | Log level: ERROR, WARN, INFO, DEBUG |
-| `CORD_HMAC_KEY` | No | `ai-ops-dev-key` | HMAC key for receipt signing |
-| `GOOGLE_CLIENT_ID` | For Gmail/Calendar | — | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | For Gmail/Calendar | — | Google OAuth client secret |
-| `X_API_KEY` | For X/Twitter | — | X API bearer token |
-| `SHOPIFY_STORE_URL` | For Shopify | — | Shopify store URL |
-| `SHOPIFY_ACCESS_TOKEN` | For Shopify | — | Shopify admin API token |
+| Variable               | Required           | Default             | Description                          |
+| ---------------------- | ------------------ | ------------------- | ------------------------------------ |
+| `OPS_PORT`             | No                 | `3100`              | API server port                      |
+| `OPS_DB_PATH`          | No                 | `~/.ai-ops/data.db` | SQLite database path                 |
+| `OPS_API_KEY`          | No                 | (none)              | API key for auth (dev mode if unset) |
+| `OPS_LOG_LEVEL`        | No                 | `INFO`              | Log level: ERROR, WARN, INFO, DEBUG  |
+| `CORD_HMAC_KEY`        | No                 | `ai-ops-dev-key`    | HMAC key for receipt signing         |
+| `GOOGLE_CLIENT_ID`     | For Gmail/Calendar | —                   | Google OAuth client ID               |
+| `GOOGLE_CLIENT_SECRET` | For Gmail/Calendar | —                   | Google OAuth client secret           |
+| `X_API_KEY`            | For X/Twitter      | —                   | X API bearer token                   |
+| `SHOPIFY_STORE_URL`    | For Shopify        | —                   | Shopify store URL                    |
+| `SHOPIFY_ACCESS_TOKEN` | For Shopify        | —                   | Shopify admin API token              |
 
 ## Troubleshooting
 
 **Build fails with TypeScript errors**
+
 ```bash
 npm run clean && npm install && npm run build
 ```
 
 **Port 3100 already in use**
+
 ```bash
 OPS_PORT=3200 node apps/ops-api/dist/server.js
 ```
 
 **SQLite errors**
+
 ```bash
 rm -rf ~/.ai-ops/data.db
 # Server will recreate the DB on next start
 ```
 
 **OAuth callback fails**
+
 - Make sure the redirect URI in Google Cloud Console matches exactly: `http://localhost:3100/api/oauth/google/callback`
 - Check that `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set in `.env`
 

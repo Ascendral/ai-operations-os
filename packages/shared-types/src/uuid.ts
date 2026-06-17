@@ -5,6 +5,6 @@
  * This uses the `node:crypto` module which works in Node 16+.
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 export { randomUUID };

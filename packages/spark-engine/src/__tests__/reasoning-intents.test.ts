@@ -1,22 +1,25 @@
 /**
  * Tests for SPARK diagnose, compare, and confidence-scored intents.
  */
-import { Database, SparkStore } from '@ai-operations/ops-storage';
-import type { LearningEpisode, IntentClassification } from '@ai-operations/shared-types';
-import { ReasoningCore, detectCompoundQuery } from '../reasoning-core';
-import { WeightManager } from '../weight-manager';
-import { AwarenessCore } from '../awareness-core';
-import { buildAllDefaultWeights } from '../constants';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
+import { Database, SparkStore } from "@ai-operations/ops-storage";
+import type {
+  LearningEpisode,
+  IntentClassification,
+} from "@ai-operations/shared-types";
+import { ReasoningCore, detectCompoundQuery } from "../reasoning-core";
+import { WeightManager } from "../weight-manager";
+import { AwarenessCore } from "../awareness-core";
+import { buildAllDefaultWeights } from "../constants";
+import * as path from "path";
+import * as fs from "fs";
+import * as os from "os";
 
 // ── Helpers ────────────────────────────────────────────────────────
 
 let tmpDir: string;
 
 beforeAll(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'spark-reasoning-intents-'));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "spark-reasoning-intents-"));
 });
 
 afterAll(() => {
@@ -39,19 +42,21 @@ function initWeights(store: SparkStore): void {
   store.initializeWeights(buildAllDefaultWeights());
 }
 
-function makeEpisode(overrides: Partial<LearningEpisode> = {}): LearningEpisode {
+function makeEpisode(
+  overrides: Partial<LearningEpisode> = {},
+): LearningEpisode {
   return {
     id: `ep-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    predictionId: 'pred-1',
-    outcomeId: 'out-1',
-    category: 'communication',
+    predictionId: "pred-1",
+    outcomeId: "out-1",
+    category: "communication",
     scoreDelta: 0,
     outcomeMismatch: false,
-    adjustmentDirection: 'none',
+    adjustmentDirection: "none",
     adjustmentMagnitude: 0,
     weightBefore: 1.0,
     weightAfter: 1.0,
-    reason: 'test episode',
+    reason: "test episode",
     createdAt: new Date().toISOString(),
     ...overrides,
   } as LearningEpisode;
@@ -59,7 +64,7 @@ function makeEpisode(overrides: Partial<LearningEpisode> = {}): LearningEpisode 
 
 // ── Diagnose Intent ────────────────────────────────────────────────
 
-describe('ReasoningCore — diagnose intent', () => {
+describe("ReasoningCore — diagnose intent", () => {
   let store: SparkStore;
 
   beforeEach(() => {
@@ -75,8 +80,12 @@ describe('ReasoningCore — diagnose intent', () => {
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('What went wrong? Diagnose the issue.', undefined, report);
-    expect(result.queryIntent).toBe('diagnose');
+    const result = reasoning.reason(
+      "What went wrong? Diagnose the issue.",
+      undefined,
+      report,
+    );
+    expect(result.queryIntent).toBe("diagnose");
   });
 
   it('classifies "any problems" as diagnose', () => {
@@ -86,28 +95,46 @@ describe('ReasoningCore — diagnose intent', () => {
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('Are there any problems?', undefined, report);
-    expect(result.queryIntent).toBe('diagnose');
+    const result = reasoning.reason(
+      "Are there any problems?",
+      undefined,
+      report,
+    );
+    expect(result.queryIntent).toBe("diagnose");
   });
 
-  it('returns meaningful response with no episodes', () => {
+  it("returns meaningful response with no episodes", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('What went wrong?', undefined, report);
+    const result = reasoning.reason("What went wrong?", undefined, report);
     expect(result.response).toBeTruthy();
     expect(result.response.length).toBeGreaterThan(10);
   });
 
-  it('detects failure episodes and reports breakdown', () => {
+  it("detects failure episodes and reports breakdown", () => {
     // Insert episodes with adjustments
-    store.saveEpisode(makeEpisode({ category: 'communication', adjustmentDirection: 'increase' }));
-    store.saveEpisode(makeEpisode({ category: 'communication', adjustmentDirection: 'decrease' }));
-    store.saveEpisode(makeEpisode({ category: 'publication', adjustmentDirection: 'increase' }));
-    store.saveEpisode(makeEpisode({ category: 'scheduling', adjustmentDirection: 'none' }));
+    store.saveEpisode(
+      makeEpisode({
+        category: "communication",
+        adjustmentDirection: "increase",
+      }),
+    );
+    store.saveEpisode(
+      makeEpisode({
+        category: "communication",
+        adjustmentDirection: "decrease",
+      }),
+    );
+    store.saveEpisode(
+      makeEpisode({ category: "publication", adjustmentDirection: "increase" }),
+    );
+    store.saveEpisode(
+      makeEpisode({ category: "scheduling", adjustmentDirection: "none" }),
+    );
 
     const weights = new WeightManager(store);
     weights.initialize();
@@ -115,28 +142,30 @@ describe('ReasoningCore — diagnose intent', () => {
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('What went wrong?', undefined, report);
-    expect(result.queryIntent).toBe('diagnose');
+    const result = reasoning.reason("What went wrong?", undefined, report);
+    expect(result.queryIntent).toBe("diagnose");
     expect(result.response).toBeTruthy();
     // Should mention the adjustments
-    expect(result.steps.some(s => s.ruleId === 'diagnose-failures')).toBe(true);
+    expect(result.steps.some((s) => s.ruleId === "diagnose-failures")).toBe(
+      true,
+    );
   });
 
-  it('suggests compare as a follow-up', () => {
+  it("suggests compare as a follow-up", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('Diagnose failures', undefined, report);
+    const result = reasoning.reason("Diagnose failures", undefined, report);
     expect(result.suggestions.length).toBeGreaterThan(0);
   });
 });
 
 // ── Compare Intent ─────────────────────────────────────────────────
 
-describe('ReasoningCore — compare intent', () => {
+describe("ReasoningCore — compare intent", () => {
   let store: SparkStore;
 
   beforeEach(() => {
@@ -152,8 +181,12 @@ describe('ReasoningCore — compare intent', () => {
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('Compare communication vs financial', undefined, report);
-    expect(result.queryIntent).toBe('compare');
+    const result = reasoning.reason(
+      "Compare communication vs financial",
+      undefined,
+      report,
+    );
+    expect(result.queryIntent).toBe("compare");
   });
 
   it('classifies "what is the difference" as compare', () => {
@@ -163,54 +196,74 @@ describe('ReasoningCore — compare intent', () => {
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('What is the difference between scheduling and communication?', undefined, report);
-    expect(result.queryIntent).toBe('compare');
+    const result = reasoning.reason(
+      "What is the difference between scheduling and communication?",
+      undefined,
+      report,
+    );
+    expect(result.queryIntent).toBe("compare");
   });
 
-  it('returns a comparison with two recognized categories', () => {
+  it("returns a comparison with two recognized categories", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('Compare communication vs financial', undefined, report);
-    expect(result.queryIntent).toBe('compare');
+    const result = reasoning.reason(
+      "Compare communication vs financial",
+      undefined,
+      report,
+    );
+    expect(result.queryIntent).toBe("compare");
     expect(result.response).toBeTruthy();
-    expect(result.steps.some(s => s.ruleId === 'compare-categories')).toBe(true);
+    expect(result.steps.some((s) => s.ruleId === "compare-categories")).toBe(
+      true,
+    );
   });
 
-  it('suggests diagnose-related follow-up', () => {
+  it("suggests diagnose-related follow-up", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('Compare communication vs financial', undefined, report);
+    const result = reasoning.reason(
+      "Compare communication vs financial",
+      undefined,
+      report,
+    );
     expect(result.suggestions.length).toBeGreaterThan(0);
     const hasDiagnoseRelated = result.suggestions.some(
-      s => s.toLowerCase().includes('wrong') || s.toLowerCase().includes('uncertain'),
+      (s) =>
+        s.toLowerCase().includes("wrong") ||
+        s.toLowerCase().includes("uncertain"),
     );
     expect(hasDiagnoseRelated).toBe(true);
   });
 
-  it('handles compare with unrecognized categories gracefully', () => {
+  it("handles compare with unrecognized categories gracefully", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('Compare apples vs oranges', undefined, report);
-    expect(result.queryIntent).toBe('compare');
+    const result = reasoning.reason(
+      "Compare apples vs oranges",
+      undefined,
+      report,
+    );
+    expect(result.queryIntent).toBe("compare");
     expect(result.response).toBeTruthy();
   });
 });
 
 // ── Confidence Scoring (IntentClassification) ────────────────────
 
-describe('ReasoningCore — confidence scoring', () => {
+describe("ReasoningCore — confidence scoring", () => {
   let store: SparkStore;
 
   beforeEach(() => {
@@ -219,67 +272,79 @@ describe('ReasoningCore — confidence scoring', () => {
     initWeights(store);
   });
 
-  it('returns IntentClassification from classifyQueryIntent', () => {
+  it("returns IntentClassification from classifyQueryIntent", () => {
     const reasoning = new ReasoningCore(store);
-    const cls = reasoning.classifyQueryIntent('What is my status?');
-    expect(cls).toHaveProperty('intent');
-    expect(cls).toHaveProperty('confidence');
-    expect(cls).toHaveProperty('alternatives');
-    expect(cls).toHaveProperty('ambiguous');
-    expect(typeof cls.confidence).toBe('number');
+    const cls = reasoning.classifyQueryIntent("What is my status?");
+    expect(cls).toHaveProperty("intent");
+    expect(cls).toHaveProperty("confidence");
+    expect(cls).toHaveProperty("alternatives");
+    expect(cls).toHaveProperty("ambiguous");
+    expect(typeof cls.confidence).toBe("number");
     expect(Array.isArray(cls.alternatives)).toBe(true);
-    expect(typeof cls.ambiguous).toBe('boolean');
+    expect(typeof cls.ambiguous).toBe("boolean");
   });
 
-  it('classifies clear queries with confidence > 0.5', () => {
+  it("classifies clear queries with confidence > 0.5", () => {
     const reasoning = new ReasoningCore(store);
 
     // "status" is a clear intent keyword
-    const cls = reasoning.classifyQueryIntent('How are you doing? Give me your status.');
-    expect(cls.intent).toBe('status');
+    const cls = reasoning.classifyQueryIntent(
+      "How are you doing? Give me your status.",
+    );
+    expect(cls.intent).toBe("status");
     expect(cls.confidence).toBeGreaterThan(0.5);
   });
 
-  it('returns general with low confidence for gibberish', () => {
+  it("returns general with low confidence for gibberish", () => {
     const reasoning = new ReasoningCore(store);
-    const cls = reasoning.classifyQueryIntent('xyzzy foobar bazzle');
-    expect(cls.intent).toBe('general');
+    const cls = reasoning.classifyQueryIntent("xyzzy foobar bazzle");
+    expect(cls.intent).toBe("general");
     expect(cls.confidence).toBeLessThanOrEqual(0.2);
     expect(cls.ambiguous).toBe(false);
   });
 
-  it('detects ambiguity when two intents score similarly', () => {
+  it("detects ambiguity when two intents score similarly", () => {
     const reasoning = new ReasoningCore(store);
 
     // "history" → learned/recent/changed/history/past/trend/progress
     // "explain" → why/explain/reason/because/how come/what caused
     // Craft a query that has overlapping signals
-    const cls = reasoning.classifyQueryIntent('Why did this change recently? What is the reason?');
+    const cls = reasoning.classifyQueryIntent(
+      "Why did this change recently? What is the reason?",
+    );
     // Both 'explain' and 'history' should score — "Why" and "reason" hit explain,
     // "change" and "recently" hit history
     if (cls.ambiguous) {
       expect(cls.alternatives.length).toBeGreaterThan(0);
       // Second alternative should be close to the best
-      expect(cls.alternatives[0].confidence).toBeGreaterThanOrEqual(cls.confidence * 0.5);
+      expect(cls.alternatives[0].confidence).toBeGreaterThanOrEqual(
+        cls.confidence * 0.5,
+      );
     }
     // Either way, the classification should be valid
-    expect(['explain', 'history']).toContain(cls.intent);
+    expect(["explain", "history"]).toContain(cls.intent);
   });
 
-  it('includes alternatives sorted by descending confidence', () => {
+  it("includes alternatives sorted by descending confidence", () => {
     const reasoning = new ReasoningCore(store);
-    const cls = reasoning.classifyQueryIntent('Explain why things are broken and diagnose the issue');
+    const cls = reasoning.classifyQueryIntent(
+      "Explain why things are broken and diagnose the issue",
+    );
     // Both 'explain' and 'diagnose' should score
     expect(cls.alternatives.length).toBeGreaterThan(0);
     // Alternatives should be sorted descending
     for (let i = 1; i < cls.alternatives.length; i++) {
-      expect(cls.alternatives[i - 1].confidence).toBeGreaterThanOrEqual(cls.alternatives[i].confidence);
+      expect(cls.alternatives[i - 1].confidence).toBeGreaterThanOrEqual(
+        cls.alternatives[i].confidence,
+      );
     }
   });
 
-  it('all confidences sum to approximately 1.0 (excluding cap adjustments)', () => {
+  it("all confidences sum to approximately 1.0 (excluding cap adjustments)", () => {
     const reasoning = new ReasoningCore(store);
-    const cls = reasoning.classifyQueryIntent('What is the status of my email?');
+    const cls = reasoning.classifyQueryIntent(
+      "What is the status of my email?",
+    );
     // The raw normalized scores should be internally consistent
     // We can check that alternatives are all < primary confidence
     for (const alt of cls.alternatives) {
@@ -287,20 +352,20 @@ describe('ReasoningCore — confidence scoring', () => {
     }
   });
 
-  it('attaches classification to ReasoningResult', () => {
+  it("attaches classification to ReasoningResult", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('How are you?', undefined, report);
+    const result = reasoning.reason("How are you?", undefined, report);
     expect(result.classification).toBeDefined();
     expect(result.classification!.intent).toBe(result.queryIntent);
     expect(result.classification!.confidence).toBeGreaterThan(0);
   });
 
-  it('produces compound response for ambiguous queries', () => {
+  it("produces compound response for ambiguous queries", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
@@ -308,28 +373,34 @@ describe('ReasoningCore — confidence scoring', () => {
 
     const report = awareness.report();
     // Force ambiguity with an overlapping query
-    const result = reasoning.reason('Why did it fail? What went wrong recently?', undefined, report);
+    const result = reasoning.reason(
+      "Why did it fail? What went wrong recently?",
+      undefined,
+      report,
+    );
     // If ambiguous, response should contain "Also considering"
     if (result.classification?.ambiguous) {
-      expect(result.response).toContain('Also considering');
+      expect(result.response).toContain("Also considering");
     }
     // Either way, the result should be valid
     expect(result.response).toBeTruthy();
     expect(result.steps.length).toBeGreaterThan(0);
   });
 
-  it('does not flag unambiguous queries as ambiguous', () => {
+  it("does not flag unambiguous queries as ambiguous", () => {
     const reasoning = new ReasoningCore(store);
     // Pure status query — only "status" keywords match
-    const cls = reasoning.classifyQueryIntent('Give me an overview of your status');
+    const cls = reasoning.classifyQueryIntent(
+      "Give me an overview of your status",
+    );
     expect(cls.ambiguous).toBe(false);
-    expect(cls.intent).toBe('status');
+    expect(cls.intent).toBe("status");
   });
 });
 
 // ── Extended Connector Detection (Slack + Notion) ────────────────
 
-describe('ReasoningCore — slack and notion connector detection', () => {
+describe("ReasoningCore — slack and notion connector detection", () => {
   let store: SparkStore;
 
   beforeEach(() => {
@@ -345,7 +416,11 @@ describe('ReasoningCore — slack and notion connector detection', () => {
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('What is happening in the slack channel?', undefined, report);
+    const result = reasoning.reason(
+      "What is happening in the slack channel?",
+      undefined,
+      report,
+    );
     // Should mention slack in the response or at minimum not crash
     expect(result.response).toBeTruthy();
     expect(result.queryIntent).toBeDefined();
@@ -358,12 +433,16 @@ describe('ReasoningCore — slack and notion connector detection', () => {
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('Check my notion database for updates', undefined, report);
+    const result = reasoning.reason(
+      "Check my notion database for updates",
+      undefined,
+      report,
+    );
     expect(result.response).toBeTruthy();
     expect(result.queryIntent).toBeDefined();
   });
 
-  it('detects cross-connector slack+gmail pattern', () => {
+  it("detects cross-connector slack+gmail pattern", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const reasoning = new ReasoningCore(store);
@@ -372,119 +451,141 @@ describe('ReasoningCore — slack and notion connector detection', () => {
     const context = reasoning.assembleCrossConnectorContext();
     // Inject slack and gmail activity
     (context.connectorActivity as any).slack = {
-      recentOperations: ['send'],
+      recentOperations: ["send"],
       recentOutcomes: [],
       episodeCount: 1,
       lastActivityAt: new Date().toISOString(),
     };
     (context.connectorActivity as any).gmail = {
-      recentOperations: ['send'],
+      recentOperations: ["send"],
       recentOutcomes: [],
       episodeCount: 1,
       lastActivityAt: new Date().toISOString(),
     };
     // Re-detect patterns with the enriched activity
-    const patterns = (reasoning as any).detectCrossConnectorPatterns(context.connectorActivity);
-    const slackEmailPattern = patterns.find((p: any) => p.type === 'slack-to-email');
+    const patterns = (reasoning as any).detectCrossConnectorPatterns(
+      context.connectorActivity,
+    );
+    const slackEmailPattern = patterns.find(
+      (p: any) => p.type === "slack-to-email",
+    );
     expect(slackEmailPattern).toBeDefined();
-    expect(slackEmailPattern!.connectors).toContain('slack');
-    expect(slackEmailPattern!.connectors).toContain('gmail');
+    expect(slackEmailPattern!.connectors).toContain("slack");
+    expect(slackEmailPattern!.connectors).toContain("gmail");
   });
 
-  it('detects cross-connector notion+calendar pattern', () => {
+  it("detects cross-connector notion+calendar pattern", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const reasoning = new ReasoningCore(store);
 
     const context = reasoning.assembleCrossConnectorContext();
     (context.connectorActivity as any).notion = {
-      recentOperations: ['update'],
+      recentOperations: ["update"],
       recentOutcomes: [],
       episodeCount: 1,
       lastActivityAt: new Date().toISOString(),
     };
     (context.connectorActivity as any).calendar = {
-      recentOperations: ['create'],
+      recentOperations: ["create"],
       recentOutcomes: [],
       episodeCount: 1,
       lastActivityAt: new Date().toISOString(),
     };
-    const patterns = (reasoning as any).detectCrossConnectorPatterns(context.connectorActivity);
-    const notionCalPattern = patterns.find((p: any) => p.type === 'notion-to-calendar');
+    const patterns = (reasoning as any).detectCrossConnectorPatterns(
+      context.connectorActivity,
+    );
+    const notionCalPattern = patterns.find(
+      (p: any) => p.type === "notion-to-calendar",
+    );
     expect(notionCalPattern).toBeDefined();
-    expect(notionCalPattern!.connectors).toContain('notion');
-    expect(notionCalPattern!.connectors).toContain('calendar');
+    expect(notionCalPattern!.connectors).toContain("notion");
+    expect(notionCalPattern!.connectors).toContain("calendar");
   });
 
-  it('detects cross-connector slack+notion pattern', () => {
+  it("detects cross-connector slack+notion pattern", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const reasoning = new ReasoningCore(store);
 
     const context = reasoning.assembleCrossConnectorContext();
     (context.connectorActivity as any).slack = {
-      recentOperations: ['post'],
+      recentOperations: ["post"],
       recentOutcomes: [],
       episodeCount: 1,
       lastActivityAt: new Date().toISOString(),
     };
     (context.connectorActivity as any).notion = {
-      recentOperations: ['update'],
+      recentOperations: ["update"],
       recentOutcomes: [],
       episodeCount: 1,
       lastActivityAt: new Date().toISOString(),
     };
-    const patterns = (reasoning as any).detectCrossConnectorPatterns(context.connectorActivity);
-    const slackNotionPattern = patterns.find((p: any) => p.type === 'slack-to-notion');
+    const patterns = (reasoning as any).detectCrossConnectorPatterns(
+      context.connectorActivity,
+    );
+    const slackNotionPattern = patterns.find(
+      (p: any) => p.type === "slack-to-notion",
+    );
     expect(slackNotionPattern).toBeDefined();
-    expect(slackNotionPattern!.connectors).toContain('slack');
-    expect(slackNotionPattern!.connectors).toContain('notion');
+    expect(slackNotionPattern!.connectors).toContain("slack");
+    expect(slackNotionPattern!.connectors).toContain("notion");
   });
 });
 
 // ── Compound Query Support ────────────────────────────────────────
 
-describe('detectCompoundQuery', () => {
-  it('returns single segment for simple query', () => {
-    const segments = detectCompoundQuery('What is my status?');
+describe("detectCompoundQuery", () => {
+  it("returns single segment for simple query", () => {
+    const segments = detectCompoundQuery("What is my status?");
     expect(segments).toHaveLength(1);
-    expect(segments[0].connective).toBe('root');
-    expect(segments[0].text).toBe('What is my status?');
+    expect(segments[0].connective).toBe("root");
+    expect(segments[0].text).toBe("What is my status?");
   });
 
   it('splits on "and then"', () => {
-    const segments = detectCompoundQuery('Compare email and calendar and then recommend changes');
+    const segments = detectCompoundQuery(
+      "Compare email and calendar and then recommend changes",
+    );
     expect(segments.length).toBeGreaterThanOrEqual(2);
-    const hasCompare = segments.some(s => s.text.toLowerCase().includes('compare'));
-    const hasRecommend = segments.some(s => s.text.toLowerCase().includes('recommend'));
+    const hasCompare = segments.some((s) =>
+      s.text.toLowerCase().includes("compare"),
+    );
+    const hasRecommend = segments.some((s) =>
+      s.text.toLowerCase().includes("recommend"),
+    );
     expect(hasCompare).toBe(true);
     expect(hasRecommend).toBe(true);
   });
 
   it('splits on "then" conjunction', () => {
-    const segments = detectCompoundQuery('Diagnose the issue, then explain why it happened');
+    const segments = detectCompoundQuery(
+      "Diagnose the issue, then explain why it happened",
+    );
     expect(segments.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('handles if-then conditional patterns', () => {
-    const segments = detectCompoundQuery('If I approve this, then what happens?');
+  it("handles if-then conditional patterns", () => {
+    const segments = detectCompoundQuery(
+      "If I approve this, then what happens?",
+    );
     expect(segments.length).toBe(2);
-    const ifThenSeg = segments.find(s => s.connective === 'if-then');
+    const ifThenSeg = segments.find((s) => s.connective === "if-then");
     expect(ifThenSeg).toBeDefined();
   });
 
-  it('does not split very short queries', () => {
-    const segments = detectCompoundQuery('Hello');
+  it("does not split very short queries", () => {
+    const segments = detectCompoundQuery("Hello");
     expect(segments).toHaveLength(1);
   });
 
-  it('returns root connective for first segment', () => {
-    const segments = detectCompoundQuery('Do X and then do Y');
-    expect(segments[0].connective).toBe('root');
+  it("returns root connective for first segment", () => {
+    const segments = detectCompoundQuery("Do X and then do Y");
+    expect(segments[0].connective).toBe("root");
   });
 });
 
-describe('ReasoningCore — compound query reasoning', () => {
+describe("ReasoningCore — compound query reasoning", () => {
   let store: SparkStore;
 
   beforeEach(() => {
@@ -493,7 +594,7 @@ describe('ReasoningCore — compound query reasoning', () => {
     initWeights(store);
   });
 
-  it('produces multi-section response for compound queries', () => {
+  it("produces multi-section response for compound queries", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
@@ -501,7 +602,7 @@ describe('ReasoningCore — compound query reasoning', () => {
 
     const report = awareness.report();
     const result = reasoning.reason(
-      'Give me your status and then recommend what to change',
+      "Give me your status and then recommend what to change",
       undefined,
       report,
     );
@@ -511,7 +612,7 @@ describe('ReasoningCore — compound query reasoning', () => {
     expect(result.steps.length).toBeGreaterThan(0);
   });
 
-  it('handles if-then conditional queries', () => {
+  it("handles if-then conditional queries", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
@@ -519,28 +620,28 @@ describe('ReasoningCore — compound query reasoning', () => {
 
     const report = awareness.report();
     const result = reasoning.reason(
-      'If I approve communication, then what would happen?',
+      "If I approve communication, then what would happen?",
       undefined,
       report,
     );
     expect(result.response).toBeTruthy();
     // Should contain conditional framing
-    if (result.response.includes('[Conditional]')) {
-      expect(result.response).toContain('[Conditional]');
+    if (result.response.includes("[Conditional]")) {
+      expect(result.response).toContain("[Conditional]");
     }
   });
 
-  it('simple queries remain single-part (no split)', () => {
+  it("simple queries remain single-part (no split)", () => {
     const weights = new WeightManager(store);
     weights.initialize();
     const awareness = new AwarenessCore(store);
     const reasoning = new ReasoningCore(store);
 
     const report = awareness.report();
-    const result = reasoning.reason('How are you doing?', undefined, report);
+    const result = reasoning.reason("How are you doing?", undefined, report);
     expect(result.response).toBeTruthy();
     // Should NOT contain section markers for simple queries
-    expect(result.response).not.toContain('[then]');
-    expect(result.response).not.toContain('[also]');
+    expect(result.response).not.toContain("[then]");
+    expect(result.response).not.toContain("[also]");
   });
 });

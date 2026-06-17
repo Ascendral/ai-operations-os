@@ -13,52 +13,52 @@
 /* eslint-disable no-unused-vars */
 
 var SpiralViz = (function () {
-  'use strict';
+  "use strict";
 
   // ── Constants ──────────────────────────────────────────────────────
 
-  var SIMULATION_ALPHA  = 1.0;
-  var ALPHA_DECAY       = 0.005;
-  var ALPHA_MIN         = 0.001;
-  var VELOCITY_DECAY    = 0.4;
+  var SIMULATION_ALPHA = 1.0;
+  var ALPHA_DECAY = 0.005;
+  var ALPHA_MIN = 0.001;
+  var VELOCITY_DECAY = 0.4;
 
   // Force model tuning
   var REPULSION_STRENGTH = 800;
-  var SPRING_STRENGTH    = 0.05;
-  var SPRING_LENGTH      = 100;
-  var CENTER_GRAVITY     = 0.01;
+  var SPRING_STRENGTH = 0.05;
+  var SPRING_LENGTH = 100;
+  var CENTER_GRAVITY = 0.01;
 
   // Visual
-  var NODE_MIN_RADIUS   = 6;
-  var NODE_MAX_RADIUS   = 22;
-  var EDGE_MIN_WIDTH    = 0.4;
-  var EDGE_MAX_WIDTH    = 2.5;
-  var HOVER_GROW        = 4;
-  var LABEL_DISTANCE    = 6;
+  var NODE_MIN_RADIUS = 6;
+  var NODE_MAX_RADIUS = 22;
+  var EDGE_MIN_WIDTH = 0.4;
+  var EDGE_MAX_WIDTH = 2.5;
+  var HOVER_GROW = 4;
+  var LABEL_DISTANCE = 6;
 
   // Interaction
-  var CLICK_RADIUS      = 12;
-  var ZOOM_MIN          = 0.15;
-  var ZOOM_MAX          = 5;
-  var ZOOM_STEP         = 0.12;
+  var CLICK_RADIUS = 12;
+  var ZOOM_MIN = 0.15;
+  var ZOOM_MAX = 5;
+  var ZOOM_STEP = 0.12;
 
   // Token type → color mapping (uses CSS custom properties via DesignTokens)
   var TYPE_COLORS = {
-    conversation:      '--accent',
-    episode:           '--green',
-    insight:           '--yellow',
-    belief:            '--orange',
-    'cross-connector': '--cyan',
-    composite:         '--red',
-    reflection:        '--blue',
+    conversation: "--accent",
+    episode: "--green",
+    insight: "--yellow",
+    belief: "--orange",
+    "cross-connector": "--cyan",
+    composite: "--red",
+    reflection: "--blue",
   };
 
   // Tier opacity multipliers
   var TIER_OPACITY = {
-    raw:        1.0,
-    recent:     0.85,
+    raw: 1.0,
+    recent: 0.85,
     compressed: 0.6,
-    archival:   0.35,
+    archival: 0.35,
   };
 
   // ── SpiralViz Class ───────────────────────────────────────────────
@@ -76,9 +76,9 @@ var SpiralViz = (function () {
     this.height = 0;
 
     // Graph data
-    this.nodes = [];     // { id, type, tier, strength, spiralCount, gist, topics, sentiment, x, y, vx, vy, radius, color, opacity, pinned }
-    this.edges = [];     // { from, to, weight, type, fromNode, toNode }
-    this.nodeIndex = {};  // id → node
+    this.nodes = []; // { id, type, tier, strength, spiralCount, gist, topics, sentiment, x, y, vx, vy, radius, color, opacity, pinned }
+    this.edges = []; // { from, to, weight, type, fromNode, toNode }
+    this.nodeIndex = {}; // id → node
 
     // Simulation state
     this.alpha = 0;
@@ -99,7 +99,7 @@ var SpiralViz = (function () {
     this.lastMouseY = 0;
 
     // Filters
-    this.typeFilter = null;      // null = show all, or Set of types
+    this.typeFilter = null; // null = show all, or Set of types
     this.minStrength = 0;
 
     // Callbacks
@@ -109,10 +109,10 @@ var SpiralViz = (function () {
     // Bind event handlers
     this._onMouseDown = this._handleMouseDown.bind(this);
     this._onMouseMove = this._handleMouseMove.bind(this);
-    this._onMouseUp   = this._handleMouseUp.bind(this);
-    this._onWheel     = this._handleWheel.bind(this);
-    this._onDblClick  = this._handleDblClick.bind(this);
-    this._onResize    = this._handleResize.bind(this);
+    this._onMouseUp = this._handleMouseUp.bind(this);
+    this._onWheel = this._handleWheel.bind(this);
+    this._onDblClick = this._handleDblClick.bind(this);
+    this._onResize = this._handleResize.bind(this);
 
     this._init();
   }
@@ -132,32 +132,32 @@ var SpiralViz = (function () {
 
     this.canvas.width = this.width * this.dpr;
     this.canvas.height = this.height * this.dpr;
-    this.canvas.style.width = this.width + 'px';
-    this.canvas.style.height = this.height + 'px';
+    this.canvas.style.width = this.width + "px";
+    this.canvas.style.height = this.height + "px";
 
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext("2d");
     this.ctx.scale(this.dpr, this.dpr);
   };
 
   SpiralViz.prototype._bindEvents = function () {
-    this.canvas.addEventListener('mousedown', this._onMouseDown);
-    this.canvas.addEventListener('mousemove', this._onMouseMove);
-    this.canvas.addEventListener('mouseup', this._onMouseUp);
-    this.canvas.addEventListener('mouseleave', this._onMouseUp);
-    this.canvas.addEventListener('wheel', this._onWheel, { passive: false });
-    this.canvas.addEventListener('dblclick', this._onDblClick);
-    window.addEventListener('resize', this._onResize);
+    this.canvas.addEventListener("mousedown", this._onMouseDown);
+    this.canvas.addEventListener("mousemove", this._onMouseMove);
+    this.canvas.addEventListener("mouseup", this._onMouseUp);
+    this.canvas.addEventListener("mouseleave", this._onMouseUp);
+    this.canvas.addEventListener("wheel", this._onWheel, { passive: false });
+    this.canvas.addEventListener("dblclick", this._onDblClick);
+    window.addEventListener("resize", this._onResize);
   };
 
   SpiralViz.prototype.destroy = function () {
     this.stop();
-    this.canvas.removeEventListener('mousedown', this._onMouseDown);
-    this.canvas.removeEventListener('mousemove', this._onMouseMove);
-    this.canvas.removeEventListener('mouseup', this._onMouseUp);
-    this.canvas.removeEventListener('mouseleave', this._onMouseUp);
-    this.canvas.removeEventListener('wheel', this._onWheel);
-    this.canvas.removeEventListener('dblclick', this._onDblClick);
-    window.removeEventListener('resize', this._onResize);
+    this.canvas.removeEventListener("mousedown", this._onMouseDown);
+    this.canvas.removeEventListener("mousemove", this._onMouseMove);
+    this.canvas.removeEventListener("mouseup", this._onMouseUp);
+    this.canvas.removeEventListener("mouseleave", this._onMouseUp);
+    this.canvas.removeEventListener("wheel", this._onWheel);
+    this.canvas.removeEventListener("dblclick", this._onDblClick);
+    window.removeEventListener("resize", this._onResize);
   };
 
   // ── Data Loading ──────────────────────────────────────────────────
@@ -184,14 +184,14 @@ var SpiralViz = (function () {
       var dist = Math.sqrt(i + 1) * 20;
       var node = {
         id: t.id,
-        type: t.type || 'conversation',
-        tier: t.tier || 'recent',
+        type: t.type || "conversation",
+        tier: t.tier || "recent",
         strength: t.strength || 0.5,
         spiralCount: t.spiralCount || 0,
-        gist: t.gist || '',
+        gist: t.gist || "",
         topics: t.topics || [],
-        sentiment: t.sentiment || 'neutral',
-        createdAt: t.createdAt || '',
+        sentiment: t.sentiment || "neutral",
+        createdAt: t.createdAt || "",
         // Physics
         x: centerX + Math.cos(angle) * dist,
         y: centerY + Math.sin(angle) * dist,
@@ -199,7 +199,7 @@ var SpiralViz = (function () {
         vy: 0,
         // Visual (computed)
         radius: this._strengthToRadius(t.strength || 0.5),
-        color: '',
+        color: "",
         opacity: TIER_OPACITY[t.tier] || 0.6,
         // State
         pinned: false,
@@ -220,7 +220,7 @@ var SpiralViz = (function () {
             from: e.from,
             to: e.to,
             weight: e.weight || 0.1,
-            type: e.type || 'related',
+            type: e.type || "related",
             fromNode: fromNode,
             toNode: toNode,
           });
@@ -241,7 +241,10 @@ var SpiralViz = (function () {
   };
 
   SpiralViz.prototype._strengthToRadius = function (strength) {
-    return NODE_MIN_RADIUS + (NODE_MAX_RADIUS - NODE_MIN_RADIUS) * Math.max(0, Math.min(1, strength));
+    return (
+      NODE_MIN_RADIUS +
+      (NODE_MAX_RADIUS - NODE_MIN_RADIUS) * Math.max(0, Math.min(1, strength))
+    );
   };
 
   // ── Simulation ────────────────────────────────────────────────────
@@ -297,7 +300,7 @@ var SpiralViz = (function () {
         var dist2 = dx * dx + dy * dy;
         if (dist2 < 1) dist2 = 1;
         var dist = Math.sqrt(dist2);
-        var force = REPULSION_STRENGTH * this.alpha / dist2;
+        var force = (REPULSION_STRENGTH * this.alpha) / dist2;
         var fx = (dx / dist) * force;
         var fy = (dy / dist) * force;
 
@@ -319,7 +322,8 @@ var SpiralViz = (function () {
       var edy = to.y - from.y;
       var eDist = Math.sqrt(edx * edx + edy * edy) || 1;
       var displacement = eDist - SPRING_LENGTH;
-      var springF = SPRING_STRENGTH * displacement * this.alpha * (0.5 + edge.weight * 0.5);
+      var springF =
+        SPRING_STRENGTH * displacement * this.alpha * (0.5 + edge.weight * 0.5);
       var sfx = (edx / eDist) * springF;
       var sfy = (edy / eDist) * springF;
 
@@ -390,8 +394,9 @@ var SpiralViz = (function () {
       // Filter check
       if (!this._isVisible(from) || !this._isVisible(to)) continue;
 
-      var isHighlighted = (selected && (from.id === selected.id || to.id === selected.id)) ||
-                          (hovered && (from.id === hovered.id || to.id === hovered.id));
+      var isHighlighted =
+        (selected && (from.id === selected.id || to.id === selected.id)) ||
+        (hovered && (from.id === hovered.id || to.id === hovered.id));
 
       var alpha = isHighlighted ? 0.6 : 0.12;
       var width = EDGE_MIN_WIDTH + (EDGE_MAX_WIDTH - EDGE_MIN_WIDTH) * e.weight;
@@ -418,8 +423,11 @@ var SpiralViz = (function () {
 
       var isSelected = selected && node.id === selected.id;
       var isHovered = hovered && node.id === hovered.id;
-      var isConnected = this._isConnectedTo(node, selected) || this._isConnectedTo(node, hovered);
-      var dimmed = (selected || hovered) && !isSelected && !isHovered && !isConnected;
+      var isConnected =
+        this._isConnectedTo(node, selected) ||
+        this._isConnectedTo(node, hovered);
+      var dimmed =
+        (selected || hovered) && !isSelected && !isHovered && !isConnected;
 
       var radius = node.radius;
       if (isHovered || isSelected) radius += HOVER_GROW;
@@ -431,7 +439,14 @@ var SpiralViz = (function () {
       if (isSelected || isHovered) {
         ctx.beginPath();
         ctx.arc(node.x, node.y, radius + 8, 0, Math.PI * 2);
-        var glow = ctx.createRadialGradient(node.x, node.y, radius, node.x, node.y, radius + 8);
+        var glow = ctx.createRadialGradient(
+          node.x,
+          node.y,
+          radius,
+          node.x,
+          node.y,
+          radius + 8,
+        );
         glow.addColorStop(0, this._withAlpha(nodeColor, 0.3));
         glow.addColorStop(1, this._withAlpha(nodeColor, 0));
         ctx.fillStyle = glow;
@@ -453,7 +468,7 @@ var SpiralViz = (function () {
       if (node.spiralCount > 5) {
         ctx.beginPath();
         ctx.arc(node.x, node.y, Math.max(2, radius * 0.25), 0, Math.PI * 2);
-        ctx.fillStyle = this._withAlpha('#ffffff', nodeAlpha * 0.6);
+        ctx.fillStyle = this._withAlpha("#ffffff", nodeAlpha * 0.6);
         ctx.fill();
       }
     }
@@ -462,19 +477,22 @@ var SpiralViz = (function () {
   SpiralViz.prototype._renderLabels = function (ctx, c) {
     var targets = [];
     if (this.selectedNode) targets.push(this.selectedNode);
-    if (this.hoveredNode && this.hoveredNode !== this.selectedNode) targets.push(this.hoveredNode);
+    if (this.hoveredNode && this.hoveredNode !== this.selectedNode)
+      targets.push(this.hoveredNode);
 
     // Also label connected nodes when something is selected
     if (this.selectedNode) {
       for (var i = 0; i < this.edges.length; i++) {
         var e = this.edges[i];
-        if (e.fromNode.id === this.selectedNode.id && this._isVisible(e.toNode)) targets.push(e.toNode);
-        if (e.toNode.id === this.selectedNode.id && this._isVisible(e.fromNode)) targets.push(e.fromNode);
+        if (e.fromNode.id === this.selectedNode.id && this._isVisible(e.toNode))
+          targets.push(e.toNode);
+        if (e.toNode.id === this.selectedNode.id && this._isVisible(e.fromNode))
+          targets.push(e.fromNode);
       }
     }
 
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
 
     var seen = {};
     for (var j = 0; j < targets.length; j++) {
@@ -483,10 +501,11 @@ var SpiralViz = (function () {
       seen[node.id] = true;
 
       var label = node.gist || node.type;
-      if (label.length > 40) label = label.substring(0, 37) + '…';
+      if (label.length > 40) label = label.substring(0, 37) + "…";
 
       var ly = node.y + node.radius + LABEL_DISTANCE;
-      var fontSize = node === this.selectedNode || node === this.hoveredNode ? 11 : 10;
+      var fontSize =
+        node === this.selectedNode || node === this.hoveredNode ? 11 : 10;
 
       ctx.font = DesignTokens.fontBody(fontSize);
       var tw = ctx.measureText(label).width;
@@ -496,7 +515,14 @@ var SpiralViz = (function () {
       var py = 3;
       ctx.fillStyle = this._withAlpha(c.bgSecondary, 0.85);
       ctx.beginPath();
-      this._roundRect(ctx, node.x - tw / 2 - px, ly - py, tw + px * 2, fontSize + py * 2, 4);
+      this._roundRect(
+        ctx,
+        node.x - tw / 2 - px,
+        ly - py,
+        tw + px * 2,
+        fontSize + py * 2,
+        4,
+      );
       ctx.fill();
 
       // Text
@@ -509,11 +535,27 @@ var SpiralViz = (function () {
     // Legend (bottom-right corner)
     var legendX = this.width - 16;
     var legendY = this.height - 16;
-    var typeNames = ['conversation', 'episode', 'insight', 'belief', 'cross-connector', 'composite', 'reflection'];
-    var displayNames = ['Conversation', 'Episode', 'Insight', 'Belief', 'Cross-Connector', 'Composite', 'Reflection'];
+    var typeNames = [
+      "conversation",
+      "episode",
+      "insight",
+      "belief",
+      "cross-connector",
+      "composite",
+      "reflection",
+    ];
+    var displayNames = [
+      "Conversation",
+      "Episode",
+      "Insight",
+      "Belief",
+      "Cross-Connector",
+      "Composite",
+      "Reflection",
+    ];
 
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
     ctx.font = DesignTokens.fontBody(10);
 
     for (var i = typeNames.length - 1; i >= 0; i--) {
@@ -522,7 +564,13 @@ var SpiralViz = (function () {
 
       // Dot
       ctx.beginPath();
-      ctx.arc(legendX - ctx.measureText(displayNames[i]).width - 12, y, 4, 0, Math.PI * 2);
+      ctx.arc(
+        legendX - ctx.measureText(displayNames[i]).width - 12,
+        y,
+        4,
+        0,
+        Math.PI * 2,
+      );
       ctx.fillStyle = typeColor;
       ctx.fill();
 
@@ -532,17 +580,17 @@ var SpiralViz = (function () {
     }
 
     // Zoom level indicator (bottom-left)
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
     ctx.font = DesignTokens.fontMono(10);
     ctx.fillStyle = c.textMuted;
-    ctx.fillText(Math.round(this.zoom * 100) + '%', 16, this.height - 16);
+    ctx.fillText(Math.round(this.zoom * 100) + "%", 16, this.height - 16);
 
     // Node count (top-left)
     var visCount = 0;
     for (var j = 0; j < this.nodes.length; j++) {
       if (this._isVisible(this.nodes[j])) visCount++;
     }
-    ctx.fillText(visCount + ' / ' + this.nodes.length + ' nodes', 16, 24);
+    ctx.fillText(visCount + " / " + this.nodes.length + " nodes", 16, 24);
   };
 
   // ── Helpers ───────────────────────────────────────────────────────
@@ -552,23 +600,33 @@ var SpiralViz = (function () {
   };
 
   SpiralViz.prototype._resolveTypeColor = function (type, c) {
-    var cssVar = TYPE_COLORS[type] || '--accent';
+    var cssVar = TYPE_COLORS[type] || "--accent";
     return DesignTokens.css(cssVar);
   };
 
   SpiralViz.prototype._withAlpha = function (color, alpha) {
     // Convert hex or named color to rgba
-    if (color.charAt(0) === '#') {
+    if (color.charAt(0) === "#") {
       var r = parseInt(color.slice(1, 3), 16);
       var g = parseInt(color.slice(3, 5), 16);
       var b = parseInt(color.slice(5, 7), 16);
-      return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+      return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
     }
-    if (color.indexOf('rgb') === 0) {
+    if (color.indexOf("rgb") === 0) {
       // Already rgb/rgba — extract components
       var match = color.match(/[\d.]+/g);
       if (match && match.length >= 3) {
-        return 'rgba(' + match[0] + ',' + match[1] + ',' + match[2] + ',' + alpha + ')';
+        return (
+          "rgba(" +
+          match[0] +
+          "," +
+          match[1] +
+          "," +
+          match[2] +
+          "," +
+          alpha +
+          ")"
+        );
       }
     }
     return color;
@@ -596,8 +654,10 @@ var SpiralViz = (function () {
     if (!target) return false;
     for (var i = 0; i < this.edges.length; i++) {
       var e = this.edges[i];
-      if ((e.fromNode === node && e.toNode === target) ||
-          (e.toNode === node && e.fromNode === target)) {
+      if (
+        (e.fromNode === node && e.toNode === target) ||
+        (e.toNode === node && e.fromNode === target)
+      ) {
         return true;
       }
     }
@@ -687,7 +747,7 @@ var SpiralViz = (function () {
       var prev = this.hoveredNode;
       this.hoveredNode = this._hitTest(w.x, w.y);
       if (this.hoveredNode !== prev) {
-        this.canvas.style.cursor = this.hoveredNode ? 'pointer' : 'grab';
+        this.canvas.style.cursor = this.hoveredNode ? "pointer" : "grab";
       }
     }
 
@@ -701,7 +761,8 @@ var SpiralViz = (function () {
       var rect = this.canvas.getBoundingClientRect();
       var sx = e.clientX - rect.left;
       var sy = e.clientY - rect.top;
-      var movedDist = Math.abs(sx - this.lastMouseX) + Math.abs(sy - this.lastMouseY);
+      var movedDist =
+        Math.abs(sx - this.lastMouseX) + Math.abs(sy - this.lastMouseY);
 
       // Release pin unless we want to keep it positioned
       this.dragNode.pinned = false;

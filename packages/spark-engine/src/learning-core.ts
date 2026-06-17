@@ -13,20 +13,20 @@
  * cautious about these, never less.
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 import type {
   Prediction,
   LearningEpisode,
   SparkCategory,
   WeightHistoryEntry,
-} from '@ai-operations/shared-types';
-import type { OutcomeSignal } from '@ai-operations/shared-types';
-import type { SparkStore } from '@ai-operations/ops-storage';
+} from "@ai-operations/shared-types";
+import type { OutcomeSignal } from "@ai-operations/shared-types";
+import type { SparkStore } from "@ai-operations/ops-storage";
 import {
   EMA_ALPHA,
   MIN_EPISODES_BEFORE_LEARNING,
   buildDefaultWeight,
-} from './constants';
+} from "./constants";
 
 // ── LearningCore ──────────────────────────────────────────────────
 
@@ -91,7 +91,8 @@ export class LearningCore {
     );
 
     // Step 4: Load current weight (or create default)
-    const currentWeightEntry = this.store.getWeight(category) ?? buildDefaultWeight(category);
+    const currentWeightEntry =
+      this.store.getWeight(category) ?? buildDefaultWeight(category);
     const weightBefore = currentWeightEntry.currentWeight;
 
     // Step 5: Apply EMA update if enough episodes exist
@@ -99,9 +100,9 @@ export class LearningCore {
     let weightAfter = weightBefore;
 
     if (episodeCount >= MIN_EPISODES_BEFORE_LEARNING) {
-      if (direction === 'increase') {
+      if (direction === "increase") {
         weightAfter = weightBefore + this.alpha * magnitude;
-      } else if (direction === 'decrease') {
+      } else if (direction === "decrease") {
         weightAfter = weightBefore - this.alpha * magnitude;
       }
 
@@ -113,7 +114,7 @@ export class LearningCore {
       weightAfter = Math.round(weightAfter * 10000) / 10000;
     } else {
       // Below minimum episode threshold — record intent but don't adjust
-      direction = 'none';
+      direction = "none";
       magnitude = 0;
       reason = `Insufficient episodes (${episodeCount}/${MIN_EPISODES_BEFORE_LEARNING}). No weight adjustment yet.`;
     }
@@ -137,7 +138,7 @@ export class LearningCore {
       category,
       previousWeight: weightBefore,
       newWeight: weightAfter,
-      episodeId: '', // Will be filled after episode creation
+      episodeId: "", // Will be filled after episode creation
       snapshotId,
       reason,
       createdAt: new Date().toISOString(),
@@ -178,7 +179,10 @@ export class LearningCore {
    * @param outcome    - The actual measured outcome.
    * @returns True if the prediction meaningfully disagreed with reality.
    */
-  private detectMismatch(prediction: Prediction, outcome: OutcomeSignal): boolean {
+  private detectMismatch(
+    prediction: Prediction,
+    outcome: OutcomeSignal,
+  ): boolean {
     const predicted = prediction.predictedOutcome;
     const actual = outcome.actualOutcome;
 
@@ -186,17 +190,20 @@ export class LearningCore {
     if (predicted === actual) return false;
 
     // Predicted success but got something negative
-    if (predicted === 'success' && (actual === 'failure' || actual === 'blocked')) {
+    if (
+      predicted === "success" &&
+      (actual === "failure" || actual === "blocked")
+    ) {
       return true;
     }
 
     // Predicted failure but actually succeeded
-    if (predicted === 'failure' && actual === 'success') {
+    if (predicted === "failure" && actual === "success") {
       return true;
     }
 
     // Predicted success but needed escalation
-    if (predicted === 'success' && actual === 'escalation') {
+    if (predicted === "success" && actual === "escalation") {
       return true;
     }
 
@@ -225,16 +232,20 @@ export class LearningCore {
     actualOutcome: string,
     actualCordScore: number,
     approvalGranted?: boolean,
-  ): { direction: 'increase' | 'decrease' | 'none'; magnitude: number; reason: string } {
+  ): {
+    direction: "increase" | "decrease" | "none";
+    magnitude: number;
+    reason: string;
+  } {
     // CORD was too permissive: allowed/contained but the action failed
     if (
-      (cordDecision === 'ALLOW' || cordDecision === 'CONTAIN') &&
-      (actualOutcome === 'failure' || actualOutcome === 'blocked')
+      (cordDecision === "ALLOW" || cordDecision === "CONTAIN") &&
+      (actualOutcome === "failure" || actualOutcome === "blocked")
     ) {
       // Lower scores mean CORD was more wrong — scale magnitude inversely
       const magnitude = Math.max(0.05, (100 - actualCordScore) / 100);
       return {
-        direction: 'increase',
+        direction: "increase",
         magnitude,
         reason: `CORD was too permissive (${cordDecision} at score ${actualCordScore}) but action ${actualOutcome}. Increasing weight to be more cautious.`,
       };
@@ -242,14 +253,14 @@ export class LearningCore {
 
     // CORD was too cautious: challenged but approval was granted and action succeeded
     if (
-      cordDecision === 'CHALLENGE' &&
+      cordDecision === "CHALLENGE" &&
       approvalGranted === true &&
-      (actualOutcome === 'success' || actualOutcome === 'escalation')
+      (actualOutcome === "success" || actualOutcome === "escalation")
     ) {
       // Higher scores mean CORD was more overcautious — scale magnitude proportionally
       const magnitude = Math.max(0.05, actualCordScore / 100);
       return {
-        direction: 'decrease',
+        direction: "decrease",
         magnitude,
         reason: `CORD was too cautious (CHALLENGE at score ${actualCordScore}) but action succeeded after approval. Decreasing weight to be less restrictive.`,
       };
@@ -257,12 +268,12 @@ export class LearningCore {
 
     // BLOCK was overridden and the action succeeded — small decrease
     if (
-      cordDecision === 'BLOCK' &&
+      cordDecision === "BLOCK" &&
       approvalGranted === true &&
-      (actualOutcome === 'success' || actualOutcome === 'escalation')
+      (actualOutcome === "success" || actualOutcome === "escalation")
     ) {
       return {
-        direction: 'decrease',
+        direction: "decrease",
         magnitude: 0.05,
         reason: `BLOCK was overridden and action succeeded. Small weight decrease.`,
       };
@@ -270,7 +281,7 @@ export class LearningCore {
 
     // Assessment was correct — no adjustment needed
     return {
-      direction: 'none',
+      direction: "none",
       magnitude: 0,
       reason: `CORD assessment was correct (${cordDecision} at score ${actualCordScore}, outcome: ${actualOutcome}). No adjustment.`,
     };

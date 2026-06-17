@@ -8,12 +8,17 @@
  * DELETE /api/tasks/:id      Delete a task (soft — marks as failed)
  */
 
-import type { Task, TaskSource, TaskIntent, TaskPriority } from '@ai-operations/shared-types';
-import { createTask } from '@ai-operations/shared-types';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
-import { stores } from '../storage';
-import { validateBody, taskCreateSchema } from '../middleware/validate';
+import type {
+  Task,
+  TaskSource,
+  TaskIntent,
+  TaskPriority,
+} from "@ai-operations/shared-types";
+import { createTask } from "@ai-operations/shared-types";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
+import { stores } from "../storage";
+import { validateBody, taskCreateSchema } from "../middleware/validate";
 
 // ── Route handlers ───────────────────────────────────────────────────────────
 
@@ -21,8 +26,8 @@ import { validateBody, taskCreateSchema } from '../middleware/validate';
 async function listTasks(ctx: any): Promise<void> {
   const { res, query } = ctx;
 
-  const limit = parseInt(query.limit || '50', 10);
-  const offset = parseInt(query.offset || '0', 10);
+  const limit = parseInt(query.limit || "50", 10);
+  const offset = parseInt(query.offset || "0", 10);
 
   const filter = {
     status: query.status,
@@ -69,8 +74,8 @@ async function createTaskHandler(ctx: any): Promise<void> {
     source: body.source as TaskSource,
     title: body.title as string,
     body: body.body as string | undefined,
-    intent: (body.intent as TaskIntent) || 'unknown',
-    priority: (body.priority as TaskPriority) || 'normal',
+    intent: (body.intent as TaskIntent) || "unknown",
+    priority: (body.priority as TaskPriority) || "normal",
     sourceId: body.sourceId as string | undefined,
     owner: body.owner as string | undefined,
     dueAt: body.dueAt as string | undefined,
@@ -92,8 +97,14 @@ async function updateTask(ctx: any): Promise<void> {
   }
 
   const allowedFields = [
-    'intent', 'title', 'body', 'priority', 'status',
-    'owner', 'dueAt', 'metadata',
+    "intent",
+    "title",
+    "body",
+    "priority",
+    "status",
+    "owner",
+    "dueAt",
+    "metadata",
   ] as const;
 
   const updates: Partial<Task> = {};
@@ -117,16 +128,16 @@ async function deleteTask(ctx: any): Promise<void> {
     return;
   }
 
-  stores.tasks.update(params.id, { status: 'failed' });
+  stores.tasks.update(params.id, { status: "failed" });
   sendJson(res, 200, { deleted: true, id: params.id });
 }
 
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const taskRoutes: Route[] = [
-  pathToRoute('GET', '/api/tasks', listTasks),
-  pathToRoute('GET', '/api/tasks/:id', getTask),
-  pathToRoute('POST', '/api/tasks', createTaskHandler),
-  pathToRoute('PATCH', '/api/tasks/:id', updateTask),
-  pathToRoute('DELETE', '/api/tasks/:id', deleteTask),
+  pathToRoute("GET", "/api/tasks", listTasks),
+  pathToRoute("GET", "/api/tasks/:id", getTask),
+  pathToRoute("POST", "/api/tasks", createTaskHandler),
+  pathToRoute("PATCH", "/api/tasks/:id", updateTask),
+  pathToRoute("DELETE", "/api/tasks/:id", deleteTask),
 ];

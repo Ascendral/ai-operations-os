@@ -1,4 +1,4 @@
-import { randomUUID } from './uuid';
+import { randomUUID } from "./uuid";
 
 /**
  * Task — The universal work item.
@@ -7,27 +7,34 @@ import { randomUUID } from './uuid';
  * becomes a Task. This is the lingua franca of the AI Operations OS.
  */
 
-export type TaskSource = 'email' | 'calendar' | 'social' | 'store' | 'slack' | 'notion' | 'manual';
+export type TaskSource =
+  | "email"
+  | "calendar"
+  | "social"
+  | "store"
+  | "slack"
+  | "notion"
+  | "manual";
 
 export type TaskIntent =
-  | 'reply'
-  | 'schedule'
-  | 'post'
-  | 'fulfill'
-  | 'refund'
-  | 'escalate'
-  | 'ignore'
-  | 'unknown';
+  | "reply"
+  | "schedule"
+  | "post"
+  | "fulfill"
+  | "refund"
+  | "escalate"
+  | "ignore"
+  | "unknown";
 
-export type TaskPriority = 'urgent' | 'high' | 'normal' | 'low';
+export type TaskPriority = "urgent" | "high" | "normal" | "low";
 
 export type TaskStatus =
-  | 'pending'
-  | 'planned'
-  | 'running'
-  | 'awaiting_approval'
-  | 'completed'
-  | 'failed';
+  | "pending"
+  | "planned"
+  | "running"
+  | "awaiting_approval"
+  | "completed"
+  | "failed";
 
 export interface Task {
   /** Unique identifier (UUID v4) */
@@ -73,14 +80,16 @@ export interface Task {
 /**
  * Create a new Task with sensible defaults.
  */
-export function createTask(partial: Partial<Task> & Pick<Task, 'source' | 'title'>): Task {
+export function createTask(
+  partial: Partial<Task> & Pick<Task, "source" | "title">,
+): Task {
   const now = new Date().toISOString();
   return {
     id: randomUUID(),
-    intent: 'unknown',
+    intent: "unknown",
     body: undefined,
-    priority: 'normal',
-    status: 'pending',
+    priority: "normal",
+    status: "pending",
     owner: undefined,
     dueAt: undefined,
     metadata: {},

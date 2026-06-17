@@ -49,18 +49,18 @@ AI Operations OS is an autonomous business workflow orchestration system that re
 
 The monorepo contains 10 packages: 3 applications and 7 libraries.
 
-| Package | Path | Purpose | Key Exports | Dependencies |
-|---------|------|---------|-------------|--------------|
-| **shared-types** | `packages/shared-types` | Core data models and type definitions | `Task`, `WorkflowRun`, `WorkflowStep`, `Action`, `Approval`, `ActionReceipt`, `PolicyRule`, `CordDecision`, `createTask`, `computeReceiptHash`, `signReceipt`, `verifyReceiptChain`, `GENESIS_HASH` | None (leaf package) |
-| **ops-core** | `packages/ops-core` | Workflow engine, state machine, intent classifier | `WorkflowEngine`, `StateMachine`, `IntentClassifier`, `TaskStore` (in-memory), `ConnectorRegistry`, `SafetyGate` | `shared-types` |
-| **ops-policy** | `packages/ops-policy` | Business rules, autonomy levels, escalation, budgets | `RuleEngine`, `AutonomyManager`, `EscalationManager`, `BudgetTracker` | `shared-types` |
-| **ops-connectors** | `packages/ops-connectors` | Connector framework and service integrations | `BaseConnector`, `ConnectorRegistry`, `GmailConnector`, `CalendarConnector`, `XTwitterConnector`, `ShopifyConnector` | `shared-types` |
-| **cord-adapter** | `packages/cord-adapter` | Bridge to cord-engine for safety evaluation | `CordSafetyGate`, `PolicySimulator`, `ForensicEngine` | `shared-types`, `cord-engine` (optional) |
-| **codebot-adapter** | `packages/codebot-adapter` | Bridge to codebot-ai for tool execution | `CodeBotAdapter`, `CodeBotExecutor`, `ReceiptBuilder` | `shared-types`, `codebot-ai` (optional) |
-| **ops-storage** | `packages/ops-storage` | SQLite persistence layer | `Database`, `TaskStore`, `WorkflowStore`, `ApprovalStore`, `createStores()` | `shared-types`, `better-sqlite3` |
-| **ops-api** | `apps/ops-api` | REST/SSE API server (Node.js built-in http) | `server`, `stores`, route modules | `shared-types`, `ops-storage`, `ops-worker` |
-| **ops-worker** | `apps/ops-worker` | Background job processor and pipeline orchestrator | `runPipeline`, `defaultBuildWorkflow`, `JobQueue`, `Scheduler` | `shared-types` |
-| **ops-web** | `apps/ops-web` | Web dashboard (React) | UI components | `shared-types` |
+| Package             | Path                       | Purpose                                              | Key Exports                                                                                                                                                                                         | Dependencies                                |
+| ------------------- | -------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **shared-types**    | `packages/shared-types`    | Core data models and type definitions                | `Task`, `WorkflowRun`, `WorkflowStep`, `Action`, `Approval`, `ActionReceipt`, `PolicyRule`, `CordDecision`, `createTask`, `computeReceiptHash`, `signReceipt`, `verifyReceiptChain`, `GENESIS_HASH` | None (leaf package)                         |
+| **ops-core**        | `packages/ops-core`        | Workflow engine, state machine, intent classifier    | `WorkflowEngine`, `StateMachine`, `IntentClassifier`, `TaskStore` (in-memory), `ConnectorRegistry`, `SafetyGate`                                                                                    | `shared-types`                              |
+| **ops-policy**      | `packages/ops-policy`      | Business rules, autonomy levels, escalation, budgets | `RuleEngine`, `AutonomyManager`, `EscalationManager`, `BudgetTracker`                                                                                                                               | `shared-types`                              |
+| **ops-connectors**  | `packages/ops-connectors`  | Connector framework and service integrations         | `BaseConnector`, `ConnectorRegistry`, `GmailConnector`, `CalendarConnector`, `XTwitterConnector`, `ShopifyConnector`                                                                                | `shared-types`                              |
+| **cord-adapter**    | `packages/cord-adapter`    | Bridge to cord-engine for safety evaluation          | `CordSafetyGate`, `PolicySimulator`, `ForensicEngine`                                                                                                                                               | `shared-types`, `cord-engine` (optional)    |
+| **codebot-adapter** | `packages/codebot-adapter` | Bridge to codebot-ai for tool execution              | `CodeBotAdapter`, `CodeBotExecutor`, `ReceiptBuilder`                                                                                                                                               | `shared-types`, `codebot-ai` (optional)     |
+| **ops-storage**     | `packages/ops-storage`     | SQLite persistence layer                             | `Database`, `TaskStore`, `WorkflowStore`, `ApprovalStore`, `createStores()`                                                                                                                         | `shared-types`, `better-sqlite3`            |
+| **ops-api**         | `apps/ops-api`             | REST/SSE API server (Node.js built-in http)          | `server`, `stores`, route modules                                                                                                                                                                   | `shared-types`, `ops-storage`, `ops-worker` |
+| **ops-worker**      | `apps/ops-worker`          | Background job processor and pipeline orchestrator   | `runPipeline`, `defaultBuildWorkflow`, `JobQueue`, `Scheduler`                                                                                                                                      | `shared-types`                              |
+| **ops-web**         | `apps/ops-web`             | Web dashboard (React)                                | UI components                                                                                                                                                                                       | `shared-types`                              |
 
 ---
 
@@ -143,12 +143,12 @@ Signed proof of execution. Each receipt contains `actionId`, `policyVersion`, `c
 
 ### Existing Connectors
 
-| Connector | File | Operations |
-|-----------|------|------------|
-| Gmail | `packages/ops-connectors/src/gmail.ts` | `read`, `list`, `search`, `reply`, `send`, `forward`, `draft` |
-| Google Calendar | `packages/ops-connectors/src/calendar.ts` | `list_events`, `check_availability`, `create_event`, `update_event`, `cancel_event` |
-| X (Twitter) | `packages/ops-connectors/src/x-twitter.ts` | `post`, `reply`, `schedule`, `delete` |
-| Shopify | `packages/ops-connectors/src/shopify.ts` | `get_order`, `list_orders`, `fulfill_order`, `refund` |
+| Connector       | File                                       | Operations                                                                          |
+| --------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Gmail           | `packages/ops-connectors/src/gmail.ts`     | `read`, `list`, `search`, `reply`, `send`, `forward`, `draft`                       |
+| Google Calendar | `packages/ops-connectors/src/calendar.ts`  | `list_events`, `check_availability`, `create_event`, `update_event`, `cancel_event` |
+| X (Twitter)     | `packages/ops-connectors/src/x-twitter.ts` | `post`, `reply`, `schedule`, `delete`                                               |
+| Shopify         | `packages/ops-connectors/src/shopify.ts`   | `get_order`, `list_orders`, `fulfill_order`, `refund`                               |
 
 ### Adding a New Connector
 
@@ -157,23 +157,28 @@ Signed proof of execution. Each receipt contains `actionId`, `policyVersion`, `c
 2. Extend `BaseConnector` and implement the three required members:
 
 ```typescript
-import { BaseConnector, ConnectorConfig, ConnectorResult } from './base';
+import { BaseConnector, ConnectorConfig, ConnectorResult } from "./base";
 
 export class SlackConnector extends BaseConnector {
   constructor(config: ConnectorConfig) {
-    super({ ...config, name: 'slack' });
+    super({ ...config, name: "slack" });
   }
 
   get supportedOperations(): string[] {
-    return ['send_message', 'list_channels', 'react'];
+    return ["send_message", "list_channels", "react"];
   }
 
-  async execute(operation: string, input: Record<string, unknown>): Promise<ConnectorResult> {
+  async execute(
+    operation: string,
+    input: Record<string, unknown>,
+  ): Promise<ConnectorResult> {
     // Implement each operation
     switch (operation) {
-      case 'send_message': return this.sendMessage(input);
+      case "send_message":
+        return this.sendMessage(input);
       // ...
-      default: return { success: false, error: `Unsupported: ${operation}` };
+      default:
+        return { success: false, error: `Unsupported: ${operation}` };
     }
   }
 
@@ -206,23 +211,23 @@ CORD (Constrained Operational Risk Decisions) is the safety scoring engine. The 
 
 **Operation-to-CORD-tool mapping:**
 
-| Operation Category | CORD Tool Type | Risk Profile |
-|--------------------|---------------|--------------|
-| `send`, `reply`, `forward` | `communication` | Outbound messaging risk |
-| `post`, `tweet` | `publication` | Public content risk |
-| `delete`, `remove`, `archive` | `destructive` | Data loss risk |
-| `create_event`, `update_event`, `cancel_event` | `scheduling` | Calendar disruption risk |
-| `refund`, `charge`, `transfer` | `financial` | Monetary risk |
-| `read`, `list`, `search`, `get` | `readonly` | Minimal risk |
+| Operation Category                             | CORD Tool Type  | Risk Profile             |
+| ---------------------------------------------- | --------------- | ------------------------ |
+| `send`, `reply`, `forward`                     | `communication` | Outbound messaging risk  |
+| `post`, `tweet`                                | `publication`   | Public content risk      |
+| `delete`, `remove`, `archive`                  | `destructive`   | Data loss risk           |
+| `create_event`, `update_event`, `cancel_event` | `scheduling`    | Calendar disruption risk |
+| `refund`, `charge`, `transfer`                 | `financial`     | Monetary risk            |
+| `read`, `list`, `search`, `get`                | `readonly`      | Minimal risk             |
 
 **Decision thresholds:**
 
-| Decision | Score Range | Behavior |
-|----------|------------|----------|
-| ALLOW | 0-19 | Auto-execute |
-| CONTAIN | 20-49 | Execute with constraints |
-| CHALLENGE | 50-79 | Require human approval |
-| BLOCK | 80-99 | Reject (hardBlock if financial/destructive) |
+| Decision  | Score Range | Behavior                                    |
+| --------- | ----------- | ------------------------------------------- |
+| ALLOW     | 0-19        | Auto-execute                                |
+| CONTAIN   | 20-49       | Execute with constraints                    |
+| CHALLENGE | 50-79       | Require human approval                      |
+| BLOCK     | 80-99       | Reject (hardBlock if financial/destructive) |
 
 **Graceful degradation:** If cord-engine is not installed (it is an optional dependency), `CordSafetyGate` returns `ALLOW` with `score: 0` for all operations, allowing the system to run in permissive mode.
 
@@ -231,6 +236,7 @@ CORD (Constrained Operational Risk Decisions) is the safety scoring engine. The 
 The `RuleEngine` in `ops-policy` evaluates operations against owner-defined `PolicyRule` objects. Rules are sorted by priority (highest first); the first matching rule wins. Each rule specifies a `connector` pattern, `operation` pattern, and an `autonomy` level (`'auto'`, `'approve'`, or `'deny'`). If no rules match, the policy's `defaultAutonomy` is used.
 
 Supporting components:
+
 - **AutonomyManager** -- Resolves the final autonomy decision by combining policy rules with CORD scores.
 - **EscalationManager** -- Routes escalations to configured targets based on risk thresholds.
 - **BudgetTracker** -- Tracks spending against per-connector or global budgets for financial operations.
@@ -325,65 +331,65 @@ The API server runs on port 3100 (configurable via `OPS_PORT`) using Node.js bui
 
 ### Health
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health check (also `/api/health`) |
+| Method | Path      | Description                       |
+| ------ | --------- | --------------------------------- |
+| GET    | `/health` | Health check (also `/api/health`) |
 
 ### Tasks
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/tasks` | List tasks (filters: `status`, `source`, `intent`, `priority`, `limit`, `offset`) |
-| GET | `/api/tasks/:id` | Get a single task |
-| POST | `/api/tasks` | Create a task (requires `source`, `title`) |
-| PATCH | `/api/tasks/:id` | Update a task |
-| DELETE | `/api/tasks/:id` | Soft-delete a task (marks as `failed`) |
+| Method | Path             | Description                                                                       |
+| ------ | ---------------- | --------------------------------------------------------------------------------- |
+| GET    | `/api/tasks`     | List tasks (filters: `status`, `source`, `intent`, `priority`, `limit`, `offset`) |
+| GET    | `/api/tasks/:id` | Get a single task                                                                 |
+| POST   | `/api/tasks`     | Create a task (requires `source`, `title`)                                        |
+| PATCH  | `/api/tasks/:id` | Update a task                                                                     |
+| DELETE | `/api/tasks/:id` | Soft-delete a task (marks as `failed`)                                            |
 
 ### Workflows
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/workflows` | Trigger a workflow run (requires `taskId`, `workflowType`, optional `steps`) |
-| GET | `/api/workflows` | List workflow runs (filters: `taskId`, `state`, `limit`, `offset`) |
-| GET | `/api/workflows/:id` | Get a specific workflow run with its steps |
-| POST | `/api/workflows/:id/pause` | Pause a running workflow |
-| POST | `/api/workflows/:id/resume` | Resume a paused workflow |
+| Method | Path                        | Description                                                                  |
+| ------ | --------------------------- | ---------------------------------------------------------------------------- |
+| POST   | `/api/workflows`            | Trigger a workflow run (requires `taskId`, `workflowType`, optional `steps`) |
+| GET    | `/api/workflows`            | List workflow runs (filters: `taskId`, `state`, `limit`, `offset`)           |
+| GET    | `/api/workflows/:id`        | Get a specific workflow run with its steps                                   |
+| POST   | `/api/workflows/:id/pause`  | Pause a running workflow                                                     |
+| POST   | `/api/workflows/:id/resume` | Resume a paused workflow                                                     |
 
 ### Approvals
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/approvals` | List approvals (filters: `status` = pending/all/decided, `risk`) |
-| GET | `/api/approvals/:id` | Get a specific approval |
-| POST | `/api/approvals/:id/decide` | Submit decision (`{ decision: 'approved'|'denied'|'modified' }`) |
-| GET | `/api/approvals/stream` | SSE stream of new approval requests |
+| Method | Path                        | Description                                                      |
+| ------ | --------------------------- | ---------------------------------------------------------------- | -------- | -------------- |
+| GET    | `/api/approvals`            | List approvals (filters: `status` = pending/all/decided, `risk`) |
+| GET    | `/api/approvals/:id`        | Get a specific approval                                          |
+| POST   | `/api/approvals/:id/decide` | Submit decision (`{ decision: 'approved'                         | 'denied' | 'modified' }`) |
+| GET    | `/api/approvals/stream`     | SSE stream of new approval requests                              |
 
 ### Webhooks
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/webhooks/gmail` | Gmail push notification |
-| POST | `/api/webhooks/calendar` | Google Calendar push notification |
-| POST | `/api/webhooks/shopify` | Shopify webhook |
-| POST | `/api/webhooks/stripe` | Stripe webhook |
-| POST | `/api/webhooks/generic` | Generic webhook for custom integrations |
+| Method | Path                     | Description                             |
+| ------ | ------------------------ | --------------------------------------- |
+| POST   | `/api/webhooks/gmail`    | Gmail push notification                 |
+| POST   | `/api/webhooks/calendar` | Google Calendar push notification       |
+| POST   | `/api/webhooks/shopify`  | Shopify webhook                         |
+| POST   | `/api/webhooks/stripe`   | Stripe webhook                          |
+| POST   | `/api/webhooks/generic`  | Generic webhook for custom integrations |
 
 ### Pipeline
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/pipeline/run` | Trigger full pipeline with SSE event stream |
-| POST | `/api/pipeline/simulate` | Dry-run pipeline simulation (no execution) |
+| Method | Path                     | Description                                 |
+| ------ | ------------------------ | ------------------------------------------- |
+| POST   | `/api/pipeline/run`      | Trigger full pipeline with SSE event stream |
+| POST   | `/api/pipeline/simulate` | Dry-run pipeline simulation (no execution)  |
 
 ### OAuth
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/oauth/google/url` | Get Google OAuth2 authorization URL |
-| GET | `/api/oauth/google/callback` | Handle OAuth callback with auth code |
-| GET | `/api/oauth/status` | Check connector authentication status |
-| POST | `/api/oauth/google/refresh` | Refresh expired Google access token |
-| POST | `/api/oauth/x/token` | Save X/Twitter bearer token |
+| Method | Path                         | Description                           |
+| ------ | ---------------------------- | ------------------------------------- |
+| GET    | `/api/oauth/google/url`      | Get Google OAuth2 authorization URL   |
+| GET    | `/api/oauth/google/callback` | Handle OAuth callback with auth code  |
+| GET    | `/api/oauth/status`          | Check connector authentication status |
+| POST   | `/api/oauth/google/refresh`  | Refresh expired Google access token   |
+| POST   | `/api/oauth/x/token`         | Save X/Twitter bearer token           |
 
 ---
 
@@ -405,12 +411,12 @@ npm run build
 
 ### Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run build` | Build all packages (Turborepo) |
-| `npm run dev` | Dev mode for all packages |
-| `npm test` | Run all tests |
-| `npm run lint` | Lint all packages |
+| Command         | Description                            |
+| --------------- | -------------------------------------- |
+| `npm run build` | Build all packages (Turborepo)         |
+| `npm run dev`   | Dev mode for all packages              |
+| `npm test`      | Run all tests                          |
+| `npm run lint`  | Lint all packages                      |
 | `npm run clean` | Clean build artifacts and node_modules |
 
 ### Running Individual Apps
@@ -430,16 +436,16 @@ npm run dev --workspace=apps/ops-web
 
 Copy `.env.example` to `.env` and configure:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GMAIL_CLIENT_ID` | For Gmail | Google OAuth client ID |
-| `GMAIL_CLIENT_SECRET` | For Gmail | Google OAuth client secret |
-| `CALENDAR_API_KEY` | For Calendar | Google Calendar API key |
-| `X_API_KEY` | For X | X API bearer token |
-| `CORD_HMAC_KEY` | Yes | HMAC key for receipt signing |
-| `POLICY_VERSION` | No | Policy version identifier (default: `v1`) |
-| `OPS_PORT` | No | API server port (default: `3100`) |
-| `OPS_HOST` | No | API server host (default: `0.0.0.0`) |
+| Variable              | Required     | Description                               |
+| --------------------- | ------------ | ----------------------------------------- |
+| `GMAIL_CLIENT_ID`     | For Gmail    | Google OAuth client ID                    |
+| `GMAIL_CLIENT_SECRET` | For Gmail    | Google OAuth client secret                |
+| `CALENDAR_API_KEY`    | For Calendar | Google Calendar API key                   |
+| `X_API_KEY`           | For X        | X API bearer token                        |
+| `CORD_HMAC_KEY`       | Yes          | HMAC key for receipt signing              |
+| `POLICY_VERSION`      | No           | Policy version identifier (default: `v1`) |
+| `OPS_PORT`            | No           | API server port (default: `3100`)         |
+| `OPS_HOST`            | No           | API server host (default: `0.0.0.0`)      |
 
 ### Adding a New Feature
 

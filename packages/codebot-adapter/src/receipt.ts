@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 /**
  * ReceiptBuilder — Builds hash-chained action receipts during execution.
@@ -8,12 +8,12 @@ import { randomUUID } from 'node:crypto';
  * functions from @ai-operations/shared-types for hashing and signing.
  */
 
-import type { ActionReceipt, CordDecision } from '@ai-operations/shared-types';
+import type { ActionReceipt, CordDecision } from "@ai-operations/shared-types";
 import {
   GENESIS_HASH,
   computeReceiptHash,
   signReceipt,
-} from '@ai-operations/shared-types';
+} from "@ai-operations/shared-types";
 
 // ---------------------------------------------------------------------------
 // Types

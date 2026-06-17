@@ -16,15 +16,18 @@
  * removal, casual phrasing, and qualifiers to a generated response.
  */
 
-import type { SparkStore } from '@ai-operations/ops-storage';
-import type { PersonalityProfile, PersonalityContext } from '@ai-operations/shared-types';
+import type { SparkStore } from "@ai-operations/ops-storage";
+import type {
+  PersonalityProfile,
+  PersonalityContext,
+} from "@ai-operations/shared-types";
 import {
   PERSONALITY_LEARNING_RATE,
   PERSONALITY_TRAIT_MIN,
   PERSONALITY_TRAIT_MAX,
   PERSONALITY_DEFAULT,
   PERSONALITY_CONSISTENCY_WINDOW,
-} from './spiral-constants';
+} from "./spiral-constants";
 
 export class PersonalityEngine {
   private profile: PersonalityProfile;
@@ -57,41 +60,48 @@ export class PersonalityEngine {
     const deltas: number[] = [];
 
     // Curiosity: increases with diverse topics
-    const curiosityDelta = context.topicDiversity > 3
-      ? lr * (context.topicDiversity / 10)
-      : -lr * 0.2;
-    this.profile.curiosity = this.clamp(this.profile.curiosity + curiosityDelta);
+    const curiosityDelta =
+      context.topicDiversity > 3
+        ? lr * (context.topicDiversity / 10)
+        : -lr * 0.2;
+    this.profile.curiosity = this.clamp(
+      this.profile.curiosity + curiosityDelta,
+    );
     deltas.push(Math.abs(curiosityDelta));
 
     // Caution: increases with SENTINEL categories
-    const cautionDelta = context.hasSentinelCategories
-      ? lr * 0.5
-      : -lr * 0.1;
+    const cautionDelta = context.hasSentinelCategories ? lr * 0.5 : -lr * 0.1;
     this.profile.caution = this.clamp(this.profile.caution + cautionDelta);
     deltas.push(Math.abs(cautionDelta));
 
     // Warmth: increases with positive valence
-    const warmthDelta = context.emotionalValence > 0
-      ? lr * context.emotionalValence
-      : lr * context.emotionalValence * 0.5; // Slower decrease
+    const warmthDelta =
+      context.emotionalValence > 0
+        ? lr * context.emotionalValence
+        : lr * context.emotionalValence * 0.5; // Slower decrease
     this.profile.warmth = this.clamp(this.profile.warmth + warmthDelta);
     deltas.push(Math.abs(warmthDelta));
 
     // Directness: increases with explain/diagnose intents
-    const directIntents = ['explain', 'diagnose', 'compare'];
+    const directIntents = ["explain", "diagnose", "compare"];
     const directnessDelta = directIntents.includes(context.queryIntent)
       ? lr * 0.5
       : -lr * 0.1;
-    this.profile.directness = this.clamp(this.profile.directness + directnessDelta);
+    this.profile.directness = this.clamp(
+      this.profile.directness + directnessDelta,
+    );
     deltas.push(Math.abs(directnessDelta));
 
     // Playfulness: increases with positive momentum
-    const playfulnessDelta = context.emotionalMomentum === 'improving'
-      ? lr * 0.5
-      : context.emotionalMomentum === 'declining'
-        ? -lr * 0.3
-        : 0;
-    this.profile.playfulness = this.clamp(this.profile.playfulness + playfulnessDelta);
+    const playfulnessDelta =
+      context.emotionalMomentum === "improving"
+        ? lr * 0.5
+        : context.emotionalMomentum === "declining"
+          ? -lr * 0.3
+          : 0;
+    this.profile.playfulness = this.clamp(
+      this.profile.playfulness + playfulnessDelta,
+    );
     deltas.push(Math.abs(playfulnessDelta));
 
     // Track deltas for consistency scoring
@@ -115,9 +125,9 @@ export class PersonalityEngine {
     // High warmth (> 0.65): add empathetic preamble
     if (this.profile.warmth > 0.65) {
       const warmPreambles = [
-        'I appreciate you asking — ',
-        'Great question — ',
-        'Thanks for checking in — ',
+        "I appreciate you asking — ",
+        "Great question — ",
+        "Thanks for checking in — ",
       ];
       const preamble = warmPreambles[text.length % warmPreambles.length];
       result = preamble + result.charAt(0).toLowerCase() + result.slice(1);
@@ -126,22 +136,22 @@ export class PersonalityEngine {
     // High directness (> 0.65): remove hedging words
     if (this.profile.directness > 0.65) {
       result = result
-        .replace(/\bI think\b/gi, '')
-        .replace(/\bperhaps\b/gi, '')
-        .replace(/\bmaybe\b/gi, '')
-        .replace(/\bpossibly\b/gi, '')
-        .replace(/\bit seems like\b/gi, '')
-        .replace(/\s{2,}/g, ' ')
+        .replace(/\bI think\b/gi, "")
+        .replace(/\bperhaps\b/gi, "")
+        .replace(/\bmaybe\b/gi, "")
+        .replace(/\bpossibly\b/gi, "")
+        .replace(/\bit seems like\b/gi, "")
+        .replace(/\s{2,}/g, " ")
         .trim();
     }
 
     // High playfulness (> 0.65): add casual closing
     if (this.profile.playfulness > 0.65) {
-      if (!result.endsWith('!') && !result.endsWith('?')) {
+      if (!result.endsWith("!") && !result.endsWith("?")) {
         const closings = [
-          ' — pretty interesting, right?',
-          ' — let me know what you think!',
-          ' — fun stuff.',
+          " — pretty interesting, right?",
+          " — let me know what you think!",
+          " — fun stuff.",
         ];
         result += closings[text.length % closings.length];
       }
@@ -149,12 +159,13 @@ export class PersonalityEngine {
 
     // High caution (> 0.65): add qualifier
     if (this.profile.caution > 0.65) {
-      result += ' (Note: confidence varies by category — see introspection for details.)';
+      result +=
+        " (Note: confidence varies by category — see introspection for details.)";
     }
 
     // High curiosity (> 0.65): add exploration prompt
     if (this.profile.curiosity > 0.65) {
-      result += ' Want me to dig deeper into any aspect of this?';
+      result += " Want me to dig deeper into any aspect of this?";
     }
 
     return result;
@@ -168,8 +179,11 @@ export class PersonalityEngine {
   getConsistencyScore(): number {
     if (this.recentDeltas.length < 2) return 1.0;
 
-    const mean = this.recentDeltas.reduce((s, d) => s + d, 0) / this.recentDeltas.length;
-    const variance = this.recentDeltas.reduce((s, d) => s + (d - mean) ** 2, 0) / this.recentDeltas.length;
+    const mean =
+      this.recentDeltas.reduce((s, d) => s + d, 0) / this.recentDeltas.length;
+    const variance =
+      this.recentDeltas.reduce((s, d) => s + (d - mean) ** 2, 0) /
+      this.recentDeltas.length;
 
     // Map variance to 0-1 scale (lower variance = higher consistency)
     // Variance of ~0.001 maps to ~0.9 consistency
@@ -183,24 +197,24 @@ export class PersonalityEngine {
     const p = this.profile;
     const traits: string[] = [];
 
-    if (p.curiosity > 0.6) traits.push('curious');
-    else if (p.curiosity < 0.4) traits.push('focused');
+    if (p.curiosity > 0.6) traits.push("curious");
+    else if (p.curiosity < 0.4) traits.push("focused");
 
-    if (p.caution > 0.6) traits.push('cautious');
-    else if (p.caution < 0.4) traits.push('bold');
+    if (p.caution > 0.6) traits.push("cautious");
+    else if (p.caution < 0.4) traits.push("bold");
 
-    if (p.warmth > 0.6) traits.push('warm');
-    else if (p.warmth < 0.4) traits.push('reserved');
+    if (p.warmth > 0.6) traits.push("warm");
+    else if (p.warmth < 0.4) traits.push("reserved");
 
-    if (p.directness > 0.6) traits.push('direct');
-    else if (p.directness < 0.4) traits.push('nuanced');
+    if (p.directness > 0.6) traits.push("direct");
+    else if (p.directness < 0.4) traits.push("nuanced");
 
-    if (p.playfulness > 0.6) traits.push('playful');
-    else if (p.playfulness < 0.4) traits.push('serious');
+    if (p.playfulness > 0.6) traits.push("playful");
+    else if (p.playfulness < 0.4) traits.push("serious");
 
-    if (traits.length === 0) traits.push('balanced');
+    if (traits.length === 0) traits.push("balanced");
 
-    return `Personality: ${traits.join(', ')}. Consistency: ${(this.getConsistencyScore() * 100).toFixed(0)}%.`;
+    return `Personality: ${traits.join(", ")}. Consistency: ${(this.getConsistencyScore() * 100).toFixed(0)}%.`;
   }
 
   // ── Private ──────────────────────────────────────────────────────
@@ -216,6 +230,9 @@ export class PersonalityEngine {
   }
 
   private clamp(value: number): number {
-    return Math.max(PERSONALITY_TRAIT_MIN, Math.min(PERSONALITY_TRAIT_MAX, value));
+    return Math.max(
+      PERSONALITY_TRAIT_MIN,
+      Math.min(PERSONALITY_TRAIT_MAX, value),
+    );
   }
 }

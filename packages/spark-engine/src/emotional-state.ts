@@ -10,14 +10,18 @@
  * its reasoning and strengthens emotionally significant memories.
  */
 
-import type { SparkStore } from '@ai-operations/ops-storage';
-import type { Essence, EmotionalState, EmotionalMomentum } from '@ai-operations/shared-types';
+import type { SparkStore } from "@ai-operations/ops-storage";
+import type {
+  Essence,
+  EmotionalState,
+  EmotionalMomentum,
+} from "@ai-operations/shared-types";
 import {
   EMOTIONAL_EMA_ALPHA,
   EMOTIONAL_RING_BUFFER_SIZE,
   EMOTIONAL_HIGH_INTENSITY_THRESHOLD,
   EMOTIONAL_VOLATILITY_HIGH,
-} from './spiral-constants';
+} from "./spiral-constants";
 
 export class EmotionalStateEngine {
   private readonly store: SparkStore;
@@ -47,7 +51,10 @@ export class EmotionalStateEngine {
     this.applySignal(signal);
 
     // Track high-emotion tokens
-    if (tokenId && essence.sentimentIntensity > EMOTIONAL_HIGH_INTENSITY_THRESHOLD) {
+    if (
+      tokenId &&
+      essence.sentimentIntensity > EMOTIONAL_HIGH_INTENSITY_THRESHOLD
+    ) {
       this.highEmotionTokenIds.add(tokenId);
     }
 
@@ -80,13 +87,20 @@ export class EmotionalStateEngine {
    */
   getSummary(): string {
     const state = this.getState();
-    const valenceLabel = state.valence > 0.2 ? 'positive'
-      : state.valence < -0.2 ? 'negative'
-      : 'neutral';
-    const momentumLabel = state.momentum === 'improving' ? 'trending upward'
-      : state.momentum === 'declining' ? 'trending downward'
-      : 'holding steady';
-    const volatilityLabel = state.volatility > EMOTIONAL_VOLATILITY_HIGH ? 'turbulent' : 'calm';
+    const valenceLabel =
+      state.valence > 0.2
+        ? "positive"
+        : state.valence < -0.2
+          ? "negative"
+          : "neutral";
+    const momentumLabel =
+      state.momentum === "improving"
+        ? "trending upward"
+        : state.momentum === "declining"
+          ? "trending downward"
+          : "holding steady";
+    const volatilityLabel =
+      state.volatility > EMOTIONAL_VOLATILITY_HIGH ? "turbulent" : "calm";
 
     return `Emotionally ${valenceLabel} (valence ${state.valence.toFixed(2)}), ${momentumLabel}, and ${volatilityLabel}.`;
   }
@@ -101,13 +115,13 @@ export class EmotionalStateEngine {
     const intensity = Math.min(1.0, sentimentIntensity);
 
     switch (sentiment) {
-      case 'positive':
+      case "positive":
         return intensity;
-      case 'negative':
+      case "negative":
         return -intensity;
-      case 'mixed':
+      case "mixed":
         return intensity * 0.1; // Slightly positive bias for mixed
-      case 'neutral':
+      case "neutral":
       default:
         return 0;
     }
@@ -118,7 +132,8 @@ export class EmotionalStateEngine {
    */
   private applySignal(signal: number): void {
     // EMA: valence = α * signal + (1 - α) * valence
-    this.valence = EMOTIONAL_EMA_ALPHA * signal + (1 - EMOTIONAL_EMA_ALPHA) * this.valence;
+    this.valence =
+      EMOTIONAL_EMA_ALPHA * signal + (1 - EMOTIONAL_EMA_ALPHA) * this.valence;
 
     // Clamp to [-1, 1]
     this.valence = Math.max(-1.0, Math.min(1.0, this.valence));
@@ -134,10 +149,13 @@ export class EmotionalStateEngine {
    * Compute momentum via linear regression slope over the ring buffer.
    */
   private computeMomentum(): EmotionalMomentum {
-    if (this.valenceHistory.length < 3) return 'stable';
+    if (this.valenceHistory.length < 3) return "stable";
 
     const n = this.valenceHistory.length;
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    let sumX = 0,
+      sumY = 0,
+      sumXY = 0,
+      sumX2 = 0;
 
     for (let i = 0; i < n; i++) {
       sumX += i;
@@ -148,9 +166,9 @@ export class EmotionalStateEngine {
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
 
-    if (slope > 0.02) return 'improving';
-    if (slope < -0.02) return 'declining';
-    return 'stable';
+    if (slope > 0.02) return "improving";
+    if (slope < -0.02) return "declining";
+    return "stable";
   }
 
   /**
@@ -161,7 +179,8 @@ export class EmotionalStateEngine {
 
     const n = this.valenceHistory.length;
     const mean = this.valenceHistory.reduce((s, v) => s + v, 0) / n;
-    const variance = this.valenceHistory.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+    const variance =
+      this.valenceHistory.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
 
     return Math.min(1.0, Math.sqrt(variance));
   }

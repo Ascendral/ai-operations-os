@@ -15,17 +15,24 @@ npm install @ai-operations/codebot-adapter
 ## Quick Start
 
 ```ts
-import { CodeBotAdapter, ReceiptBuilder } from '@ai-operations/codebot-adapter';
-import { verifyReceiptChain } from '@ai-operations/shared-types';
+import { CodeBotAdapter, ReceiptBuilder } from "@ai-operations/codebot-adapter";
+import { verifyReceiptChain } from "@ai-operations/shared-types";
 
 const adapter = new CodeBotAdapter();
 const result = await adapter.executeStep(workflowStep);
 
 const builder = new ReceiptBuilder();
-builder.addStep({ actionId: 'act-001', policyVersion: '1.0.0', cordDecision: 'ALLOW', cordScore: 12, cordReasons: ['Low risk'], input: { query: 'inbox' } });
-const receipts = builder.finalize('signing-key');
+builder.addStep({
+  actionId: "act-001",
+  policyVersion: "1.0.0",
+  cordDecision: "ALLOW",
+  cordScore: 12,
+  cordReasons: ["Low risk"],
+  input: { query: "inbox" },
+});
+const receipts = builder.finalize("signing-key");
 
-const { valid } = verifyReceiptChain(receipts, 'signing-key');
+const { valid } = verifyReceiptChain(receipts, "signing-key");
 ```
 
 ## API
@@ -57,7 +64,7 @@ isAvailable(): boolean
 
 ```ts
 const executor = new CodeBotExecutor();
-for await (const event of executor.run('Refactor the utils module')) {
+for await (const event of executor.run("Refactor the utils module")) {
   console.log(`[${event.type}] ${event.message}`);
 }
 ```

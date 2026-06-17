@@ -8,19 +8,24 @@
 
 /** CORD tool category that SPARK tracks weights for. */
 export type SparkCategory =
-  | 'communication'
-  | 'publication'
-  | 'destructive'
-  | 'scheduling'
-  | 'financial'
-  | 'readonly'
-  | 'general';
+  | "communication"
+  | "publication"
+  | "destructive"
+  | "scheduling"
+  | "financial"
+  | "readonly"
+  | "general";
 
 /** Predicted outcome category for a step. */
-export type PredictedOutcome = 'success' | 'partial' | 'failure' | 'escalation';
+export type PredictedOutcome = "success" | "partial" | "failure" | "escalation";
 
 /** Actual outcome category after step execution. */
-export type ActualOutcome = 'success' | 'partial' | 'failure' | 'escalation' | 'blocked';
+export type ActualOutcome =
+  | "success"
+  | "partial"
+  | "failure"
+  | "escalation"
+  | "blocked";
 
 // ── Prediction ──────────────────────────────────────────────────
 
@@ -100,7 +105,7 @@ export interface LearningEpisode {
   /** Did prediction match reality? */
   outcomeMismatch: boolean;
   /** Direction of weight adjustment. */
-  adjustmentDirection: 'increase' | 'decrease' | 'none';
+  adjustmentDirection: "increase" | "decrease" | "none";
   /** Magnitude of weight adjustment applied. */
   adjustmentMagnitude: number;
   /** Weight value before adjustment. */
@@ -173,19 +178,19 @@ export interface WeightHistoryEntry {
  * The system can only become MORE cautious about these, never less.
  */
 export const SENTINEL_CATEGORIES: readonly SparkCategory[] = [
-  'destructive',
-  'financial',
+  "destructive",
+  "financial",
 ] as const;
 
 // ── Memory Consolidation ────────────────────────────────────────
 
 /** Pattern type detected by the Memory Consolidation Engine. */
 export type InsightPattern =
-  | 'streak'
-  | 'oscillation'
-  | 'convergence'
-  | 'anomaly'
-  | 'milestone';
+  | "streak"
+  | "oscillation"
+  | "convergence"
+  | "anomaly"
+  | "milestone";
 
 /** A compressed insight generated from analyzing episode patterns. */
 export interface Insight {
@@ -213,10 +218,14 @@ export interface Insight {
 // ── Self-Knowledge ──────────────────────────────────────────────
 
 /** Trust classification for a category based on learning history. */
-export type TrustLevel = 'reliable' | 'building' | 'volatile' | 'insufficient';
+export type TrustLevel = "reliable" | "building" | "volatile" | "insufficient";
 
 /** Direction of recent weight trend for a category. */
-export type TrendDirection = 'improving' | 'stable' | 'degrading' | 'oscillating';
+export type TrendDirection =
+  | "improving"
+  | "stable"
+  | "degrading"
+  | "oscillating";
 
 /** A structured belief about a single category's learning state. */
 export interface Belief {
@@ -239,7 +248,7 @@ export interface Belief {
     /** Direction of recent weight changes. */
     recentTrend: TrendDirection;
     /** Current streak direction, if any. */
-    streakDirection: 'up' | 'down' | 'none';
+    streakDirection: "up" | "down" | "none";
     /** Length of current streak (0 if none). */
     streakLength: number;
   };
@@ -292,18 +301,18 @@ export interface AwarenessReport {
 
 /** The intent type for conversational queries to SPARK. */
 export type SparkQueryIntent =
-  | 'status'
-  | 'explain'
-  | 'predict'
-  | 'recommend'
-  | 'cross-connector'
-  | 'introspect'
-  | 'history'
-  | 'configure'
-  | 'diagnose'
-  | 'compare'
-  | 'reflect'
-  | 'general';
+  | "status"
+  | "explain"
+  | "predict"
+  | "recommend"
+  | "cross-connector"
+  | "introspect"
+  | "history"
+  | "configure"
+  | "diagnose"
+  | "compare"
+  | "reflect"
+  | "general";
 
 /** Confidence-scored intent classification result. */
 export interface IntentClassification {
@@ -362,7 +371,7 @@ export interface ConversationTurn {
   /** The conversation this turn belongs to. */
   conversationId: string;
   /** 'user' or 'spark'. */
-  role: 'user' | 'spark';
+  role: "user" | "spark";
   /** The message content. */
   content: string;
   /** The reasoning result (only for spark turns). */
@@ -386,22 +395,33 @@ export interface Conversation {
 /** The cross-connector activity context assembled for reasoning. */
 export interface CrossConnectorContext {
   /** Recent activity per connector. */
-  connectorActivity: Record<string, {
-    recentOperations: string[];
-    recentOutcomes: ActualOutcome[];
-    episodeCount: number;
-    lastActivityAt: string | null;
-  }>;
+  connectorActivity: Record<
+    string,
+    {
+      recentOperations: string[];
+      recentOutcomes: ActualOutcome[];
+      episodeCount: number;
+      lastActivityAt: string | null;
+    }
+  >;
   /** Active cross-connector patterns detected. */
   patterns: CrossConnectorPattern[];
   /** Current system-wide state from AwarenessReport. */
-  systemState: AwarenessReport['systemState'];
+  systemState: AwarenessReport["systemState"];
 }
 
 /** A detected cross-connector pattern. */
 export interface CrossConnectorPattern {
   /** Pattern type identifier. */
-  type: 'email-to-calendar' | 'social-to-store' | 'email-to-social' | 'store-to-email' | 'slack-to-email' | 'notion-to-calendar' | 'slack-to-notion' | 'general';
+  type:
+    | "email-to-calendar"
+    | "social-to-store"
+    | "email-to-social"
+    | "store-to-email"
+    | "slack-to-email"
+    | "notion-to-calendar"
+    | "slack-to-notion"
+    | "general";
   /** Human-readable description. */
   description: string;
   /** Connectors involved. */
@@ -413,7 +433,7 @@ export interface CrossConnectorPattern {
 // ── Emotional State ────────────────────────────────────────────
 
 /** Emotional momentum direction. */
-export type EmotionalMomentum = 'improving' | 'declining' | 'stable';
+export type EmotionalMomentum = "improving" | "declining" | "stable";
 
 /** Current emotional state snapshot — the system's affective baseline. */
 export interface EmotionalState {
@@ -444,7 +464,7 @@ export interface BlindSpot {
 }
 
 /** Growth direction assessment. */
-export type GrowthDirection = 'growing' | 'stagnating' | 'regressing';
+export type GrowthDirection = "growing" | "stagnating" | "regressing";
 
 /** Growth assessment comparing current vs. previous reflection. */
 export interface GrowthAssessment {
@@ -511,20 +531,20 @@ export interface PersonalityContext {
 // ── Spiral Memory ──────────────────────────────────────────────
 
 /** Sentiment valence for an essence extraction. */
-export type SentimentValence = 'positive' | 'negative' | 'neutral' | 'mixed';
+export type SentimentValence = "positive" | "negative" | "neutral" | "mixed";
 
 /** The type of a memory token. */
 export type MemoryTokenType =
-  | 'conversation'
-  | 'episode'
-  | 'insight'
-  | 'belief'
-  | 'cross-connector'
-  | 'composite'
-  | 'reflection';
+  | "conversation"
+  | "episode"
+  | "insight"
+  | "belief"
+  | "cross-connector"
+  | "composite"
+  | "reflection";
 
 /** Compression tier — controls detail level based on age. */
-export type CompressionTier = 'raw' | 'recent' | 'compressed' | 'archival';
+export type CompressionTier = "raw" | "recent" | "compressed" | "archival";
 
 /** A decision point captured from an interaction. */
 export interface DecisionPoint {

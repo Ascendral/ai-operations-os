@@ -12,19 +12,39 @@
  * - Approval flow via approvals routes
  */
 
-import type { TaskSource, Approval, WorkflowStep } from '@ai-operations/shared-types';
-import { DEFAULT_POLICY } from '@ai-operations/shared-types';
-import { runPipeline as runPipelineFn, defaultBuildWorkflow } from '@ai-operations/ops-worker';
-import { LLMIntentClassifier } from '@ai-operations/ops-core';
-import { RuleEngine } from '@ai-operations/ops-policy';
-import { ConnectorRegistry, GmailConnector, CalendarConnector, XTwitterConnector, ShopifyConnector, SlackConnector, NotionConnector } from '@ai-operations/ops-connectors';
-import { Predictor, OutcomeTracker, LearningCore, WeightManager } from '@ai-operations/spark-engine';
-import { evaluateAction } from '../middleware/cord-gate';
-import { requestApproval, waitForDecision } from './approvals';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
-import { stores } from '../storage';
-import { validateBody, pipelineSimulateSchema } from '../middleware/validate';
+import type {
+  TaskSource,
+  Approval,
+  WorkflowStep,
+} from "@ai-operations/shared-types";
+import { DEFAULT_POLICY } from "@ai-operations/shared-types";
+import {
+  runPipeline as runPipelineFn,
+  defaultBuildWorkflow,
+} from "@ai-operations/ops-worker";
+import { LLMIntentClassifier } from "@ai-operations/ops-core";
+import { RuleEngine } from "@ai-operations/ops-policy";
+import {
+  ConnectorRegistry,
+  GmailConnector,
+  CalendarConnector,
+  XTwitterConnector,
+  ShopifyConnector,
+  SlackConnector,
+  NotionConnector,
+} from "@ai-operations/ops-connectors";
+import {
+  Predictor,
+  OutcomeTracker,
+  LearningCore,
+  WeightManager,
+} from "@ai-operations/spark-engine";
+import { evaluateAction } from "../middleware/cord-gate";
+import { requestApproval, waitForDecision } from "./approvals";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
+import { stores } from "../storage";
+import { validateBody, pipelineSimulateSchema } from "../middleware/validate";
 
 // ── Singletons ────────────────────────────────────────────────────────────────
 
@@ -61,16 +81,16 @@ async function handleRunPipeline(ctx: any): Promise<void> {
   const eventData = (body.event as Record<string, unknown>) || body;
 
   if (!source) {
-    sendError(res, 400, 'Missing required field: source');
+    sendError(res, 400, "Missing required field: source");
     return;
   }
 
   // SSE headers
   res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "Access-Control-Allow-Origin": "*",
   });
 
   try {
@@ -86,7 +106,11 @@ async function handleRunPipeline(ctx: any): Promise<void> {
         };
       },
 
-      evaluateSafety: (connector: string, operation: string, input: Record<string, unknown>) => {
+      evaluateSafety: (
+        connector: string,
+        operation: string,
+        input: Record<string, unknown>,
+      ) => {
         const gate = evaluateAction(connector, operation, input);
         return {
           decision: gate.decision,
@@ -95,7 +119,11 @@ async function handleRunPipeline(ctx: any): Promise<void> {
         };
       },
 
-      executeConnector: async (connector: string, operation: string, input: Record<string, unknown>) => {
+      executeConnector: async (
+        connector: string,
+        operation: string,
+        input: Record<string, unknown>,
+      ) => {
         const conn = registry.get(connector);
         if (!conn) {
           return {
@@ -116,13 +144,15 @@ async function handleRunPipeline(ctx: any): Promise<void> {
 
       requestApproval: async (approval: Approval) => {
         // Broadcast the approval request to SSE clients
-        res.write(`data: ${JSON.stringify({
-          type: 'approval_request',
-          approvalId: approval.id,
-          risk: approval.risk,
-          reason: approval.reason,
-          preview: approval.preview,
-        })}\n\n`);
+        res.write(
+          `data: ${JSON.stringify({
+            type: "approval_request",
+            approvalId: approval.id,
+            risk: approval.risk,
+            reason: approval.reason,
+            preview: approval.preview,
+          })}\n\n`,
+        );
 
         // Store the approval and wait for a decision from the dashboard
         requestApproval(
@@ -133,13 +163,21 @@ async function handleRunPipeline(ctx: any): Promise<void> {
           approval.preview,
         );
         const decided = await waitForDecision(approval.id);
-        return (decided?.decision ?? 'approved') as 'approved' | 'denied' | 'modified';
+        return (decided?.decision ?? "approved") as
+          | "approved"
+          | "denied"
+          | "modified";
       },
 
       buildWorkflow: defaultBuildWorkflow,
 
       spark: {
-        beforeStep: (stepId: string, runId: string, connector: string, operation: string) => {
+        beforeStep: (
+          stepId: string,
+          runId: string,
+          connector: string,
+          operation: string,
+        ) => {
           try {
             return sparkPredictor.predict(stepId, runId, connector, operation);
           } catch {
@@ -147,12 +185,20 @@ async function handleRunPipeline(ctx: any): Promise<void> {
           }
         },
 
-        afterStep: (step: WorkflowStep, runId: string, wasApproved?: boolean) => {
+        afterStep: (
+          step: WorkflowStep,
+          runId: string,
+          wasApproved?: boolean,
+        ) => {
           try {
             const prediction = stores.spark.getPredictionByStepId(step.id);
             if (!prediction) return undefined;
 
-            const outcome = sparkOutcomeTracker.measure(step, runId, wasApproved);
+            const outcome = sparkOutcomeTracker.measure(
+              step,
+              runId,
+              wasApproved,
+            );
             const episode = sparkLearningCore.learn(prediction, outcome);
             return episode;
           } catch {
@@ -166,13 +212,15 @@ async function handleRunPipeline(ctx: any): Promise<void> {
       res.write(`data: ${JSON.stringify(event)}\n\n`);
     }
   } catch (err) {
-    res.write(`data: ${JSON.stringify({
-      type: 'error',
-      message: err instanceof Error ? err.message : String(err),
-    })}\n\n`);
+    res.write(
+      `data: ${JSON.stringify({
+        type: "error",
+        message: err instanceof Error ? err.message : String(err),
+      })}\n\n`,
+    );
   }
 
-  res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+  res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
   res.end();
 }
 
@@ -189,15 +237,17 @@ async function simulatePipeline(ctx: any): Promise<void> {
   }
 
   const source = body.source as TaskSource;
-  const title = (body.title as string) || (body.subject as string) || 'Untitled task';
-  const bodyText = (body.body as string) || '';
+  const title =
+    (body.title as string) || (body.subject as string) || "Untitled task";
+  const bodyText = (body.body as string) || "";
 
   // Simulate intent classification
   const text = `${title} ${bodyText}`.toLowerCase();
-  let intent = 'reply';
-  if (text.includes('schedule') || text.includes('meeting')) intent = 'schedule';
-  else if (text.includes('post') || text.includes('tweet')) intent = 'post';
-  else if (text.includes('order') || text.includes('ship')) intent = 'fulfill';
+  let intent = "reply";
+  if (text.includes("schedule") || text.includes("meeting"))
+    intent = "schedule";
+  else if (text.includes("post") || text.includes("tweet")) intent = "post";
+  else if (text.includes("order") || text.includes("ship")) intent = "fulfill";
 
   // Simulate workflow steps
   const workflowSteps: Array<{
@@ -208,22 +258,36 @@ async function simulatePipeline(ctx: any): Promise<void> {
     requiresApproval: boolean;
   }> = [];
 
-  const readOps = ['read', 'list', 'search', 'check_availability', 'get_order'];
-  const intentStepMap: Record<string, Array<{ connector: string; operation: string }>> = {
-    reply: [{ connector: 'gmail', operation: 'read' }, { connector: 'gmail', operation: 'reply' }],
-    schedule: [{ connector: 'calendar', operation: 'check_availability' }, { connector: 'calendar', operation: 'create_event' }],
-    post: [{ connector: 'x-twitter', operation: 'post' }],
-    fulfill: [{ connector: 'shopify', operation: 'get_order' }, { connector: 'shopify', operation: 'fulfill_order' }],
+  const readOps = ["read", "list", "search", "check_availability", "get_order"];
+  const intentStepMap: Record<
+    string,
+    Array<{ connector: string; operation: string }>
+  > = {
+    reply: [
+      { connector: "gmail", operation: "read" },
+      { connector: "gmail", operation: "reply" },
+    ],
+    schedule: [
+      { connector: "calendar", operation: "check_availability" },
+      { connector: "calendar", operation: "create_event" },
+    ],
+    post: [{ connector: "x-twitter", operation: "post" }],
+    fulfill: [
+      { connector: "shopify", operation: "get_order" },
+      { connector: "shopify", operation: "fulfill_order" },
+    ],
   };
 
-  const steps = intentStepMap[intent] || [{ connector: 'gmail', operation: 'read' }];
+  const steps = intentStepMap[intent] || [
+    { connector: "gmail", operation: "read" },
+  ];
   for (const s of steps) {
     const isRead = readOps.includes(s.operation);
     workflowSteps.push({
       connector: s.connector,
       operation: s.operation,
-      policyDecision: isRead ? 'auto' : 'approve',
-      safetyDecision: 'ALLOW',
+      policyDecision: isRead ? "auto" : "approve",
+      safetyDecision: "ALLOW",
       requiresApproval: !isRead,
     });
   }
@@ -246,6 +310,6 @@ async function simulatePipeline(ctx: any): Promise<void> {
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const pipelineRoutes: Route[] = [
-  pathToRoute('POST', '/api/pipeline/run', handleRunPipeline),
-  pathToRoute('POST', '/api/pipeline/simulate', simulatePipeline),
+  pathToRoute("POST", "/api/pipeline/run", handleRunPipeline),
+  pathToRoute("POST", "/api/pipeline/simulate", simulatePipeline),
 ];

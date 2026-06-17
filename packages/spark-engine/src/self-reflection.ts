@@ -14,8 +14,8 @@
  *   5. Persist the reflection result
  */
 
-import { randomUUID } from 'node:crypto';
-import type { SparkStore } from '@ai-operations/ops-storage';
+import { randomUUID } from "node:crypto";
+import type { SparkStore } from "@ai-operations/ops-storage";
 import type {
   BlindSpot,
   GrowthDirection,
@@ -23,15 +23,15 @@ import type {
   ReflectionResult,
   SparkCategory,
   Belief,
-} from '@ai-operations/shared-types';
-import { ALL_CATEGORIES } from './constants';
+} from "@ai-operations/shared-types";
+import { ALL_CATEGORIES } from "./constants";
 import {
   BLIND_SPOT_MAX_EPISODES,
   BLIND_SPOT_MAX_CONFIDENCE,
-} from './spiral-constants';
-import type { EmotionalStateEngine } from './emotional-state';
-import type { MemoryTokenManager } from './memory-token-manager';
-import type { SpiralLoop } from './spiral-loop';
+} from "./spiral-constants";
+import type { EmotionalStateEngine } from "./emotional-state";
+import type { MemoryTokenManager } from "./memory-token-manager";
+import type { SpiralLoop } from "./spiral-loop";
 
 export class SelfReflectionEngine {
   private readonly store: SparkStore;
@@ -87,10 +87,14 @@ export class SelfReflectionEngine {
     // ── Step 3: Emotional summary ──────────────────────────────
     const emotionalSummary = this.emotionalState
       ? this.emotionalState.getSummary()
-      : 'Emotional state engine not available.';
+      : "Emotional state engine not available.";
 
     // ── Step 4: Internal narrative ─────────────────────────────
-    const internalNarrative = this.composeNarrative(blindSpots, growth, emotionalSummary);
+    const internalNarrative = this.composeNarrative(
+      blindSpots,
+      growth,
+      emotionalSummary,
+    );
 
     // ── Step 5: Create reflection token ────────────────────────
     let tokenId: string | null = null;
@@ -133,8 +137,10 @@ export class SelfReflectionEngine {
    *   - AND at least REFLECTION_INTERVAL_HOURS since last reflection
    */
   shouldAutoReflect(): boolean {
-    const { REFLECTION_MIN_MAINTENANCE_PASSES, REFLECTION_INTERVAL_HOURS } =
-      require('./spiral-constants');
+    const {
+      REFLECTION_MIN_MAINTENANCE_PASSES,
+      REFLECTION_INTERVAL_HOURS,
+    } = require("./spiral-constants");
 
     if (this.maintenancePassCount < REFLECTION_MIN_MAINTENANCE_PASSES) {
       return false;
@@ -202,14 +208,14 @@ export class SelfReflectionEngine {
     if (!previousReflection) {
       // First reflection — assess from scratch
       const totalConfidence = currentBeliefs.reduce(
-        (sum, b) => sum + b.calibration, 0
+        (sum, b) => sum + b.calibration,
+        0,
       );
-      const avgConfidence = currentBeliefs.length > 0
-        ? totalConfidence / currentBeliefs.length
-        : 0;
+      const avgConfidence =
+        currentBeliefs.length > 0 ? totalConfidence / currentBeliefs.length : 0;
 
       return {
-        direction: avgConfidence > 0.3 ? 'growing' : 'stagnating',
+        direction: avgConfidence > 0.3 ? "growing" : "stagnating",
         categoriesImproved: [],
         categoriesDeclined: [],
         overallDelta: avgConfidence,
@@ -219,7 +225,7 @@ export class SelfReflectionEngine {
 
     // Compare previous blind spots to current state
     const prevBlindCategories = new Set(
-      previousReflection.blindSpots.map(bs => bs.category)
+      previousReflection.blindSpots.map((bs) => bs.category),
     );
 
     const improved: SparkCategory[] = [];
@@ -229,7 +235,9 @@ export class SelfReflectionEngine {
     for (const category of ALL_CATEGORIES) {
       const cat = category as SparkCategory;
       const currentConf = currentConfidenceMap.get(cat) ?? 0;
-      const prevBS = previousReflection.blindSpots.find(bs => bs.category === cat);
+      const prevBS = previousReflection.blindSpots.find(
+        (bs) => bs.category === cat,
+      );
       const prevConf = prevBS?.confidence ?? currentConf; // No change if not tracked
 
       const delta = currentConf - prevConf;
@@ -242,28 +250,31 @@ export class SelfReflectionEngine {
       }
     }
 
-    const overallDelta = ALL_CATEGORIES.length > 0
-      ? deltaSum / ALL_CATEGORIES.length
-      : 0;
+    const overallDelta =
+      ALL_CATEGORIES.length > 0 ? deltaSum / ALL_CATEGORIES.length : 0;
 
     let direction: GrowthDirection;
-    if (overallDelta > 0.02) direction = 'growing';
-    else if (overallDelta < -0.02) direction = 'regressing';
-    else direction = 'stagnating';
+    if (overallDelta > 0.02) direction = "growing";
+    else if (overallDelta < -0.02) direction = "regressing";
+    else direction = "stagnating";
 
     const narrativeParts: string[] = [];
     if (improved.length > 0) {
-      narrativeParts.push(`Improved confidence in: ${improved.join(', ')}.`);
+      narrativeParts.push(`Improved confidence in: ${improved.join(", ")}.`);
     }
     if (declined.length > 0) {
-      narrativeParts.push(`Declined confidence in: ${declined.join(', ')}.`);
+      narrativeParts.push(`Declined confidence in: ${declined.join(", ")}.`);
     }
-    if (direction === 'stagnating') {
-      narrativeParts.push('Overall learning has plateaued — need new data or different operation types.');
-    } else if (direction === 'growing') {
-      narrativeParts.push('On a positive growth trajectory.');
+    if (direction === "stagnating") {
+      narrativeParts.push(
+        "Overall learning has plateaued — need new data or different operation types.",
+      );
+    } else if (direction === "growing") {
+      narrativeParts.push("On a positive growth trajectory.");
     } else {
-      narrativeParts.push('Experiencing regression — some categories are becoming less reliable.');
+      narrativeParts.push(
+        "Experiencing regression — some categories are becoming less reliable.",
+      );
     }
 
     return {
@@ -271,7 +282,7 @@ export class SelfReflectionEngine {
       categoriesImproved: improved,
       categoriesDeclined: declined,
       overallDelta,
-      narrative: narrativeParts.join(' '),
+      narrative: narrativeParts.join(" "),
     };
   }
 
@@ -290,11 +301,19 @@ export class SelfReflectionEngine {
 
     // Blind spots
     if (blindSpots.length === 0) {
-      parts.push('No blind spots detected — all categories have sufficient coverage.');
+      parts.push(
+        "No blind spots detected — all categories have sufficient coverage.",
+      );
     } else {
-      parts.push(`I have ${blindSpots.length} blind spot(s): ${blindSpots.map(bs => bs.category).join(', ')}.`);
-      const worstSpot = blindSpots.sort((a, b) => a.confidence - b.confidence)[0];
-      parts.push(`Weakest area: ${worstSpot.category} (${worstSpot.narrative}).`);
+      parts.push(
+        `I have ${blindSpots.length} blind spot(s): ${blindSpots.map((bs) => bs.category).join(", ")}.`,
+      );
+      const worstSpot = blindSpots.sort(
+        (a, b) => a.confidence - b.confidence,
+      )[0];
+      parts.push(
+        `Weakest area: ${worstSpot.category} (${worstSpot.narrative}).`,
+      );
     }
 
     // Growth
@@ -303,6 +322,6 @@ export class SelfReflectionEngine {
     // Emotional state
     parts.push(emotionalSummary);
 
-    return parts.join(' ');
+    return parts.join(" ");
   }
 }

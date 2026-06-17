@@ -10,33 +10,33 @@
  * - EMA convergence behavior (alpha=0.1)
  */
 
-import { Database } from '@ai-operations/ops-storage';
-import { SparkStore } from '@ai-operations/ops-storage';
+import { Database } from "@ai-operations/ops-storage";
+import { SparkStore } from "@ai-operations/ops-storage";
 import type {
   Prediction,
   OutcomeSignal,
   SparkCategory,
   SparkWeightEntry,
-} from '@ai-operations/shared-types';
-import { LearningCore } from '../learning-core';
+} from "@ai-operations/shared-types";
+import { LearningCore } from "../learning-core";
 import {
   EMA_ALPHA,
   MAX_DEVIATION_PERCENT,
   MIN_EPISODES_BEFORE_LEARNING,
   buildAllDefaultWeights,
   buildDefaultWeight,
-} from '../constants';
+} from "../constants";
 
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
+import * as path from "path";
+import * as fs from "fs";
+import * as os from "os";
 
 // ── Helpers ──────────────────────────────────────────────────────
 
 let tmpDir: string;
 
 beforeAll(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'spark-learning-test-'));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "spark-learning-test-"));
 });
 
 afterAll(() => {
@@ -63,13 +63,13 @@ function initWeights(store: SparkStore): void {
 function makePrediction(overrides: Partial<Prediction> = {}): Prediction {
   return {
     id: `pred-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    stepId: 'step-1',
-    runId: 'run-1',
-    connector: 'gmail',
-    operation: 'send',
-    category: 'communication',
+    stepId: "step-1",
+    runId: "run-1",
+    connector: "gmail",
+    operation: "send",
+    category: "communication",
     predictedScore: 20,
-    predictedOutcome: 'success',
+    predictedOutcome: "success",
     confidence: 0.5,
     createdAt: new Date().toISOString(),
     ...overrides,
@@ -80,11 +80,11 @@ function makePrediction(overrides: Partial<Prediction> = {}): Prediction {
 function makeOutcome(overrides: Partial<OutcomeSignal> = {}): OutcomeSignal {
   return {
     id: `out-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    stepId: 'step-1',
-    runId: 'run-1',
-    actualOutcome: 'success',
+    stepId: "step-1",
+    runId: "run-1",
+    actualOutcome: "success",
     actualCordScore: 20,
-    actualCordDecision: 'ALLOW',
+    actualCordDecision: "ALLOW",
     signals: {
       succeeded: true,
       escalated: false,
@@ -113,11 +113,11 @@ function seedMinEpisodes(
       category,
       scoreDelta: 0,
       outcomeMismatch: false,
-      adjustmentDirection: 'none',
+      adjustmentDirection: "none",
       adjustmentMagnitude: 0,
       weightBefore: 1.0,
       weightAfter: 1.0,
-      reason: 'seed episode for minimum threshold',
+      reason: "seed episode for minimum threshold",
       createdAt: new Date().toISOString(),
     });
   }
@@ -131,7 +131,7 @@ function seedMinEpisodes(
 
 // ── LearningCore ─────────────────────────────────────────────────
 
-describe('LearningCore', () => {
+describe("LearningCore", () => {
   let db: Database;
   let store: SparkStore;
   let core: LearningCore;
@@ -150,29 +150,29 @@ describe('LearningCore', () => {
 
   // ── Weight increases when CORD is too permissive ─────────────
 
-  describe('weight increases when CORD is too permissive', () => {
-    it('increases weight when ALLOW leads to failure', () => {
-      const category: SparkCategory = 'communication';
+  describe("weight increases when CORD is too permissive", () => {
+    it("increases weight when ALLOW leads to failure", () => {
+      const category: SparkCategory = "communication";
       seedMinEpisodes(store, category);
 
       const prediction = makePrediction({
         category,
         predictedScore: 15,
-        predictedOutcome: 'success',
+        predictedOutcome: "success",
       });
       store.savePrediction(prediction);
 
       const outcome = makeOutcome({
         stepId: prediction.stepId,
         runId: prediction.runId,
-        actualOutcome: 'failure',
+        actualOutcome: "failure",
         actualCordScore: 15,
-        actualCordDecision: 'ALLOW',
+        actualCordDecision: "ALLOW",
         signals: {
           succeeded: false,
           escalated: false,
           hasError: true,
-          errorMessage: 'API error',
+          errorMessage: "API error",
         },
       });
       store.saveOutcome(outcome);
@@ -181,34 +181,34 @@ describe('LearningCore', () => {
       const episode = core.learn(prediction, outcome);
       const weightAfter = store.getWeight(category)!.currentWeight;
 
-      expect(episode.adjustmentDirection).toBe('increase');
+      expect(episode.adjustmentDirection).toBe("increase");
       expect(weightAfter).toBeGreaterThan(weightBefore);
       expect(episode.weightAfter).toBeGreaterThan(episode.weightBefore);
     });
 
-    it('increases weight when CONTAIN leads to failure', () => {
-      const category: SparkCategory = 'publication';
+    it("increases weight when CONTAIN leads to failure", () => {
+      const category: SparkCategory = "publication";
       seedMinEpisodes(store, category);
 
       const prediction = makePrediction({
         category,
-        operation: 'post',
+        operation: "post",
         predictedScore: 35,
-        predictedOutcome: 'success',
+        predictedOutcome: "success",
       });
       store.savePrediction(prediction);
 
       const outcome = makeOutcome({
         stepId: prediction.stepId,
         runId: prediction.runId,
-        actualOutcome: 'failure',
+        actualOutcome: "failure",
         actualCordScore: 35,
-        actualCordDecision: 'CONTAIN',
+        actualCordDecision: "CONTAIN",
         signals: {
           succeeded: false,
           escalated: false,
           hasError: true,
-          errorMessage: 'Post rejected by platform',
+          errorMessage: "Post rejected by platform",
         },
       });
       store.saveOutcome(outcome);
@@ -217,29 +217,29 @@ describe('LearningCore', () => {
       const episode = core.learn(prediction, outcome);
       const weightAfter = store.getWeight(category)!.currentWeight;
 
-      expect(episode.adjustmentDirection).toBe('increase');
+      expect(episode.adjustmentDirection).toBe("increase");
       expect(weightAfter).toBeGreaterThan(weightBefore);
     });
 
-    it('magnitude is proportional to how low the score was', () => {
-      const category: SparkCategory = 'communication';
+    it("magnitude is proportional to how low the score was", () => {
+      const category: SparkCategory = "communication";
       seedMinEpisodes(store, category);
 
       // Low score failure (score=5) — should have larger magnitude
       const predLow = makePrediction({
-        id: 'pred-low',
-        stepId: 'step-low',
+        id: "pred-low",
+        stepId: "step-low",
         category,
         predictedScore: 5,
       });
       store.savePrediction(predLow);
 
       const outLow = makeOutcome({
-        id: 'out-low',
-        stepId: 'step-low',
-        actualOutcome: 'failure',
+        id: "out-low",
+        stepId: "step-low",
+        actualOutcome: "failure",
         actualCordScore: 5,
-        actualCordDecision: 'ALLOW',
+        actualCordDecision: "ALLOW",
         signals: { succeeded: false, escalated: false, hasError: true },
       });
       store.saveOutcome(outLow);
@@ -252,19 +252,19 @@ describe('LearningCore', () => {
 
       // Higher score failure (score=40) — should have smaller magnitude
       const predHigh = makePrediction({
-        id: 'pred-high',
-        stepId: 'step-high',
+        id: "pred-high",
+        stepId: "step-high",
         category,
         predictedScore: 40,
       });
       store.savePrediction(predHigh);
 
       const outHigh = makeOutcome({
-        id: 'out-high',
-        stepId: 'step-high',
-        actualOutcome: 'failure',
+        id: "out-high",
+        stepId: "step-high",
+        actualOutcome: "failure",
         actualCordScore: 40,
-        actualCordDecision: 'CONTAIN',
+        actualCordDecision: "CONTAIN",
         signals: { succeeded: false, escalated: false, hasError: true },
       });
       store.saveOutcome(outHigh);
@@ -281,24 +281,24 @@ describe('LearningCore', () => {
 
   // ── Weight decreases when CORD is too cautious ──────────────
 
-  describe('weight decreases when CORD is too cautious', () => {
-    it('decreases weight when CHALLENGE + approval + success', () => {
-      const category: SparkCategory = 'communication';
+  describe("weight decreases when CORD is too cautious", () => {
+    it("decreases weight when CHALLENGE + approval + success", () => {
+      const category: SparkCategory = "communication";
       seedMinEpisodes(store, category);
 
       const prediction = makePrediction({
         category,
         predictedScore: 55,
-        predictedOutcome: 'escalation',
+        predictedOutcome: "escalation",
       });
       store.savePrediction(prediction);
 
       const outcome = makeOutcome({
         stepId: prediction.stepId,
         runId: prediction.runId,
-        actualOutcome: 'escalation',
+        actualOutcome: "escalation",
         actualCordScore: 55,
-        actualCordDecision: 'CHALLENGE',
+        actualCordDecision: "CHALLENGE",
         signals: {
           succeeded: true,
           escalated: true,
@@ -313,17 +313,17 @@ describe('LearningCore', () => {
       const episode = core.learn(prediction, outcome);
       const weightAfter = store.getWeight(category)!.currentWeight;
 
-      expect(episode.adjustmentDirection).toBe('decrease');
+      expect(episode.adjustmentDirection).toBe("decrease");
       expect(weightAfter).toBeLessThan(weightBefore);
     });
 
-    it('decreases weight when BLOCK overridden', () => {
-      const category: SparkCategory = 'scheduling';
+    it("decreases weight when BLOCK overridden", () => {
+      const category: SparkCategory = "scheduling";
       seedMinEpisodes(store, category);
 
       const prediction = makePrediction({
         category,
-        operation: 'create_event',
+        operation: "create_event",
         predictedScore: 85,
       });
       store.savePrediction(prediction);
@@ -331,9 +331,9 @@ describe('LearningCore', () => {
       const outcome = makeOutcome({
         stepId: prediction.stepId,
         runId: prediction.runId,
-        actualOutcome: 'escalation',
+        actualOutcome: "escalation",
         actualCordScore: 85,
-        actualCordDecision: 'BLOCK',
+        actualCordDecision: "BLOCK",
         signals: {
           succeeded: true,
           escalated: true,
@@ -347,29 +347,29 @@ describe('LearningCore', () => {
       const episode = core.learn(prediction, outcome);
       const weightAfter = store.getWeight(category)!.currentWeight;
 
-      expect(episode.adjustmentDirection).toBe('decrease');
+      expect(episode.adjustmentDirection).toBe("decrease");
       expect(weightAfter).toBeLessThan(weightBefore);
     });
 
-    it('magnitude is proportional to how high the score was', () => {
-      const category: SparkCategory = 'communication';
+    it("magnitude is proportional to how high the score was", () => {
+      const category: SparkCategory = "communication";
       seedMinEpisodes(store, category);
 
       // High score override (score=85) — should have larger decrease magnitude
       const predHigh = makePrediction({
-        id: 'pred-dec-high',
-        stepId: 'step-dec-high',
+        id: "pred-dec-high",
+        stepId: "step-dec-high",
         category,
         predictedScore: 85,
       });
       store.savePrediction(predHigh);
 
       const outHigh = makeOutcome({
-        id: 'out-dec-high',
-        stepId: 'step-dec-high',
-        actualOutcome: 'escalation',
+        id: "out-dec-high",
+        stepId: "step-dec-high",
+        actualOutcome: "escalation",
         actualCordScore: 85,
-        actualCordDecision: 'CHALLENGE',
+        actualCordDecision: "CHALLENGE",
         signals: {
           succeeded: true,
           escalated: true,
@@ -387,19 +387,19 @@ describe('LearningCore', () => {
 
       // Medium score override (score=55) — should have smaller decrease magnitude
       const predMed = makePrediction({
-        id: 'pred-dec-med',
-        stepId: 'step-dec-med',
+        id: "pred-dec-med",
+        stepId: "step-dec-med",
         category,
         predictedScore: 55,
       });
       store.savePrediction(predMed);
 
       const outMed = makeOutcome({
-        id: 'out-dec-med',
-        stepId: 'step-dec-med',
-        actualOutcome: 'escalation',
+        id: "out-dec-med",
+        stepId: "step-dec-med",
+        actualOutcome: "escalation",
         actualCordScore: 55,
-        actualCordDecision: 'CHALLENGE',
+        actualCordDecision: "CHALLENGE",
         signals: {
           succeeded: true,
           escalated: true,
@@ -421,25 +421,25 @@ describe('LearningCore', () => {
 
   // ── No change when assessment is correct ────────────────────
 
-  describe('no change when assessment is correct', () => {
-    it('no weight change when ALLOW + success', () => {
-      const category: SparkCategory = 'readonly';
+  describe("no change when assessment is correct", () => {
+    it("no weight change when ALLOW + success", () => {
+      const category: SparkCategory = "readonly";
       seedMinEpisodes(store, category);
 
       const prediction = makePrediction({
         category,
-        operation: 'read',
+        operation: "read",
         predictedScore: 5,
-        predictedOutcome: 'success',
+        predictedOutcome: "success",
       });
       store.savePrediction(prediction);
 
       const outcome = makeOutcome({
         stepId: prediction.stepId,
         runId: prediction.runId,
-        actualOutcome: 'success',
+        actualOutcome: "success",
         actualCordScore: 5,
-        actualCordDecision: 'ALLOW',
+        actualCordDecision: "ALLOW",
         signals: {
           succeeded: true,
           escalated: false,
@@ -453,28 +453,28 @@ describe('LearningCore', () => {
       const episode = core.learn(prediction, outcome);
       const weightAfter = store.getWeight(category)!.currentWeight;
 
-      expect(episode.adjustmentDirection).toBe('none');
+      expect(episode.adjustmentDirection).toBe("none");
       expect(weightAfter).toBeCloseTo(weightBefore, 10);
       expect(episode.adjustmentMagnitude).toBe(0);
     });
 
-    it('no weight change when CHALLENGE + denied', () => {
-      const category: SparkCategory = 'communication';
+    it("no weight change when CHALLENGE + denied", () => {
+      const category: SparkCategory = "communication";
       seedMinEpisodes(store, category);
 
       const prediction = makePrediction({
         category,
         predictedScore: 60,
-        predictedOutcome: 'escalation',
+        predictedOutcome: "escalation",
       });
       store.savePrediction(prediction);
 
       const outcome = makeOutcome({
         stepId: prediction.stepId,
         runId: prediction.runId,
-        actualOutcome: 'blocked',
+        actualOutcome: "blocked",
         actualCordScore: 60,
-        actualCordDecision: 'CHALLENGE',
+        actualCordDecision: "CHALLENGE",
         signals: {
           succeeded: false,
           escalated: true,
@@ -488,16 +488,16 @@ describe('LearningCore', () => {
       const episode = core.learn(prediction, outcome);
       const weightAfter = store.getWeight(category)!.currentWeight;
 
-      expect(episode.adjustmentDirection).toBe('none');
+      expect(episode.adjustmentDirection).toBe("none");
       expect(weightAfter).toBeCloseTo(weightBefore, 10);
     });
   });
 
   // ── SENTINEL bounds enforcement ─────────────────────────────
 
-  describe('SENTINEL bounds enforcement', () => {
-    it('destructive category weight NEVER goes below 1.0', () => {
-      const category: SparkCategory = 'destructive';
+  describe("SENTINEL bounds enforcement", () => {
+    it("destructive category weight NEVER goes below 1.0", () => {
+      const category: SparkCategory = "destructive";
       seedMinEpisodes(store, category);
 
       // Attempt to decrease the destructive weight repeatedly
@@ -506,7 +506,7 @@ describe('LearningCore', () => {
           id: `pred-sentinel-dest-${i}`,
           stepId: `step-sentinel-dest-${i}`,
           category,
-          operation: 'delete',
+          operation: "delete",
           predictedScore: 75,
         });
         store.savePrediction(prediction);
@@ -514,9 +514,9 @@ describe('LearningCore', () => {
         const outcome = makeOutcome({
           id: `out-sentinel-dest-${i}`,
           stepId: `step-sentinel-dest-${i}`,
-          actualOutcome: 'escalation',
+          actualOutcome: "escalation",
           actualCordScore: 75,
-          actualCordDecision: 'CHALLENGE',
+          actualCordDecision: "CHALLENGE",
           signals: {
             succeeded: true,
             escalated: true,
@@ -534,8 +534,8 @@ describe('LearningCore', () => {
       expect(weight.currentWeight).toBeGreaterThanOrEqual(1.0);
     });
 
-    it('financial category weight NEVER goes below 1.0', () => {
-      const category: SparkCategory = 'financial';
+    it("financial category weight NEVER goes below 1.0", () => {
+      const category: SparkCategory = "financial";
       seedMinEpisodes(store, category);
 
       // Attempt to decrease the financial weight repeatedly
@@ -544,7 +544,7 @@ describe('LearningCore', () => {
           id: `pred-sentinel-fin-${i}`,
           stepId: `step-sentinel-fin-${i}`,
           category,
-          operation: 'refund',
+          operation: "refund",
           predictedScore: 80,
         });
         store.savePrediction(prediction);
@@ -552,9 +552,9 @@ describe('LearningCore', () => {
         const outcome = makeOutcome({
           id: `out-sentinel-fin-${i}`,
           stepId: `step-sentinel-fin-${i}`,
-          actualOutcome: 'escalation',
+          actualOutcome: "escalation",
           actualCordScore: 80,
-          actualCordDecision: 'CHALLENGE',
+          actualCordDecision: "CHALLENGE",
           signals: {
             succeeded: true,
             escalated: true,
@@ -572,8 +572,8 @@ describe('LearningCore', () => {
       expect(weight.currentWeight).toBeGreaterThanOrEqual(1.0);
     });
 
-    it('non-SENTINEL categories CAN decrease to 0.7', () => {
-      const category: SparkCategory = 'readonly';
+    it("non-SENTINEL categories CAN decrease to 0.7", () => {
+      const category: SparkCategory = "readonly";
       seedMinEpisodes(store, category);
 
       // Attempt to decrease the readonly weight repeatedly
@@ -582,7 +582,7 @@ describe('LearningCore', () => {
           id: `pred-nonsent-${i}`,
           stepId: `step-nonsent-${i}`,
           category,
-          operation: 'read',
+          operation: "read",
           predictedScore: 60,
         });
         store.savePrediction(prediction);
@@ -590,9 +590,9 @@ describe('LearningCore', () => {
         const outcome = makeOutcome({
           id: `out-nonsent-${i}`,
           stepId: `step-nonsent-${i}`,
-          actualOutcome: 'escalation',
+          actualOutcome: "escalation",
           actualCordScore: 60,
-          actualCordDecision: 'CHALLENGE',
+          actualCordDecision: "CHALLENGE",
           signals: {
             succeeded: true,
             escalated: true,
@@ -612,8 +612,8 @@ describe('LearningCore', () => {
       expect(weight.currentWeight).toBeGreaterThanOrEqual(0.7);
     });
 
-    it('no category weight exceeds 1.3', () => {
-      const category: SparkCategory = 'communication';
+    it("no category weight exceeds 1.3", () => {
+      const category: SparkCategory = "communication";
       seedMinEpisodes(store, category);
 
       // Push weight up with repeated failures
@@ -629,14 +629,14 @@ describe('LearningCore', () => {
         const outcome = makeOutcome({
           id: `out-cap-${i}`,
           stepId: `step-cap-${i}`,
-          actualOutcome: 'failure',
+          actualOutcome: "failure",
           actualCordScore: 5,
-          actualCordDecision: 'ALLOW',
+          actualCordDecision: "ALLOW",
           signals: {
             succeeded: false,
             escalated: false,
             hasError: true,
-            errorMessage: 'Repeated failure',
+            errorMessage: "Repeated failure",
           },
         });
         store.saveOutcome(outcome);
@@ -652,9 +652,9 @@ describe('LearningCore', () => {
 
   // ── Minimum episodes before learning ────────────────────────
 
-  describe('minimum episodes before learning', () => {
-    it('no weight adjustment with fewer than 3 episodes', () => {
-      const category: SparkCategory = 'general';
+  describe("minimum episodes before learning", () => {
+    it("no weight adjustment with fewer than 3 episodes", () => {
+      const category: SparkCategory = "general";
       // Do NOT seed min episodes — test starts with 0
 
       const prediction = makePrediction({
@@ -666,9 +666,9 @@ describe('LearningCore', () => {
       const outcome = makeOutcome({
         stepId: prediction.stepId,
         runId: prediction.runId,
-        actualOutcome: 'failure',
+        actualOutcome: "failure",
         actualCordScore: 10,
-        actualCordDecision: 'ALLOW',
+        actualCordDecision: "ALLOW",
         signals: { succeeded: false, escalated: false, hasError: true },
       });
       store.saveOutcome(outcome);
@@ -679,31 +679,31 @@ describe('LearningCore', () => {
 
       // With fewer than MIN_EPISODES_BEFORE_LEARNING episodes,
       // the weight should not change
-      expect(episode.adjustmentDirection).toBe('none');
+      expect(episode.adjustmentDirection).toBe("none");
       expect(weightAfter).toBeCloseTo(weightBefore, 10);
     });
 
-    it('starts adjusting on 4th+ episode', () => {
-      const category: SparkCategory = 'general';
+    it("starts adjusting on 4th+ episode", () => {
+      const category: SparkCategory = "general";
 
       // Seed exactly MIN_EPISODES_BEFORE_LEARNING episodes (3)
       seedMinEpisodes(store, category, MIN_EPISODES_BEFORE_LEARNING);
 
       // The next episode (4th) should now trigger learning
       const prediction = makePrediction({
-        id: 'pred-4th',
-        stepId: 'step-4th',
+        id: "pred-4th",
+        stepId: "step-4th",
         category,
         predictedScore: 10,
       });
       store.savePrediction(prediction);
 
       const outcome = makeOutcome({
-        id: 'out-4th',
-        stepId: 'step-4th',
-        actualOutcome: 'failure',
+        id: "out-4th",
+        stepId: "step-4th",
+        actualOutcome: "failure",
         actualCordScore: 10,
-        actualCordDecision: 'ALLOW',
+        actualCordDecision: "ALLOW",
         signals: { succeeded: false, escalated: false, hasError: true },
       });
       store.saveOutcome(outcome);
@@ -713,16 +713,16 @@ describe('LearningCore', () => {
       const weightAfter = store.getWeight(category)!.currentWeight;
 
       // With enough episodes, weight should increase for ALLOW + failure
-      expect(episode.adjustmentDirection).toBe('increase');
+      expect(episode.adjustmentDirection).toBe("increase");
       expect(weightAfter).toBeGreaterThan(weightBefore);
     });
   });
 
   // ── EMA convergence ─────────────────────────────────────────
 
-  describe('EMA convergence', () => {
-    it('weight increases gradually, not jumping (alpha=0.1)', () => {
-      const category: SparkCategory = 'communication';
+  describe("EMA convergence", () => {
+    it("weight increases gradually, not jumping (alpha=0.1)", () => {
+      const category: SparkCategory = "communication";
       seedMinEpisodes(store, category);
 
       const weights: number[] = [];
@@ -740,9 +740,9 @@ describe('LearningCore', () => {
         const outcome = makeOutcome({
           id: `out-ema-${i}`,
           stepId: `step-ema-${i}`,
-          actualOutcome: 'failure',
+          actualOutcome: "failure",
           actualCordScore: 10,
-          actualCordDecision: 'ALLOW',
+          actualCordDecision: "ALLOW",
           signals: { succeeded: false, escalated: false, hasError: true },
         });
         store.saveOutcome(outcome);
@@ -765,8 +765,8 @@ describe('LearningCore', () => {
       }
     });
 
-    it('10 consecutive failures increase weight but stay bounded', () => {
-      const category: SparkCategory = 'scheduling';
+    it("10 consecutive failures increase weight but stay bounded", () => {
+      const category: SparkCategory = "scheduling";
       seedMinEpisodes(store, category);
 
       for (let i = 0; i < 10; i++) {
@@ -774,7 +774,7 @@ describe('LearningCore', () => {
           id: `pred-conv-${i}`,
           stepId: `step-conv-${i}`,
           category,
-          operation: 'create_event',
+          operation: "create_event",
           predictedScore: 8,
         });
         store.savePrediction(prediction);
@@ -782,9 +782,9 @@ describe('LearningCore', () => {
         const outcome = makeOutcome({
           id: `out-conv-${i}`,
           stepId: `step-conv-${i}`,
-          actualOutcome: 'failure',
+          actualOutcome: "failure",
           actualCordScore: 8,
-          actualCordDecision: 'ALLOW',
+          actualCordDecision: "ALLOW",
           signals: {
             succeeded: false,
             escalated: false,

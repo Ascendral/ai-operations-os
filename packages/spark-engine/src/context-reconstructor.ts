@@ -6,7 +6,7 @@
  * by following essence threads through the memory token graph.
  */
 
-import type { SparkStore } from '@ai-operations/ops-storage';
+import type { SparkStore } from "@ai-operations/ops-storage";
 import type {
   MemoryToken,
   Essence,
@@ -15,14 +15,14 @@ import type {
   DecisionPoint,
   SparkCategory,
   CompressionTier,
-} from '@ai-operations/shared-types';
-import { EssenceExtractor } from './essence-extractor';
+} from "@ai-operations/shared-types";
+import { EssenceExtractor } from "./essence-extractor";
 import {
   MAX_GRAPH_DEPTH,
   INITIAL_GRAPH_DEPTH,
   MAX_CONTEXT_TOKENS,
   TIER_WEIGHTS,
-} from './spiral-constants';
+} from "./spiral-constants";
 
 export class ContextReconstructor {
   private readonly store: SparkStore;
@@ -37,11 +37,14 @@ export class ContextReconstructor {
    * Reconstruct context relevant to a query.
    * This replaces raw turn loading for enriched context.
    */
-  reconstruct(query: string, options?: {
-    maxTokens?: number;
-    maxDepth?: number;
-    categories?: SparkCategory[];
-  }): ReconstructedContext {
+  reconstruct(
+    query: string,
+    options?: {
+      maxTokens?: number;
+      maxDepth?: number;
+      categories?: SparkCategory[];
+    },
+  ): ReconstructedContext {
     const maxTokens = options?.maxTokens ?? MAX_CONTEXT_TOKENS;
     const requestedDepth = options?.maxDepth ?? MAX_GRAPH_DEPTH;
 
@@ -55,23 +58,30 @@ export class ContextReconstructor {
     }
 
     // Find seed tokens via topic index
-    const seedTokens = this.store.findTokensByTopics(queryEssence.topics, maxTokens);
+    const seedTokens = this.store.findTokensByTopics(
+      queryEssence.topics,
+      maxTokens,
+    );
     if (seedTokens.length === 0) {
       return this.emptyContext();
     }
 
     // ── Adaptive depth: start shallow, expand if too few tokens ──
-    const seedIds = seedTokens.map(t => t.id);
+    const seedIds = seedTokens.map((t) => t.id);
     const initialDepth = Math.min(INITIAL_GRAPH_DEPTH, requestedDepth);
     let reached = this.walkGraph(seedIds, initialDepth);
 
     // If less than half of maxTokens found at initial depth, expand
-    if (reached.size < Math.floor(maxTokens / 2) && initialDepth < requestedDepth) {
+    if (
+      reached.size < Math.floor(maxTokens / 2) &&
+      initialDepth < requestedDepth
+    ) {
       reached = this.walkGraph(seedIds, requestedDepth);
     }
 
     // Score all reached tokens
-    const scored: Array<{ token: MemoryToken; score: number; depth: number }> = [];
+    const scored: Array<{ token: MemoryToken; score: number; depth: number }> =
+      [];
     for (const [_id, { token, depth }] of reached) {
       const score = this.scoreToken(token, queryEssence, depth);
       scored.push({ token, score, depth });
@@ -86,33 +96,45 @@ export class ContextReconstructor {
     }
 
     // Sort chronologically for narrative
-    topTokens.sort((a, b) => a.token.createdAt.localeCompare(b.token.createdAt));
+    topTokens.sort((a, b) =>
+      a.token.createdAt.localeCompare(b.token.createdAt),
+    );
 
     // Build narrative from gists
-    const narrative = this.buildNarrative(topTokens.map(t => t.token));
+    const narrative = this.buildNarrative(topTokens.map((t) => t.token));
 
     // Collect edge IDs used in graph walk
-    const tokenIds = topTokens.map(t => t.token.id);
+    const tokenIds = topTokens.map((t) => t.token.id);
     const edgeIds: string[] = [];
     for (const id of tokenIds) {
       const edges = this.store.getEdgesForToken(id);
       for (const edge of edges) {
-        if (tokenIds.includes(edge.fromTokenId) && tokenIds.includes(edge.toTokenId)) {
+        if (
+          tokenIds.includes(edge.fromTokenId) &&
+          tokenIds.includes(edge.toTokenId)
+        ) {
           edgeIds.push(edge.id);
         }
       }
     }
 
     // Aggregate decisions
-    const relevantDecisions: DecisionPoint[] = topTokens
-      .flatMap(t => t.token.essence.decisionPoints);
+    const relevantDecisions: DecisionPoint[] = topTokens.flatMap(
+      (t) => t.token.essence.decisionPoints,
+    );
 
     // Overall sentiment (weighted average)
-    const overallSentiment = this.computeOverallSentiment(topTokens.map(t => t.token));
+    const overallSentiment = this.computeOverallSentiment(
+      topTokens.map((t) => t.token),
+    );
 
     // Confidence based on token count and strength
-    const avgStrength = topTokens.reduce((s, t) => s + t.token.strength, 0) / topTokens.length;
-    const confidence = Math.min(1.0, avgStrength * (topTokens.length / maxTokens));
+    const avgStrength =
+      topTokens.reduce((s, t) => s + t.token.strength, 0) / topTokens.length;
+    const confidence = Math.min(
+      1.0,
+      avgStrength * (topTokens.length / maxTokens),
+    );
 
     return {
       narrative,
@@ -129,13 +151,15 @@ export class ContextReconstructor {
    * Build a narrative text from a set of memory tokens.
    */
   buildNarrative(tokens: MemoryToken[]): string {
-    if (tokens.length === 0) return '';
+    if (tokens.length === 0) return "";
 
-    return tokens
-      .map(t => t.essence.gist)
-      .filter(g => g && g.length > 0)
-      .join('. ')
-      .replace(/\.\./g, '.') + '.';
+    return (
+      tokens
+        .map((t) => t.essence.gist)
+        .filter((g) => g && g.length > 0)
+        .join(". ")
+        .replace(/\.\./g, ".") + "."
+    );
   }
 
   // ── Private ────────────────────────────────────────────────────
@@ -163,7 +187,8 @@ export class ContextReconstructor {
 
       const edges = this.store.getEdgesForToken(id);
       for (const edge of edges) {
-        const neighborId = edge.fromTokenId === id ? edge.toTokenId : edge.fromTokenId;
+        const neighborId =
+          edge.fromTokenId === id ? edge.toTokenId : edge.fromTokenId;
         if (visited.has(neighborId)) continue;
 
         const neighbor = this.store.getMemoryToken(neighborId);
@@ -177,9 +202,16 @@ export class ContextReconstructor {
     return visited;
   }
 
-  private scoreToken(token: MemoryToken, queryEssence: Essence, depth: number): number {
+  private scoreToken(
+    token: MemoryToken,
+    queryEssence: Essence,
+    depth: number,
+  ): number {
     // Topic similarity
-    const topicSimilarity = this.computeTopicSimilarity(queryEssence, token.essence);
+    const topicSimilarity = this.computeTopicSimilarity(
+      queryEssence,
+      token.essence,
+    );
 
     // Tier weight
     const tierWeight = TIER_WEIGHTS[token.tier] ?? 0.5;
@@ -237,24 +269,24 @@ export class ContextReconstructor {
     let neutral = 0;
 
     for (const token of tokens) {
-      if (token.essence.sentiment === 'positive') positive++;
-      else if (token.essence.sentiment === 'negative') negative++;
+      if (token.essence.sentiment === "positive") positive++;
+      else if (token.essence.sentiment === "negative") negative++;
       else neutral++;
     }
 
-    if (positive > negative && positive > neutral) return 'positive';
-    if (negative > positive && negative > neutral) return 'negative';
-    if (positive > 0 && negative > 0) return 'mixed';
-    return 'neutral';
+    if (positive > negative && positive > neutral) return "positive";
+    if (negative > positive && negative > neutral) return "negative";
+    if (positive > 0 && negative > 0) return "mixed";
+    return "neutral";
   }
 
   private emptyContext(): ReconstructedContext {
     return {
-      narrative: '',
+      narrative: "",
       tokenIds: [],
       edgeIds: [],
       relevantTopics: [],
-      overallSentiment: 'neutral',
+      overallSentiment: "neutral",
       relevantDecisions: [],
       confidence: 0,
     };

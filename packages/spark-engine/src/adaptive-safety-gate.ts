@@ -13,9 +13,9 @@
  * this module's import will fail gracefully at the consumer level.
  */
 
-import type { CordDecision, SparkCategory } from '@ai-operations/shared-types';
-import type { WeightManager } from './weight-manager';
-import { operationToCategory } from './predictor';
+import type { CordDecision, SparkCategory } from "@ai-operations/shared-types";
+import type { WeightManager } from "./weight-manager";
+import { operationToCategory } from "./predictor";
 
 // ── Graceful CordSafetyGate import ───────────────────────────────
 
@@ -66,10 +66,10 @@ export interface AdaptiveSafetyResult extends SafetyResult {
  * @returns The corresponding CordDecision.
  */
 function scoreToDecision(score: number): CordDecision {
-  if (score < 20) return 'ALLOW';
-  if (score < 50) return 'CONTAIN';
-  if (score < 75) return 'CHALLENGE';
-  return 'BLOCK';
+  if (score < 20) return "ALLOW";
+  if (score < 50) return "CONTAIN";
+  if (score < 75) return "CHALLENGE";
+  return "BLOCK";
 }
 
 // ── AdaptiveSafetyGate ────────────────────────────────────────────
@@ -129,7 +129,10 @@ export class AdaptiveSafetyGate {
     const multiplier = this.weights.getMultiplier(category);
 
     // Step 3: Compute adjusted score, clamped to 0-99
-    const adjustedScore = Math.min(99, Math.max(0, Math.round(rawScore * multiplier)));
+    const adjustedScore = Math.min(
+      99,
+      Math.max(0, Math.round(rawScore * multiplier)),
+    );
 
     // Step 4: Re-derive decision from adjusted score
     let adjustedDecision = scoreToDecision(adjustedScore);
@@ -143,11 +146,15 @@ export class AdaptiveSafetyGate {
     const reasons = [...rawResult.reasons];
     const sparkAdjusted = multiplier !== 1.0;
 
-    if (sparkAdjusted && adjustedDecision !== rawResult.decision && !rawResult.hardBlock) {
+    if (
+      sparkAdjusted &&
+      adjustedDecision !== rawResult.decision &&
+      !rawResult.hardBlock
+    ) {
       reasons.push(
         `SPARK adjusted score from ${rawScore} to ${adjustedScore} ` +
-        `(weight: ${multiplier.toFixed(4)}, category: ${category}). ` +
-        `Decision changed from ${rawResult.decision} to ${adjustedDecision}.`,
+          `(weight: ${multiplier.toFixed(4)}, category: ${category}). ` +
+          `Decision changed from ${rawResult.decision} to ${adjustedDecision}.`,
       );
     }
 

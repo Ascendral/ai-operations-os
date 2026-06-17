@@ -7,9 +7,9 @@
  * episodes accumulate, predictions improve via weight-adjusted scoring.
  */
 
-import { randomUUID } from 'node:crypto';
-import type { SparkCategory, Prediction } from '@ai-operations/shared-types';
-import type { SparkStore } from '@ai-operations/ops-storage';
+import { randomUUID } from "node:crypto";
+import type { SparkCategory, Prediction } from "@ai-operations/shared-types";
+import type { SparkStore } from "@ai-operations/ops-storage";
 
 // ── Operation → Category Mapping ──────────────────────────────────
 
@@ -19,42 +19,42 @@ import type { SparkStore } from '@ai-operations/ops-storage';
  */
 const OPERATION_CATEGORY_MAP: Record<string, SparkCategory> = {
   // Communication — network requests, browser interactions, messaging
-  send: 'communication',
-  reply: 'communication',
-  forward: 'communication',
-  navigate: 'communication',
+  send: "communication",
+  reply: "communication",
+  forward: "communication",
+  navigate: "communication",
 
   // Publication — pushing code, deploying, posting content
-  post: 'publication',
-  tweet: 'publication',
-  publish: 'publication',
+  post: "publication",
+  tweet: "publication",
+  publish: "publication",
 
   // Destructive — removing files, killing processes
-  delete: 'destructive',
-  remove: 'destructive',
-  archive: 'destructive',
+  delete: "destructive",
+  remove: "destructive",
+  archive: "destructive",
 
   // Scheduling — calendar events, routines
-  create_event: 'scheduling',
-  update_event: 'scheduling',
-  cancel_event: 'scheduling',
+  create_event: "scheduling",
+  update_event: "scheduling",
+  cancel_event: "scheduling",
 
   // Financial — payments, transfers
-  refund: 'financial',
-  charge: 'financial',
-  transfer: 'financial',
+  refund: "financial",
+  charge: "financial",
+  transfer: "financial",
 
   // Readonly — reading, listing, searching
-  read: 'readonly',
-  list: 'readonly',
-  search: 'readonly',
-  get: 'readonly',
+  read: "readonly",
+  list: "readonly",
+  search: "readonly",
+  get: "readonly",
 
   // General — writing, editing, executing (mapped explicitly to avoid confusion)
-  write: 'general',
-  edit: 'general',
-  create: 'general',
-  execute: 'general',
+  write: "general",
+  edit: "general",
+  create: "general",
+  execute: "general",
 };
 
 /**
@@ -84,7 +84,7 @@ const DEFAULT_CATEGORY_SCORES: Record<SparkCategory, number> = {
  * @returns The corresponding SparkCategory.
  */
 export function operationToCategory(operation: string): SparkCategory {
-  return OPERATION_CATEGORY_MAP[operation] ?? 'general';
+  return OPERATION_CATEGORY_MAP[operation] ?? "general";
 }
 
 // ── Predictor ─────────────────────────────────────────────────────
@@ -146,7 +146,9 @@ export class Predictor {
       // History exists — adjust default score with learned weight multiplier
       const baseScore = DEFAULT_CATEGORY_SCORES[category];
       const multiplier = weight?.currentWeight ?? 1.0;
-      predictedScore = Math.round(Math.min(99, Math.max(0, baseScore * multiplier)));
+      predictedScore = Math.round(
+        Math.min(99, Math.max(0, baseScore * multiplier)),
+      );
 
       // Confidence scales with experience: min(0.95, n / (n + 10))
       confidence = Math.min(0.95, episodeCount / (episodeCount + 10));
@@ -160,7 +162,7 @@ export class Predictor {
       operation,
       category,
       predictedScore,
-      predictedOutcome: 'success',
+      predictedOutcome: "success",
       confidence: Math.round(confidence * 1000) / 1000, // 3 decimal places
       createdAt: new Date().toISOString(),
     };

@@ -16,30 +16,30 @@ import {
   verifyReceiptChain,
   GENESIS_HASH,
   type ActionReceipt,
-} from '@ai-operations/shared-types';
+} from "@ai-operations/shared-types";
 
 // ── ANSI Colors ──────────────────────────────────────────────────────────────
 
 const c = {
-  reset: '\x1b[0m',
-  bold: '\x1b[1m',
-  dim: '\x1b[2m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  red: '\x1b[31m',
-  white: '\x1b[37m',
+  reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
+  red: "\x1b[31m",
+  white: "\x1b[37m",
 };
 
 // ── CLI flag parsing ─────────────────────────────────────────────────────────
 
 function parseArgs(): { apiUrl: string } {
   const args = process.argv.slice(2);
-  let apiUrl = 'http://localhost:3100';
+  let apiUrl = "http://localhost:3100";
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--url' && args[i + 1]) {
+    if (args[i] === "--url" && args[i + 1]) {
       apiUrl = args[i + 1];
       i++;
     }
@@ -50,17 +50,21 @@ function parseArgs(): { apiUrl: string } {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function header(): void {
-  const line = '='.repeat(62);
+  const line = "=".repeat(62);
   console.log();
   console.log(`${c.cyan}${c.bold}${line}${c.reset}`);
-  console.log(`${c.cyan}${c.bold}   AI OPERATIONS OS -- FULL PIPELINE DEMO${c.reset}`);
-  console.log(`${c.cyan}${c.bold}   Policy Gates  |  CORD Safety  |  Receipt Chain${c.reset}`);
+  console.log(
+    `${c.cyan}${c.bold}   AI OPERATIONS OS -- FULL PIPELINE DEMO${c.reset}`,
+  );
+  console.log(
+    `${c.cyan}${c.bold}   Policy Gates  |  CORD Safety  |  Receipt Chain${c.reset}`,
+  );
   console.log(`${c.cyan}${c.bold}${line}${c.reset}`);
   console.log();
 }
 
 function sectionHeader(title: string): void {
-  const line = '-'.repeat(58);
+  const line = "-".repeat(58);
   console.log(`${c.dim}${line}${c.reset}`);
   console.log(`${c.bold}${c.white}  ${title}${c.reset}`);
   console.log(`${c.dim}${line}${c.reset}`);
@@ -72,13 +76,13 @@ function log(label: string, value: string): void {
 
 function colorDecision(decision: string): string {
   switch (decision) {
-    case 'ALLOW':
+    case "ALLOW":
       return `${c.green}ALLOW${c.reset}`;
-    case 'BLOCK':
+    case "BLOCK":
       return `${c.red}BLOCK${c.reset}`;
-    case 'CHALLENGE':
+    case "CHALLENGE":
       return `${c.yellow}CHALLENGE${c.reset}`;
-    case 'CONTAIN':
+    case "CONTAIN":
       return `${c.yellow}CONTAIN${c.reset}`;
     default:
       return decision;
@@ -86,7 +90,7 @@ function colorDecision(decision: string): string {
 }
 
 function colorPolicy(decision: string): string {
-  if (decision === 'auto') {
+  if (decision === "auto") {
     return `${c.green}autonomous${c.reset}`;
   }
   return `${c.yellow}needs approval${c.reset}`;
@@ -132,17 +136,17 @@ async function runScenario(
   console.log();
 
   // Print input
-  log('Source:', `${c.cyan}${payload.source}${c.reset}`);
-  log('Subject:', payload.subject);
-  log('Body:', `${c.dim}${payload.body}${c.reset}`);
+  log("Source:", `${c.cyan}${payload.source}${c.reset}`);
+  log("Subject:", payload.subject);
+  log("Body:", `${c.dim}${payload.body}${c.reset}`);
   console.log();
 
   // Call simulate endpoint
   let data: SimResponse;
   try {
     const res = await fetch(`${apiUrl}/api/pipeline/simulate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
@@ -165,7 +169,7 @@ async function runScenario(
 
   // Intent classification result
   log(
-    'Intent:',
+    "Intent:",
     `${c.magenta}${data.intent}${c.reset}  workflow=${c.blue}${data.workflowType}${c.reset}`,
   );
   console.log();
@@ -176,8 +180,12 @@ async function runScenario(
     const label = `${step.connector}.${step.operation}`;
     const policy = colorPolicy(step.policyDecision);
     const safety = colorDecision(step.safetyDecision);
-    const icon = step.requiresApproval ? `${c.yellow}*${c.reset}` : `${c.green}+${c.reset}`;
-    console.log(`    ${icon} ${c.bold}${label}${c.reset}  policy=${policy}  safety=${safety}`);
+    const icon = step.requiresApproval
+      ? `${c.yellow}*${c.reset}`
+      : `${c.green}+${c.reset}`;
+    console.log(
+      `    ${icon} ${c.bold}${label}${c.reset}  policy=${policy}  safety=${safety}`,
+    );
   }
   console.log();
 
@@ -196,48 +204,56 @@ async function runScenario(
 
 function demoReceiptChain(): void {
   console.log();
-  sectionHeader('RECEIPT CHAIN VERIFICATION');
+  sectionHeader("RECEIPT CHAIN VERIFICATION");
   console.log();
 
-  const HMAC_KEY = 'demo-secret-key-for-receipt-signing';
+  const HMAC_KEY = "demo-secret-key-for-receipt-signing";
 
   // Build 3 sample receipts with hash-chaining
-  const receiptData: Array<Omit<ActionReceipt, 'hash' | 'signature'>> = [
+  const receiptData: Array<Omit<ActionReceipt, "hash" | "signature">> = [
     {
-      id: '00000000-0000-0000-0000-000000000001',
-      actionId: 'a0000000-0000-0000-0000-000000000001',
-      policyVersion: '1.0.0',
-      cordDecision: 'ALLOW',
+      id: "00000000-0000-0000-0000-000000000001",
+      actionId: "a0000000-0000-0000-0000-000000000001",
+      policyVersion: "1.0.0",
+      cordDecision: "ALLOW",
       cordScore: 12,
-      cordReasons: ['read-only operation'],
-      input: { connector: 'gmail', operation: 'read' },
+      cordReasons: ["read-only operation"],
+      input: { connector: "gmail", operation: "read" },
       output: { messageCount: 3 },
-      timestamp: new Date('2026-01-15T10:00:00Z').toISOString(),
+      timestamp: new Date("2026-01-15T10:00:00Z").toISOString(),
       prevHash: GENESIS_HASH,
     },
     {
-      id: '00000000-0000-0000-0000-000000000002',
-      actionId: 'a0000000-0000-0000-0000-000000000002',
-      policyVersion: '1.0.0',
-      cordDecision: 'ALLOW',
+      id: "00000000-0000-0000-0000-000000000002",
+      actionId: "a0000000-0000-0000-0000-000000000002",
+      policyVersion: "1.0.0",
+      cordDecision: "ALLOW",
       cordScore: 35,
-      cordReasons: ['write operation', 'approved by user'],
-      input: { connector: 'gmail', operation: 'reply', to: 'customer@example.com' },
+      cordReasons: ["write operation", "approved by user"],
+      input: {
+        connector: "gmail",
+        operation: "reply",
+        to: "customer@example.com",
+      },
       output: { sent: true },
-      timestamp: new Date('2026-01-15T10:00:05Z').toISOString(),
-      prevHash: '', // will be filled after computing receipt 1's hash
+      timestamp: new Date("2026-01-15T10:00:05Z").toISOString(),
+      prevHash: "", // will be filled after computing receipt 1's hash
     },
     {
-      id: '00000000-0000-0000-0000-000000000003',
-      actionId: 'a0000000-0000-0000-0000-000000000003',
-      policyVersion: '1.0.0',
-      cordDecision: 'ALLOW',
+      id: "00000000-0000-0000-0000-000000000003",
+      actionId: "a0000000-0000-0000-0000-000000000003",
+      policyVersion: "1.0.0",
+      cordDecision: "ALLOW",
       cordScore: 55,
-      cordReasons: ['social post', 'approved by user', 'contains pricing'],
-      input: { connector: 'x-twitter', operation: 'post', text: 'New feature release!' },
-      output: { tweetId: '123456789' },
-      timestamp: new Date('2026-01-15T10:01:00Z').toISOString(),
-      prevHash: '', // will be filled after computing receipt 2's hash
+      cordReasons: ["social post", "approved by user", "contains pricing"],
+      input: {
+        connector: "x-twitter",
+        operation: "post",
+        text: "New feature release!",
+      },
+      output: { tweetId: "123456789" },
+      timestamp: new Date("2026-01-15T10:01:00Z").toISOString(),
+      prevHash: "", // will be filled after computing receipt 2's hash
     },
   ];
 
@@ -261,7 +277,7 @@ function demoReceiptChain(): void {
     );
     console.log(
       `    hash=${c.dim}${receipt.hash.slice(0, 16)}...${c.reset}  ` +
-        `prevHash=${c.dim}${receipt.prevHash === GENESIS_HASH ? 'genesis' : receipt.prevHash.slice(0, 16) + '...'}${c.reset}`,
+        `prevHash=${c.dim}${receipt.prevHash === GENESIS_HASH ? "genesis" : receipt.prevHash.slice(0, 16) + "..."}${c.reset}`,
     );
   }
 
@@ -297,13 +313,13 @@ interface SparkChatResponse {
 
 async function demoSparkChat(apiUrl: string): Promise<void> {
   console.log();
-  sectionHeader('SPARK — Self-Learning Engine');
+  sectionHeader("SPARK — Self-Learning Engine");
   console.log();
 
   const questions = [
-    'How are you doing?',
-    'What have you learned recently?',
-    'What connections do you see?',
+    "How are you doing?",
+    "What have you learned recently?",
+    "What connections do you see?",
   ];
 
   let conversationId: string | undefined;
@@ -316,8 +332,8 @@ async function demoSparkChat(apiUrl: string): Promise<void> {
       if (conversationId) body.conversationId = conversationId;
 
       const res = await fetch(`${apiUrl}/api/spark/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
@@ -375,31 +391,31 @@ async function main(): Promise<void> {
   console.log();
 
   // ── Scenario 1: Email Reply ──
-  await runScenario(apiUrl, 'SCENARIO 1: Email Reply', {
-    source: 'email',
-    subject: 'Customer asking about pricing',
-    body: 'Hi, I wanted to know about your pricing plans.',
+  await runScenario(apiUrl, "SCENARIO 1: Email Reply", {
+    source: "email",
+    subject: "Customer asking about pricing",
+    body: "Hi, I wanted to know about your pricing plans.",
   });
 
   // ── Scenario 2: Calendar Schedule ──
-  await runScenario(apiUrl, 'SCENARIO 2: Calendar Schedule', {
-    source: 'calendar',
-    subject: 'Meeting request from partner',
-    body: 'Schedule a meeting with the team next Tuesday.',
+  await runScenario(apiUrl, "SCENARIO 2: Calendar Schedule", {
+    source: "calendar",
+    subject: "Meeting request from partner",
+    body: "Schedule a meeting with the team next Tuesday.",
   });
 
   // ── Scenario 3: Social Post ──
-  await runScenario(apiUrl, 'SCENARIO 3: Social Post', {
-    source: 'social',
-    subject: 'New product launch announcement',
-    body: 'Post about our new feature release on social media.',
+  await runScenario(apiUrl, "SCENARIO 3: Social Post", {
+    source: "social",
+    subject: "New product launch announcement",
+    body: "Post about our new feature release on social media.",
   });
 
   // ── Scenario 4: Order Refund ──
-  await runScenario(apiUrl, 'SCENARIO 4: Order Refund', {
-    source: 'shopify',
-    subject: 'Customer refund request #4821',
-    body: 'Customer wants to return order and ship back the item.',
+  await runScenario(apiUrl, "SCENARIO 4: Order Refund", {
+    source: "shopify",
+    subject: "Customer refund request #4821",
+    body: "Customer wants to return order and ship back the item.",
   });
 
   // ── SPARK Interaction ──
@@ -409,19 +425,29 @@ async function main(): Promise<void> {
   demoReceiptChain();
 
   // ── Done ──
-  const line = '='.repeat(62);
+  const line = "=".repeat(62);
   console.log(`${c.cyan}${c.bold}${line}${c.reset}`);
   console.log(`${c.cyan}${c.bold}   DEMO COMPLETE${c.reset}`);
   console.log(`${c.cyan}${c.bold}${line}${c.reset}`);
   console.log();
   console.log(`  ${c.bold}What this demo showed:${c.reset}`);
-  console.log(`    ${c.green}+${c.reset} Intent classification from raw events`);
-  console.log(`    ${c.green}+${c.reset} Policy gates: read ops auto-allowed, writes need approval`);
+  console.log(
+    `    ${c.green}+${c.reset} Intent classification from raw events`,
+  );
+  console.log(
+    `    ${c.green}+${c.reset} Policy gates: read ops auto-allowed, writes need approval`,
+  );
   console.log(`    ${c.green}+${c.reset} CORD safety scoring on every action`);
-  console.log(`    ${c.green}+${c.reset} Human-in-the-loop approval for risky operations`);
-  console.log(`    ${c.green}+${c.reset} Cryptographic receipt chain with hash-linking`);
+  console.log(
+    `    ${c.green}+${c.reset} Human-in-the-loop approval for risky operations`,
+  );
+  console.log(
+    `    ${c.green}+${c.reset} Cryptographic receipt chain with hash-linking`,
+  );
   console.log(`    ${c.green}+${c.reset} Independent chain verification`);
-  console.log(`    ${c.green}+${c.reset} SPARK self-learning engine with spiral memory`);
+  console.log(
+    `    ${c.green}+${c.reset} SPARK self-learning engine with spiral memory`,
+  );
   console.log();
 }
 

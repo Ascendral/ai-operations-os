@@ -6,7 +6,7 @@
  * with a warning so the system can still operate in a permissive mode.
  */
 
-import type { CordDecision } from '@ai-operations/shared-types';
+import type { CordDecision } from "@ai-operations/shared-types";
 
 // ---------------------------------------------------------------------------
 // Graceful cord-engine import
@@ -14,7 +14,7 @@ import type { CordDecision } from '@ai-operations/shared-types';
 
 let cord: any = null;
 try {
-  cord = require('cord-engine');
+  cord = require("cord-engine");
 } catch {
   /* cord-engine not installed */
 }
@@ -43,24 +43,24 @@ export interface SafetyResult {
  * CORD evaluates risk differently depending on the tool type.
  */
 const CONNECTOR_TO_CORD_TOOL: Record<string, string> = {
-  send: 'communication',
-  reply: 'communication',
-  forward: 'communication',
-  post: 'publication',
-  tweet: 'publication',
-  delete: 'destructive',
-  remove: 'destructive',
-  archive: 'destructive',
-  create_event: 'scheduling',
-  update_event: 'scheduling',
-  cancel_event: 'scheduling',
-  refund: 'financial',
-  charge: 'financial',
-  transfer: 'financial',
-  read: 'readonly',
-  list: 'readonly',
-  search: 'readonly',
-  get: 'readonly',
+  send: "communication",
+  reply: "communication",
+  forward: "communication",
+  post: "publication",
+  tweet: "publication",
+  delete: "destructive",
+  remove: "destructive",
+  archive: "destructive",
+  create_event: "scheduling",
+  update_event: "scheduling",
+  cancel_event: "scheduling",
+  refund: "financial",
+  charge: "financial",
+  transfer: "financial",
+  read: "readonly",
+  list: "readonly",
+  search: "readonly",
+  get: "readonly",
 };
 
 // ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ export class CordSafetyGate {
     this.cordAvailable = cord !== null;
     if (!this.cordAvailable) {
       console.warn(
-        '[CordSafetyGate] cord-engine is not installed. All evaluations will return ALLOW.',
+        "[CordSafetyGate] cord-engine is not installed. All evaluations will return ALLOW.",
       );
     }
   }
@@ -108,9 +108,9 @@ export class CordSafetyGate {
   ): SafetyResult {
     if (!this.cordAvailable) {
       return {
-        decision: 'ALLOW',
+        decision: "ALLOW",
         score: 0,
-        reasons: ['cord-engine not installed — defaulting to ALLOW'],
+        reasons: ["cord-engine not installed — defaulting to ALLOW"],
         hardBlock: false,
       };
     }
@@ -123,14 +123,14 @@ export class CordSafetyGate {
 
       return {
         decision: evaluation.decision as CordDecision,
-        score: typeof evaluation.score === 'number' ? evaluation.score : 0,
+        score: typeof evaluation.score === "number" ? evaluation.score : 0,
         reasons: Array.isArray(evaluation.reasons) ? evaluation.reasons : [],
         hardBlock: evaluation.hardBlock === true,
       };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       return {
-        decision: 'CONTAIN',
+        decision: "CONTAIN",
         score: 50,
         reasons: [`CORD evaluation error: ${message}`],
         hardBlock: false,
@@ -162,10 +162,11 @@ export class CordSafetyGate {
   ): string {
     const inputSummary = Object.entries(input)
       .map(([key, value]) => {
-        const display = typeof value === 'string' ? value : JSON.stringify(value);
+        const display =
+          typeof value === "string" ? value : JSON.stringify(value);
         return `  ${key}: ${display}`;
       })
-      .join('\n');
+      .join("\n");
 
     return [
       `Action: ${connector}.${operation}`,
@@ -173,7 +174,7 @@ export class CordSafetyGate {
       `Operation: ${operation}`,
       `Input:`,
       inputSummary,
-    ].join('\n');
+    ].join("\n");
   }
 
   /**
@@ -183,6 +184,6 @@ export class CordSafetyGate {
    * @returns The CORD tool type category string.
    */
   private mapOperationToToolType(operation: string): string {
-    return CONNECTOR_TO_CORD_TOOL[operation] ?? 'general';
+    return CONNECTOR_TO_CORD_TOOL[operation] ?? "general";
   }
 }

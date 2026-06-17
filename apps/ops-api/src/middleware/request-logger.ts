@@ -6,11 +6,11 @@
  * and duration in milliseconds using the ops-core structured logger.
  */
 
-import * as http from 'http';
-import { randomUUID } from 'node:crypto';
-import { createLogger } from '@ai-operations/ops-core';
+import * as http from "http";
+import { randomUUID } from "node:crypto";
+import { createLogger } from "@ai-operations/ops-core";
 
-const log = createLogger('request-logger');
+const log = createLogger("request-logger");
 
 /**
  * Express-style middleware that logs incoming requests and their responses.
@@ -28,20 +28,24 @@ export function requestLogger(
   (req as any).correlationId = correlationId;
 
   const start = Date.now();
-  const method = req.method || 'GET';
-  const path = (req.url || '/').split('?')[0];
+  const method = req.method || "GET";
+  const path = (req.url || "/").split("?")[0];
 
   // Hook into response finish to log with final status code and duration
-  res.on('finish', () => {
+  res.on("finish", () => {
     const durationMs = Date.now() - start;
     const statusCode = res.statusCode;
 
-    log.info('request completed', {
-      method,
-      path,
-      statusCode,
-      durationMs,
-    }, correlationId);
+    log.info(
+      "request completed",
+      {
+        method,
+        path,
+        statusCode,
+        durationMs,
+      },
+      correlationId,
+    );
   });
 
   next();

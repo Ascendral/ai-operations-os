@@ -4,8 +4,8 @@
  * Steps are stored in a separate table and joined when loading runs.
  */
 
-import type BetterSqlite3 from 'better-sqlite3';
-import type { WorkflowRun, WorkflowStep } from '@ai-operations/shared-types';
+import type BetterSqlite3 from "better-sqlite3";
+import type { WorkflowRun, WorkflowStep } from "@ai-operations/shared-types";
 
 export interface WorkflowRunFilter {
   taskId?: string;
@@ -32,10 +32,12 @@ export class WorkflowStore {
         (@id, @taskId, @workflowType, @state, @startedAt, @endedAt, @error)
     `);
 
-    this.getRunStmt = this.db.prepare('SELECT * FROM workflow_runs WHERE id = ?');
+    this.getRunStmt = this.db.prepare(
+      "SELECT * FROM workflow_runs WHERE id = ?",
+    );
 
     this.getStepsByRunStmt = this.db.prepare(
-      'SELECT * FROM workflow_steps WHERE run_id = ? ORDER BY step_order ASC'
+      "SELECT * FROM workflow_steps WHERE run_id = ? ORDER BY step_order ASC",
     );
 
     this.insertStepStmt = this.db.prepare(`
@@ -60,7 +62,7 @@ export class WorkflowStore {
       });
 
       // Delete existing steps to handle re-saves cleanly
-      this.db.prepare('DELETE FROM workflow_steps WHERE run_id = ?').run(r.id);
+      this.db.prepare("DELETE FROM workflow_steps WHERE run_id = ?").run(r.id);
 
       r.steps.forEach((step, index) => {
         this.insertStepStmt.run({
@@ -96,15 +98,16 @@ export class WorkflowStore {
     const params: Record<string, unknown> = {};
 
     if (filter?.taskId) {
-      conditions.push('task_id = @taskId');
+      conditions.push("task_id = @taskId");
       params.taskId = filter.taskId;
     }
     if (filter?.state) {
-      conditions.push('state = @state');
+      conditions.push("state = @state");
       params.state = filter.state;
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const limit = filter?.limit ?? 50;
     const offset = filter?.offset ?? 0;
 
@@ -133,12 +136,16 @@ export class WorkflowStore {
   /** Save or update a single step within a run */
   saveStep(runId: string, step: WorkflowStep): void {
     // Get existing steps to determine order
-    const existingSteps = this.getStepsByRunStmt.all(runId) as Record<string, unknown>[];
+    const existingSteps = this.getStepsByRunStmt.all(runId) as Record<
+      string,
+      unknown
+    >[];
     const existingIndex = existingSteps.findIndex((s) => s.id === step.id);
 
-    const stepOrder = existingIndex >= 0
-      ? (existingSteps[existingIndex].step_order as number)
-      : existingSteps.length;
+    const stepOrder =
+      existingIndex >= 0
+        ? (existingSteps[existingIndex].step_order as number)
+        : existingSteps.length;
 
     this.insertStepStmt.run({
       id: step.id,
@@ -158,13 +165,16 @@ export class WorkflowStore {
 
   /** Convert a database row to a WorkflowRun (with steps loaded) */
   private rowToRun(row: Record<string, unknown>): WorkflowRun {
-    const stepRows = this.getStepsByRunStmt.all(row.id as string) as Record<string, unknown>[];
+    const stepRows = this.getStepsByRunStmt.all(row.id as string) as Record<
+      string,
+      unknown
+    >[];
 
     return {
       id: row.id as string,
       taskId: row.task_id as string,
       workflowType: row.workflow_type as string,
-      state: row.state as WorkflowRun['state'],
+      state: row.state as WorkflowRun["state"],
       startedAt: row.started_at as string,
       endedAt: row.ended_at as string | undefined,
       error: row.error as string | undefined,
@@ -179,9 +189,11 @@ export class WorkflowStore {
       connector: row.connector as string,
       operation: row.operation as string,
       input: JSON.parse(row.input as string) as Record<string, unknown>,
-      output: row.output ? (JSON.parse(row.output as string) as Record<string, unknown>) : undefined,
-      status: row.status as WorkflowStep['status'],
-      cordDecision: row.cord_decision as WorkflowStep['cordDecision'],
+      output: row.output
+        ? (JSON.parse(row.output as string) as Record<string, unknown>)
+        : undefined,
+      status: row.status as WorkflowStep["status"],
+      cordDecision: row.cord_decision as WorkflowStep["cordDecision"],
       cordScore: row.cord_score as number | undefined,
       error: row.error as string | undefined,
       durationMs: row.duration_ms as number | undefined,

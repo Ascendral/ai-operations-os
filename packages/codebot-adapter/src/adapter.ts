@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 /**
  * CodeBotAdapter — Maps workflow steps to CodeBot tool calls.
@@ -10,7 +10,7 @@ import { randomUUID } from 'node:crypto';
  * mode with plausible timing, outputs, and metadata.
  */
 
-import type { WorkflowStep } from '@ai-operations/shared-types';
+import type { WorkflowStep } from "@ai-operations/shared-types";
 
 // ---------------------------------------------------------------------------
 // Graceful codebot-ai import
@@ -18,7 +18,7 @@ import type { WorkflowStep } from '@ai-operations/shared-types';
 
 let codebot: any = null;
 try {
-  codebot = require('codebot-ai');
+  codebot = require("codebot-ai");
 } catch {
   /* codebot-ai not installed — simulation mode will be used */
 }
@@ -50,24 +50,24 @@ export interface StepResult {
  * CodeBot uses its own tool naming conventions.
  */
 const OPERATION_TO_TOOL: Record<string, string> = {
-  send: 'messaging.send',
-  reply: 'messaging.reply',
-  forward: 'messaging.forward',
-  read: 'data.read',
-  list: 'data.list',
-  search: 'data.search',
-  get: 'data.get',
-  create_event: 'calendar.create',
-  update_event: 'calendar.update',
-  cancel_event: 'calendar.cancel',
-  post: 'social.publish',
-  tweet: 'social.publish',
-  delete: 'resource.delete',
-  remove: 'resource.remove',
-  archive: 'resource.archive',
-  refund: 'commerce.refund',
-  charge: 'commerce.charge',
-  transfer: 'finance.transfer',
+  send: "messaging.send",
+  reply: "messaging.reply",
+  forward: "messaging.forward",
+  read: "data.read",
+  list: "data.list",
+  search: "data.search",
+  get: "data.get",
+  create_event: "calendar.create",
+  update_event: "calendar.update",
+  cancel_event: "calendar.cancel",
+  post: "social.publish",
+  tweet: "social.publish",
+  delete: "resource.delete",
+  remove: "resource.remove",
+  archive: "resource.archive",
+  refund: "commerce.refund",
+  charge: "commerce.charge",
+  transfer: "finance.transfer",
 };
 
 // ---------------------------------------------------------------------------
@@ -100,30 +100,30 @@ function generateSimulatedOutput(
   const op = step.operation;
 
   // Messaging operations
-  if (op === 'send' || op === 'reply' || op === 'forward') {
+  if (op === "send" || op === "reply" || op === "forward") {
     return {
       ...base,
       messageId: `sim-msg-${randomUUID().slice(0, 8)}`,
-      status: 'sent',
-      to: step.input.to ?? step.input.recipient ?? 'unknown@example.com',
+      status: "sent",
+      to: step.input.to ?? step.input.recipient ?? "unknown@example.com",
       threadId: step.input.threadId ?? null,
     };
   }
 
   // Read / get operations
-  if (op === 'read' || op === 'get') {
+  if (op === "read" || op === "get") {
     return {
       ...base,
       found: true,
       itemCount: 1,
       data: step.input.id
-        ? { id: step.input.id, content: '[simulated content]' }
-        : { content: '[simulated content]' },
+        ? { id: step.input.id, content: "[simulated content]" }
+        : { content: "[simulated content]" },
     };
   }
 
   // List / search operations
-  if (op === 'list' || op === 'search') {
+  if (op === "list" || op === "search") {
     const count = Math.floor(Math.random() * 8) + 1;
     return {
       ...base,
@@ -137,58 +137,62 @@ function generateSimulatedOutput(
   }
 
   // Calendar operations
-  if (op === 'create_event' || op === 'update_event') {
+  if (op === "create_event" || op === "update_event") {
     return {
       ...base,
       eventId: `sim-evt-${randomUUID().slice(0, 8)}`,
-      status: op === 'create_event' ? 'created' : 'updated',
-      title: (step.input.title as string) ?? (step.input.subject as string) ?? 'Simulated Event',
+      status: op === "create_event" ? "created" : "updated",
+      title:
+        (step.input.title as string) ??
+        (step.input.subject as string) ??
+        "Simulated Event",
       start: step.input.start ?? new Date().toISOString(),
     };
   }
 
-  if (op === 'cancel_event') {
+  if (op === "cancel_event") {
     return {
       ...base,
-      eventId: (step.input.eventId as string) ?? `sim-evt-${randomUUID().slice(0, 8)}`,
-      status: 'cancelled',
+      eventId:
+        (step.input.eventId as string) ?? `sim-evt-${randomUUID().slice(0, 8)}`,
+      status: "cancelled",
     };
   }
 
   // Social / publish operations
-  if (op === 'post' || op === 'tweet') {
+  if (op === "post" || op === "tweet") {
     return {
       ...base,
       postId: `sim-post-${randomUUID().slice(0, 8)}`,
-      status: 'published',
+      status: "published",
       url: `https://${step.connector}.example.com/post/sim-${Date.now()}`,
     };
   }
 
   // Destructive operations
-  if (op === 'delete' || op === 'remove' || op === 'archive') {
+  if (op === "delete" || op === "remove" || op === "archive") {
     return {
       ...base,
-      targetId: (step.input.id as string) ?? 'unknown',
-      status: op === 'archive' ? 'archived' : 'deleted',
+      targetId: (step.input.id as string) ?? "unknown",
+      status: op === "archive" ? "archived" : "deleted",
     };
   }
 
   // Financial operations
-  if (op === 'refund' || op === 'charge' || op === 'transfer') {
+  if (op === "refund" || op === "charge" || op === "transfer") {
     return {
       ...base,
       transactionId: `sim-txn-${randomUUID().slice(0, 8)}`,
-      status: 'processed',
+      status: "processed",
       amount: step.input.amount ?? 0,
-      currency: step.input.currency ?? 'USD',
+      currency: step.input.currency ?? "USD",
     };
   }
 
   // Fallback — generic simulated output
   return {
     ...base,
-    status: 'completed',
+    status: "completed",
     message: `Simulated execution of ${step.connector}.${step.operation}`,
   };
 }
@@ -199,18 +203,18 @@ function generateSimulatedOutput(
  */
 function simulatedDelayMs(operation: string): number {
   switch (operation) {
-    case 'search':
-    case 'list':
+    case "search":
+    case "list":
       return 60 + Math.floor(Math.random() * 80);
-    case 'send':
-    case 'reply':
-    case 'forward':
-    case 'post':
-    case 'tweet':
+    case "send":
+    case "reply":
+    case "forward":
+    case "post":
+    case "tweet":
       return 40 + Math.floor(Math.random() * 60);
-    case 'charge':
-    case 'refund':
-    case 'transfer':
+    case "charge":
+    case "refund":
+    case "transfer":
       return 80 + Math.floor(Math.random() * 120);
     default:
       return 20 + Math.floor(Math.random() * 40);
@@ -254,7 +258,7 @@ export class CodeBotAdapter {
     this.codebotAvailable = codebot !== null;
     if (!this.codebotAvailable) {
       console.warn(
-        '[CodeBotAdapter] codebot-ai is not installed. Steps will return simulated results.',
+        "[CodeBotAdapter] codebot-ai is not installed. Steps will return simulated results.",
       );
     }
   }
@@ -292,7 +296,7 @@ export class CodeBotAdapter {
       return {
         success: true,
         output:
-          typeof result === 'object' && result !== null ? result : { result },
+          typeof result === "object" && result !== null ? result : { result },
         durationMs: Date.now() - startTime,
         simulated: false,
       };

@@ -17,8 +17,21 @@
   "optionalDependencies": {
     "@ai-operations/cord-adapter": "*"
   },
-  "files": ["dist", "README.md", "LICENSE"],
-  "publishConfig": { "registry": "https://registry.npmjs.org/", "access": "public" },
-  "keywords": ["ai", "safety", "learning", "feedback-loop", "spark"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "keywords": [
+    "ai",
+    "safety",
+    "learning",
+    "feedback-loop",
+    "spark"
+  ],
   "license": "MIT"
 }

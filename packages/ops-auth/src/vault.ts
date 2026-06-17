@@ -8,7 +8,7 @@
  * Zero external dependencies.
  */
 
-import * as crypto from 'node:crypto';
+import * as crypto from "node:crypto";
 
 /** AES-256 requires a 32-byte key. */
 const KEY_LENGTH = 32;
@@ -25,7 +25,7 @@ const AUTH_TAG_LENGTH = 16;
  * rainbow tables but the master key IS the entropy source here).
  */
 function deriveKey(masterKey: string): Buffer {
-  const salt = Buffer.from('ai-ops-vault-v1', 'utf-8');
+  const salt = Buffer.from("ai-ops-vault-v1", "utf-8");
   return crypto.scryptSync(masterKey, salt, KEY_LENGTH);
 }
 
@@ -38,22 +38,22 @@ function deriveKey(masterKey: string): Buffer {
  */
 export function encrypt(plaintext: string, masterKey: string): string {
   if (!masterKey) {
-    throw new Error('Vault: master key is required for encryption');
+    throw new Error("Vault: master key is required for encryption");
   }
 
   const key = deriveKey(masterKey);
   const iv = crypto.randomBytes(IV_LENGTH);
 
-  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv, {
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv, {
     authTagLength: AUTH_TAG_LENGTH,
   });
 
-  let encrypted = cipher.update(plaintext, 'utf-8', 'hex');
-  encrypted += cipher.final('hex');
+  let encrypted = cipher.update(plaintext, "utf-8", "hex");
+  encrypted += cipher.final("hex");
 
   const authTag = cipher.getAuthTag();
 
-  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+  return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
 }
 
 /**
@@ -66,27 +66,29 @@ export function encrypt(plaintext: string, masterKey: string): string {
  */
 export function decrypt(encrypted: string, masterKey: string): string {
   if (!masterKey) {
-    throw new Error('Vault: master key is required for decryption');
+    throw new Error("Vault: master key is required for decryption");
   }
 
-  const parts = encrypted.split(':');
+  const parts = encrypted.split(":");
   if (parts.length !== 3) {
-    throw new Error('Vault: invalid encrypted format (expected iv:authTag:ciphertext)');
+    throw new Error(
+      "Vault: invalid encrypted format (expected iv:authTag:ciphertext)",
+    );
   }
 
   const [ivHex, authTagHex, ciphertext] = parts;
 
   const key = deriveKey(masterKey);
-  const iv = Buffer.from(ivHex, 'hex');
-  const authTag = Buffer.from(authTagHex, 'hex');
+  const iv = Buffer.from(ivHex, "hex");
+  const authTag = Buffer.from(authTagHex, "hex");
 
-  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv, {
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv, {
     authTagLength: AUTH_TAG_LENGTH,
   });
   decipher.setAuthTag(authTag);
 
-  let decrypted = decipher.update(ciphertext, 'hex', 'utf-8');
-  decrypted += decipher.final('utf-8');
+  let decrypted = decipher.update(ciphertext, "hex", "utf-8");
+  decrypted += decipher.final("utf-8");
 
   return decrypted;
 }

@@ -7,7 +7,7 @@
 
 // ── Schema Types ────────────────────────────────────────────────────────────
 
-export type SchemaFieldType = 'string' | 'number' | 'boolean' | 'object';
+export type SchemaFieldType = "string" | "number" | "boolean" | "object";
 
 export interface SchemaField {
   type: SchemaFieldType;
@@ -35,15 +35,18 @@ export type ValidationResult<T = Record<string, unknown>> =
  */
 export function validateBody(schema: ValidationSchema) {
   return (body: Record<string, unknown>): ValidationResult => {
-    if (body === null || typeof body !== 'object') {
-      return { ok: false, error: 'Request body must be a JSON object' };
+    if (body === null || typeof body !== "object") {
+      return { ok: false, error: "Request body must be a JSON object" };
     }
 
     for (const [field, rule] of Object.entries(schema)) {
       const value = body[field];
 
       // Required check
-      if (rule.required && (value === undefined || value === null || value === '')) {
+      if (
+        rule.required &&
+        (value === undefined || value === null || value === "")
+      ) {
         return { ok: false, error: `Missing required field: ${field}` };
       }
 
@@ -54,11 +57,11 @@ export function validateBody(schema: ValidationSchema) {
 
       // Type check
       const actualType = typeof value;
-      if (rule.type === 'object') {
-        if (actualType !== 'object' || Array.isArray(value)) {
+      if (rule.type === "object") {
+        if (actualType !== "object" || Array.isArray(value)) {
           return {
             ok: false,
-            error: `Field '${field}' must be of type ${rule.type}, got ${Array.isArray(value) ? 'array' : actualType}`,
+            error: `Field '${field}' must be of type ${rule.type}, got ${Array.isArray(value) ? "array" : actualType}`,
           };
         }
       } else if (actualType !== rule.type) {
@@ -69,7 +72,11 @@ export function validateBody(schema: ValidationSchema) {
       }
 
       // maxLength check (strings only)
-      if (rule.maxLength !== undefined && rule.type === 'string' && typeof value === 'string') {
+      if (
+        rule.maxLength !== undefined &&
+        rule.type === "string" &&
+        typeof value === "string"
+      ) {
         if (value.length > rule.maxLength) {
           return {
             ok: false,
@@ -83,7 +90,7 @@ export function validateBody(schema: ValidationSchema) {
         if (!rule.enum.includes(String(value))) {
           return {
             ok: false,
-            error: `Field '${field}' must be one of: ${rule.enum.join(', ')}. Got '${String(value)}'`,
+            error: `Field '${field}' must be one of: ${rule.enum.join(", ")}. Got '${String(value)}'`,
           };
         }
       }
@@ -100,29 +107,38 @@ export function validateBody(schema: ValidationSchema) {
  */
 export const taskCreateSchema: ValidationSchema = {
   source: {
-    type: 'string',
+    type: "string",
     required: true,
-    enum: ['email', 'calendar', 'social', 'store', 'slack', 'notion', 'manual'],
+    enum: ["email", "calendar", "social", "store", "slack", "notion", "manual"],
   },
   title: {
-    type: 'string',
+    type: "string",
     required: true,
     maxLength: 500,
   },
   body: {
-    type: 'string',
+    type: "string",
     required: false,
     maxLength: 50000,
   },
   intent: {
-    type: 'string',
+    type: "string",
     required: false,
-    enum: ['reply', 'schedule', 'post', 'fulfill', 'refund', 'escalate', 'ignore', 'unknown'],
+    enum: [
+      "reply",
+      "schedule",
+      "post",
+      "fulfill",
+      "refund",
+      "escalate",
+      "ignore",
+      "unknown",
+    ],
   },
   priority: {
-    type: 'string',
+    type: "string",
     required: false,
-    enum: ['urgent', 'high', 'normal', 'low'],
+    enum: ["urgent", "high", "normal", "low"],
   },
 };
 
@@ -131,12 +147,12 @@ export const taskCreateSchema: ValidationSchema = {
  */
 export const approvalDecisionSchema: ValidationSchema = {
   decision: {
-    type: 'string',
+    type: "string",
     required: true,
-    enum: ['approved', 'denied', 'modified'],
+    enum: ["approved", "denied", "modified"],
   },
   decidedBy: {
-    type: 'string',
+    type: "string",
     required: false,
   },
 };
@@ -146,15 +162,15 @@ export const approvalDecisionSchema: ValidationSchema = {
  */
 export const workflowCreateSchema: ValidationSchema = {
   taskId: {
-    type: 'string',
+    type: "string",
     required: true,
   },
   workflowType: {
-    type: 'string',
+    type: "string",
     required: true,
   },
   steps: {
-    type: 'object',
+    type: "object",
     required: true,
   },
 };
@@ -164,12 +180,12 @@ export const workflowCreateSchema: ValidationSchema = {
  */
 export const pipelineSimulateSchema: ValidationSchema = {
   source: {
-    type: 'string',
+    type: "string",
     required: true,
-    enum: ['email', 'calendar', 'social', 'store', 'slack', 'notion', 'manual'],
+    enum: ["email", "calendar", "social", "store", "slack", "notion", "manual"],
   },
   title: {
-    type: 'string',
+    type: "string",
     required: true,
   },
 };
@@ -179,12 +195,12 @@ export const pipelineSimulateSchema: ValidationSchema = {
  */
 export const sparkChatSchema: ValidationSchema = {
   message: {
-    type: 'string',
+    type: "string",
     required: true,
     maxLength: 10000,
   },
   conversationId: {
-    type: 'string',
+    type: "string",
     required: false,
   },
 };
@@ -194,14 +210,14 @@ export const sparkChatSchema: ValidationSchema = {
  */
 export const webhookGenericSchema: ValidationSchema = {
   title: {
-    type: 'string',
+    type: "string",
     required: true,
     maxLength: 500,
   },
   source: {
-    type: 'string',
+    type: "string",
     required: false,
-    enum: ['email', 'calendar', 'social', 'store', 'slack', 'notion', 'manual'],
+    enum: ["email", "calendar", "social", "store", "slack", "notion", "manual"],
   },
 };
 
@@ -210,11 +226,11 @@ export const webhookGenericSchema: ValidationSchema = {
  */
 export const connectorExecuteSchema: ValidationSchema = {
   operation: {
-    type: 'string',
+    type: "string",
     required: true,
   },
   input: {
-    type: 'object',
+    type: "object",
     required: false,
   },
 };

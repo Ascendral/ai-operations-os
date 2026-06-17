@@ -14,7 +14,7 @@
 
 // ── Log levels ──────────────────────────────────────────────────────────────
 
-export type LogLevel = 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
+export type LogLevel = "ERROR" | "WARN" | "INFO" | "DEBUG";
 
 const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
   ERROR: 0,
@@ -24,11 +24,11 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 };
 
 function resolveLogLevel(): LogLevel {
-  const raw = (process.env.OPS_LOG_LEVEL || 'INFO').toUpperCase();
+  const raw = (process.env.OPS_LOG_LEVEL || "INFO").toUpperCase();
   if (raw in LOG_LEVEL_PRIORITY) {
     return raw as LogLevel;
   }
-  return 'INFO';
+  return "INFO";
 }
 
 // ── Log entry ───────────────────────────────────────────────────────────────
@@ -45,10 +45,26 @@ export interface LogEntry {
 // ── Logger type ─────────────────────────────────────────────────────────────
 
 export interface Logger {
-  error(msg: string, data?: Record<string, unknown>, correlationId?: string): void;
-  warn(msg: string, data?: Record<string, unknown>, correlationId?: string): void;
-  info(msg: string, data?: Record<string, unknown>, correlationId?: string): void;
-  debug(msg: string, data?: Record<string, unknown>, correlationId?: string): void;
+  error(
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void;
+  warn(
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void;
+  info(
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void;
+  debug(
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void;
 }
 
 // ── Implementation ──────────────────────────────────────────────────────────
@@ -61,26 +77,48 @@ class StructuredLogger implements Logger {
   constructor(name: string, writeFn?: (line: string) => void) {
     this.name = name;
     this.threshold = LOG_LEVEL_PRIORITY[resolveLogLevel()];
-    this.writeFn = writeFn ?? ((line: string) => process.stdout.write(line + '\n'));
+    this.writeFn =
+      writeFn ?? ((line: string) => process.stdout.write(line + "\n"));
   }
 
-  error(msg: string, data?: Record<string, unknown>, correlationId?: string): void {
-    this.log('ERROR', msg, data, correlationId);
+  error(
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void {
+    this.log("ERROR", msg, data, correlationId);
   }
 
-  warn(msg: string, data?: Record<string, unknown>, correlationId?: string): void {
-    this.log('WARN', msg, data, correlationId);
+  warn(
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void {
+    this.log("WARN", msg, data, correlationId);
   }
 
-  info(msg: string, data?: Record<string, unknown>, correlationId?: string): void {
-    this.log('INFO', msg, data, correlationId);
+  info(
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void {
+    this.log("INFO", msg, data, correlationId);
   }
 
-  debug(msg: string, data?: Record<string, unknown>, correlationId?: string): void {
-    this.log('DEBUG', msg, data, correlationId);
+  debug(
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void {
+    this.log("DEBUG", msg, data, correlationId);
   }
 
-  private log(level: LogLevel, msg: string, data?: Record<string, unknown>, correlationId?: string): void {
+  private log(
+    level: LogLevel,
+    msg: string,
+    data?: Record<string, unknown>,
+    correlationId?: string,
+  ): void {
     if (LOG_LEVEL_PRIORITY[level] > this.threshold) {
       return;
     }
@@ -113,6 +151,9 @@ class StructuredLogger implements Logger {
  * @param writeFn - Optional custom write function (defaults to stdout).
  * @returns A Logger instance.
  */
-export function createLogger(name: string, writeFn?: (line: string) => void): Logger {
+export function createLogger(
+  name: string,
+  writeFn?: (line: string) => void,
+): Logger {
   return new StructuredLogger(name, writeFn);
 }

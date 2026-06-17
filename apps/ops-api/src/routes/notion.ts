@@ -8,9 +8,9 @@
  * POST  /api/notion/databases/:id/query  Query a database
  */
 
-import { NotionConnector } from '@ai-operations/ops-connectors';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
+import { NotionConnector } from "@ai-operations/ops-connectors";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
 
 // ── Connector ──────────────────────────────────────────────────────────────
 
@@ -27,18 +27,20 @@ async function searchNotion(ctx: any): Promise<void> {
   const { res, query } = ctx;
   const notion = getNotionConnector();
   if (!notion) {
-    sendError(res, 401, 'Notion not connected. Set NOTION_API_KEY env var.');
+    sendError(res, 401, "Notion not connected. Set NOTION_API_KEY env var.");
     return;
   }
 
-  const result = await notion.execute('search', {
-    query: query.q || '',
-    filter: query.filter ? { property: 'object', value: query.filter } : undefined,
-    page_size: parseInt(query.limit || '10', 10),
+  const result = await notion.execute("search", {
+    query: query.q || "",
+    filter: query.filter
+      ? { property: "object", value: query.filter }
+      : undefined,
+    page_size: parseInt(query.limit || "10", 10),
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to search Notion');
+    sendError(res, 502, result.error || "Failed to search Notion");
     return;
   }
 
@@ -50,13 +52,13 @@ async function readPage(ctx: any): Promise<void> {
   const { res, params } = ctx;
   const notion = getNotionConnector();
   if (!notion) {
-    sendError(res, 401, 'Notion not connected. Set NOTION_API_KEY env var.');
+    sendError(res, 401, "Notion not connected. Set NOTION_API_KEY env var.");
     return;
   }
 
-  const result = await notion.execute('read', { pageId: params.id });
+  const result = await notion.execute("read", { pageId: params.id });
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to read page');
+    sendError(res, 502, result.error || "Failed to read page");
     return;
   }
 
@@ -68,23 +70,27 @@ async function createPage(ctx: any): Promise<void> {
   const { res, body } = ctx;
   const notion = getNotionConnector();
   if (!notion) {
-    sendError(res, 401, 'Notion not connected. Set NOTION_API_KEY env var.');
+    sendError(res, 401, "Notion not connected. Set NOTION_API_KEY env var.");
     return;
   }
 
   if (!body.parent) {
-    sendError(res, 400, 'Missing required field: parent (database_id or page_id)');
+    sendError(
+      res,
+      400,
+      "Missing required field: parent (database_id or page_id)",
+    );
     return;
   }
 
-  const result = await notion.execute('create', {
+  const result = await notion.execute("create", {
     parent: body.parent,
     properties: body.properties || {},
     children: body.children,
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to create page');
+    sendError(res, 502, result.error || "Failed to create page");
     return;
   }
 
@@ -96,17 +102,17 @@ async function updatePage(ctx: any): Promise<void> {
   const { res, params, body } = ctx;
   const notion = getNotionConnector();
   if (!notion) {
-    sendError(res, 401, 'Notion not connected. Set NOTION_API_KEY env var.');
+    sendError(res, 401, "Notion not connected. Set NOTION_API_KEY env var.");
     return;
   }
 
-  const result = await notion.execute('update', {
+  const result = await notion.execute("update", {
     pageId: params.id,
     properties: body.properties || {},
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to update page');
+    sendError(res, 502, result.error || "Failed to update page");
     return;
   }
 
@@ -118,11 +124,11 @@ async function queryDatabase(ctx: any): Promise<void> {
   const { res, params, body } = ctx;
   const notion = getNotionConnector();
   if (!notion) {
-    sendError(res, 401, 'Notion not connected. Set NOTION_API_KEY env var.');
+    sendError(res, 401, "Notion not connected. Set NOTION_API_KEY env var.");
     return;
   }
 
-  const result = await notion.execute('list', {
+  const result = await notion.execute("list", {
     databaseId: params.id,
     filter: body.filter,
     sorts: body.sorts,
@@ -130,7 +136,7 @@ async function queryDatabase(ctx: any): Promise<void> {
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to query database');
+    sendError(res, 502, result.error || "Failed to query database");
     return;
   }
 
@@ -140,9 +146,9 @@ async function queryDatabase(ctx: any): Promise<void> {
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const notionRoutes: Route[] = [
-  pathToRoute('GET', '/api/notion/search', searchNotion),
-  pathToRoute('GET', '/api/notion/pages/:id', readPage),
-  pathToRoute('POST', '/api/notion/pages', createPage),
-  pathToRoute('PATCH', '/api/notion/pages/:id', updatePage),
-  pathToRoute('POST', '/api/notion/databases/:id/query', queryDatabase),
+  pathToRoute("GET", "/api/notion/search", searchNotion),
+  pathToRoute("GET", "/api/notion/pages/:id", readPage),
+  pathToRoute("POST", "/api/notion/pages", createPage),
+  pathToRoute("PATCH", "/api/notion/pages/:id", updatePage),
+  pathToRoute("POST", "/api/notion/databases/:id/query", queryDatabase),
 ];

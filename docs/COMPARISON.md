@@ -6,37 +6,37 @@ How AI Operations OS compares to OpenClaw and other autonomous agent frameworks.
 
 ## Feature Comparison
 
-| Capability | AI Operations OS | OpenClaw |
-|------------|:----------------:|:--------:|
-| **Safety & Governance** | | |
-| Constitutional AI safety gate (CORD) | ✅ Built-in | ❌ |
-| Per-action risk scoring (0–99) | ✅ 14-dimension scoring | ❌ |
-| Hard blocks (non-overridable) | ✅ | ❌ |
-| Human-in-the-loop approval flow | ✅ Policy-driven | ❌ |
-| Signed execution receipts (SHA-256 + HMAC) | ✅ Hash-chained | ❌ |
-| Tamper-evident audit trail | ✅ | ❌ |
-| Owner-defined policy rules | ✅ Declarative JSON | ❌ |
-| Prompt injection detection (VIGIL) | ✅ | ❌ |
-| **Workflow Orchestration** | | |
-| Intent classification | ✅ | ❌ |
-| Multi-step workflows | ✅ Pipeline engine | ✅ Agent loops |
-| Webhook ingestion | ✅ Gmail, Calendar, Shopify, Stripe | ❌ |
-| Connector framework | ✅ Gmail, Calendar, X, Shopify | ✅ Many integrations |
-| Pipeline dry-run simulation | ✅ | ❌ |
-| SSE real-time streaming | ✅ | Partial |
-| **Execution** | | |
-| LLM-agnostic | ✅ Any LLM | ✅ Multiple providers |
-| Docker sandbox | ✅ (via CodeBot) | ❌ |
-| Zero runtime dependencies | ✅ | ❌ |
-| **Enterprise** | | |
-| SECURITY.md + disclosure policy | ✅ | ✅ |
-| ENTERPRISE.md (deployment, RBAC, compliance) | ✅ | ❌ |
-| SOC 2 mapping | ✅ | ❌ |
-| Air-gapped deployment | ✅ | ❌ |
-| **Community** | | |
-| GitHub stars | Early stage | 283k+ |
-| npm downloads | Early stage | High |
-| Contributors | 2 | 2,800+ |
+| Capability                                   |          AI Operations OS           |       OpenClaw        |
+| -------------------------------------------- | :---------------------------------: | :-------------------: |
+| **Safety & Governance**                      |                                     |                       |
+| Constitutional AI safety gate (CORD)         |             ✅ Built-in             |          ❌           |
+| Per-action risk scoring (0–99)               |       ✅ 14-dimension scoring       |          ❌           |
+| Hard blocks (non-overridable)                |                 ✅                  |          ❌           |
+| Human-in-the-loop approval flow              |          ✅ Policy-driven           |          ❌           |
+| Signed execution receipts (SHA-256 + HMAC)   |           ✅ Hash-chained           |          ❌           |
+| Tamper-evident audit trail                   |                 ✅                  |          ❌           |
+| Owner-defined policy rules                   |         ✅ Declarative JSON         |          ❌           |
+| Prompt injection detection (VIGIL)           |                 ✅                  |          ❌           |
+| **Workflow Orchestration**                   |                                     |                       |
+| Intent classification                        |                 ✅                  |          ❌           |
+| Multi-step workflows                         |         ✅ Pipeline engine          |    ✅ Agent loops     |
+| Webhook ingestion                            | ✅ Gmail, Calendar, Shopify, Stripe |          ❌           |
+| Connector framework                          |   ✅ Gmail, Calendar, X, Shopify    | ✅ Many integrations  |
+| Pipeline dry-run simulation                  |                 ✅                  |          ❌           |
+| SSE real-time streaming                      |                 ✅                  |        Partial        |
+| **Execution**                                |                                     |                       |
+| LLM-agnostic                                 |             ✅ Any LLM              | ✅ Multiple providers |
+| Docker sandbox                               |          ✅ (via CodeBot)           |          ❌           |
+| Zero runtime dependencies                    |                 ✅                  |          ❌           |
+| **Enterprise**                               |                                     |                       |
+| SECURITY.md + disclosure policy              |                 ✅                  |          ✅           |
+| ENTERPRISE.md (deployment, RBAC, compliance) |                 ✅                  |          ❌           |
+| SOC 2 mapping                                |                 ✅                  |          ❌           |
+| Air-gapped deployment                        |                 ✅                  |          ❌           |
+| **Community**                                |                                     |                       |
+| GitHub stars                                 |             Early stage             |         283k+         |
+| npm downloads                                |             Early stage             |         High          |
+| Contributors                                 |                  2                  |        2,800+         |
 
 ---
 

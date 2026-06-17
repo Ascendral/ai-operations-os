@@ -1,7 +1,7 @@
 ---
 name: Bug Report
 about: Report a bug in AI Operations OS
-title: '[Bug] '
+title: "[Bug] "
 labels: bug
 ---
 
@@ -10,6 +10,7 @@ A clear description of what the bug is.
 
 **To reproduce**
 Steps to reproduce:
+
 1.
 2.
 3.
@@ -18,6 +19,7 @@ Steps to reproduce:
 What you expected to happen.
 
 **Environment**
+
 - Node.js version:
 - OS:
 - AI Operations OS version:

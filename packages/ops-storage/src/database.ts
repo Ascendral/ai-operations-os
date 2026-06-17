@@ -6,13 +6,13 @@
  * for better concurrency.
  */
 
-import BetterSqlite3 from 'better-sqlite3';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
+import BetterSqlite3 from "better-sqlite3";
+import * as path from "path";
+import * as fs from "fs";
+import * as os from "os";
 
-const DEFAULT_DB_DIR = path.join(os.homedir(), '.ai-ops');
-const DEFAULT_DB_PATH = path.join(DEFAULT_DB_DIR, 'data.db');
+const DEFAULT_DB_DIR = path.join(os.homedir(), ".ai-ops");
+const DEFAULT_DB_PATH = path.join(DEFAULT_DB_DIR, "data.db");
 
 export class Database {
   readonly db: BetterSqlite3.Database;
@@ -27,8 +27,8 @@ export class Database {
     this.db = new BetterSqlite3(dbPath);
 
     // Enable WAL mode for better concurrency
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('foreign_keys = ON');
+    this.db.pragma("journal_mode = WAL");
+    this.db.pragma("foreign_keys = ON");
 
     this.createTables();
   }

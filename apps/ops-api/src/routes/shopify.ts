@@ -11,35 +11,35 @@
  * All endpoints require SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN env vars.
  */
 
-import { ShopifyConnector } from '@ai-operations/ops-connectors';
-import { IntentClassifier } from '@ai-operations/ops-core';
-import { RuleEngine } from '@ai-operations/ops-policy';
+import { ShopifyConnector } from "@ai-operations/ops-connectors";
+import { IntentClassifier } from "@ai-operations/ops-core";
+import { RuleEngine } from "@ai-operations/ops-policy";
 import {
   DEFAULT_POLICY,
   createTask,
   createApproval,
   verifyReceiptChain,
-} from '@ai-operations/shared-types';
-import type { TaskSource, CordDecision } from '@ai-operations/shared-types';
-import { ReceiptBuilder } from '@ai-operations/codebot-adapter';
-import { evaluateAction } from '../middleware/cord-gate';
-import { requestApproval } from './approvals';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
+} from "@ai-operations/shared-types";
+import type { TaskSource, CordDecision } from "@ai-operations/shared-types";
+import { ReceiptBuilder } from "@ai-operations/codebot-adapter";
+import { evaluateAction } from "../middleware/cord-gate";
+import { requestApproval } from "./approvals";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
 
 // ── Singletons ────────────────────────────────────────────────────────────────
 
 const classifier = new IntentClassifier();
 const ruleEngine = new RuleEngine(DEFAULT_POLICY);
-const HMAC_KEY = process.env.CORD_HMAC_KEY || 'ai-ops-dev-key';
+const HMAC_KEY = process.env.CORD_HMAC_KEY || "ai-ops-dev-key";
 
 /**
  * Create a Shopify connector with credentials from environment variables.
  * Returns null if credentials are not configured.
  */
 function getShopifyConnector(): ShopifyConnector | null {
-  const storeUrl = process.env.SHOPIFY_STORE_URL || '';
-  const accessToken = process.env.SHOPIFY_ACCESS_TOKEN || '';
+  const storeUrl = process.env.SHOPIFY_STORE_URL || "";
+  const accessToken = process.env.SHOPIFY_ACCESS_TOKEN || "";
 
   if (!storeUrl || !accessToken) return null;
 
@@ -59,19 +59,23 @@ async function listOrders(ctx: any): Promise<void> {
 
   const shopify = getShopifyConnector();
   if (!shopify) {
-    sendError(res, 401, 'Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.');
+    sendError(
+      res,
+      401,
+      "Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.",
+    );
     return;
   }
 
-  const result = await shopify.execute('list_orders', {
-    status: query.status || 'open',
-    limit: parseInt(query.limit || '50', 10),
+  const result = await shopify.execute("list_orders", {
+    status: query.status || "open",
+    limit: parseInt(query.limit || "50", 10),
     since_id: query.since_id,
     created_at_min: query.created_at_min,
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to list orders');
+    sendError(res, 502, result.error || "Failed to list orders");
     return;
   }
 
@@ -86,13 +90,17 @@ async function getOrder(ctx: any): Promise<void> {
 
   const shopify = getShopifyConnector();
   if (!shopify) {
-    sendError(res, 401, 'Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.');
+    sendError(
+      res,
+      401,
+      "Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.",
+    );
     return;
   }
 
-  const result = await shopify.execute('get_order', { orderId: params.id });
+  const result = await shopify.execute("get_order", { orderId: params.id });
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to get order');
+    sendError(res, 502, result.error || "Failed to get order");
     return;
   }
 
@@ -108,18 +116,22 @@ async function listProducts(ctx: any): Promise<void> {
 
   const shopify = getShopifyConnector();
   if (!shopify) {
-    sendError(res, 401, 'Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.');
+    sendError(
+      res,
+      401,
+      "Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.",
+    );
     return;
   }
 
-  const result = await shopify.execute('list_products', {
-    limit: parseInt(query.limit || '50', 10),
+  const result = await shopify.execute("list_products", {
+    limit: parseInt(query.limit || "50", 10),
     collection_id: query.collection_id,
     status: query.status,
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to list products');
+    sendError(res, 502, result.error || "Failed to list products");
     return;
   }
 
@@ -135,17 +147,21 @@ async function listCustomers(ctx: any): Promise<void> {
 
   const shopify = getShopifyConnector();
   if (!shopify) {
-    sendError(res, 401, 'Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.');
+    sendError(
+      res,
+      401,
+      "Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.",
+    );
     return;
   }
 
-  const result = await shopify.execute('list_customers', {
-    query: query.query || '',
-    limit: parseInt(query.limit || '50', 10),
+  const result = await shopify.execute("list_customers", {
+    query: query.query || "",
+    limit: parseInt(query.limit || "50", 10),
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to list customers');
+    sendError(res, 502, result.error || "Failed to list customers");
     return;
   }
 
@@ -171,13 +187,17 @@ async function processOrder(ctx: any): Promise<void> {
   const autoApprove = body.autoApprove === true;
 
   if (!orderId) {
-    sendError(res, 400, 'Missing required field: orderId');
+    sendError(res, 400, "Missing required field: orderId");
     return;
   }
 
   const shopify = getShopifyConnector();
   if (!shopify) {
-    sendError(res, 401, 'Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.');
+    sendError(
+      res,
+      401,
+      "Shopify not connected. Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables.",
+    );
     return;
   }
 
@@ -185,24 +205,24 @@ async function processOrder(ctx: any): Promise<void> {
   const policyVersion = DEFAULT_POLICY.version;
 
   // ── Step 1: Fetch the order ───────────────────────────────────────
-  const readResult = await shopify.execute('get_order', { orderId });
+  const readResult = await shopify.execute("get_order", { orderId });
   if (!readResult.success) {
-    sendError(res, 502, readResult.error || 'Failed to fetch order');
+    sendError(res, 502, readResult.error || "Failed to fetch order");
     return;
   }
 
   const order = readResult.data!;
-  const orderNumber = (order.order_number as string) || '';
-  const email = (order.email as string) || '';
-  const totalPrice = (order.total_price as string) || '';
-  const fulfillmentStatus = (order.fulfillment_status as string) || '';
-  const financialStatus = (order.financial_status as string) || '';
+  const orderNumber = (order.order_number as string) || "";
+  const email = (order.email as string) || "";
+  const totalPrice = (order.total_price as string) || "";
+  const fulfillmentStatus = (order.fulfillment_status as string) || "";
+  const financialStatus = (order.financial_status as string) || "";
   const customerName = order.customer
-    ? `${(order.customer as any).first_name || ''} ${(order.customer as any).last_name || ''}`.trim()
-    : '';
+    ? `${(order.customer as any).first_name || ""} ${(order.customer as any).last_name || ""}`.trim()
+    : "";
 
   // Receipt for read operation
-  const readSafety = evaluateAction('shopify', 'get_order', { orderId });
+  const readSafety = evaluateAction("shopify", "get_order", { orderId });
   receiptBuilder.addStep({
     actionId: `get-order-${orderId}`,
     policyVersion,
@@ -218,7 +238,7 @@ async function processOrder(ctx: any): Promise<void> {
   const classification = classifier.classifyDetailed(intentText);
 
   const task = createTask({
-    source: 'shopify' as TaskSource,
+    source: "shopify" as TaskSource,
     title: `Order #${orderNumber || orderId}`,
     body: intentText,
     sourceId: String(orderId),
@@ -238,10 +258,15 @@ async function processOrder(ctx: any): Promise<void> {
 
   // ── Step 3: Evaluate policy ──────────────────────────────────────
   // Determine the connector operation based on intent
-  const operation = classification.intent === 'fulfill' ? 'fulfill_order'
-    : classification.intent === 'refund' ? 'refund'
-    : 'get_order';
-  const policyResult = ruleEngine.evaluate('shopify', operation, { source: 'shopify' });
+  const operation =
+    classification.intent === "fulfill"
+      ? "fulfill_order"
+      : classification.intent === "refund"
+        ? "refund"
+        : "get_order";
+  const policyResult = ruleEngine.evaluate("shopify", operation, {
+    source: "shopify",
+  });
 
   // ── Step 4: Evaluate CORD safety ─────────────────────────────────
   const actionInput = {
@@ -250,15 +275,20 @@ async function processOrder(ctx: any): Promise<void> {
     totalPrice,
     operation,
   };
-  const actionSafety = evaluateAction('shopify', operation, actionInput);
+  const actionSafety = evaluateAction("shopify", operation, actionInput);
 
-  const needsApproval = actionSafety.decision === 'CHALLENGE'
-    || policyResult.autonomy === 'approve';
-  const isBlocked = actionSafety.decision === 'BLOCK'
-    || policyResult.autonomy === 'deny';
+  const needsApproval =
+    actionSafety.decision === "CHALLENGE" ||
+    policyResult.autonomy === "approve";
+  const isBlocked =
+    actionSafety.decision === "BLOCK" || policyResult.autonomy === "deny";
 
   // ── Step 5: Approval gate ────────────────────────────────────────
-  let approvalResult: { needed: boolean; decision?: string; approvalId?: string } = {
+  let approvalResult: {
+    needed: boolean;
+    decision?: string;
+    approvalId?: string;
+  } = {
     needed: needsApproval,
   };
 
@@ -273,9 +303,10 @@ async function processOrder(ctx: any): Promise<void> {
         reasons: actionSafety.reasons,
       },
       blocked: true,
-      reason: policyResult.autonomy === 'deny'
-        ? `Policy denied: ${policyResult.reason}`
-        : `CORD blocked: ${actionSafety.reasons.join(', ')}`,
+      reason:
+        policyResult.autonomy === "deny"
+          ? `Policy denied: ${policyResult.reason}`
+          : `CORD blocked: ${actionSafety.reasons.join(", ")}`,
       receipts: receiptBuilder.finalize(HMAC_KEY),
     });
     return;
@@ -285,8 +316,8 @@ async function processOrder(ctx: any): Promise<void> {
     const approval = requestApproval(
       `${operation}-${orderId}`,
       task.id,
-      policyResult.risk as 'low' | 'medium' | 'high' | 'critical',
-      needsApproval && actionSafety.decision === 'CHALLENGE'
+      policyResult.risk as "low" | "medium" | "high" | "critical",
+      needsApproval && actionSafety.decision === "CHALLENGE"
         ? `CORD challenge (score: ${actionSafety.score})`
         : `Policy requires approval: ${policyResult.reason}`,
       `${operation} for Order #${orderNumber || orderId} (${totalPrice})`,
@@ -294,7 +325,7 @@ async function processOrder(ctx: any): Promise<void> {
 
     approvalResult = {
       needed: true,
-      decision: 'pending',
+      decision: "pending",
       approvalId: approval.id,
     };
 
@@ -308,17 +339,22 @@ async function processOrder(ctx: any): Promise<void> {
         reasons: actionSafety.reasons,
       },
       approval: approvalResult,
-      message: 'Approval required. Decide at POST /api/approvals/:id/decide',
+      message: "Approval required. Decide at POST /api/approvals/:id/decide",
       receipts: receiptBuilder.finalize(HMAC_KEY),
     });
     return;
   }
 
   // ── Step 6: Execute action (auto-approved or explicitly approved) ──
-  let execution: { success: boolean; data?: Record<string, unknown>; error?: string; simulated?: boolean };
+  let execution: {
+    success: boolean;
+    data?: Record<string, unknown>;
+    error?: string;
+    simulated?: boolean;
+  };
 
-  if (classification.intent === 'fulfill') {
-    const fulfillResult = await shopify.execute('fulfill_order', { orderId });
+  if (classification.intent === "fulfill") {
+    const fulfillResult = await shopify.execute("fulfill_order", { orderId });
     execution = {
       success: fulfillResult.success,
       data: fulfillResult.data,
@@ -334,8 +370,8 @@ async function processOrder(ctx: any): Promise<void> {
       input: { orderId },
       output: fulfillResult.data || {},
     });
-  } else if (classification.intent === 'refund') {
-    const refundResult = await shopify.execute('refund', { orderId });
+  } else if (classification.intent === "refund") {
+    const refundResult = await shopify.execute("refund", { orderId });
     execution = {
       success: refundResult.success,
       data: refundResult.data,
@@ -354,7 +390,7 @@ async function processOrder(ctx: any): Promise<void> {
   } else {
     execution = {
       success: true,
-      data: { action: 'classified', intent: classification.intent },
+      data: { action: "classified", intent: classification.intent },
       simulated: true,
     };
   }
@@ -382,9 +418,9 @@ async function processOrder(ctx: any): Promise<void> {
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const shopifyRoutes: Route[] = [
-  pathToRoute('GET', '/api/shopify/orders', listOrders),
-  pathToRoute('GET', '/api/shopify/orders/:id', getOrder),
-  pathToRoute('GET', '/api/shopify/products', listProducts),
-  pathToRoute('GET', '/api/shopify/customers', listCustomers),
-  pathToRoute('POST', '/api/shopify/process', processOrder),
+  pathToRoute("GET", "/api/shopify/orders", listOrders),
+  pathToRoute("GET", "/api/shopify/orders/:id", getOrder),
+  pathToRoute("GET", "/api/shopify/products", listProducts),
+  pathToRoute("GET", "/api/shopify/customers", listCustomers),
+  pathToRoute("POST", "/api/shopify/process", processOrder),
 ];

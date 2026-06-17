@@ -19,21 +19,23 @@ Step arrives → Predictor predicts outcome → CORD scores (with learned weight
 ## Core Modules
 
 ### Predictor
+
 Before each step, predicts the CORD score, expected outcome, and confidence.
 
 ```typescript
-import { Predictor } from '@ai-operations/spark-engine';
+import { Predictor } from "@ai-operations/spark-engine";
 
 const predictor = new Predictor(sparkStore);
-const prediction = predictor.predict(stepId, runId, 'gmail', 'send');
+const prediction = predictor.predict(stepId, runId, "gmail", "send");
 // { predictedScore: 35, predictedOutcome: 'success', confidence: 0.72 }
 ```
 
 ### OutcomeTracker
+
 After execution, measures what actually happened.
 
 ```typescript
-import { OutcomeTracker } from '@ai-operations/spark-engine';
+import { OutcomeTracker } from "@ai-operations/spark-engine";
 
 const tracker = new OutcomeTracker(sparkStore);
 const outcome = tracker.measure(step, runId, wasApproved);
@@ -41,10 +43,11 @@ const outcome = tracker.measure(step, runId, wasApproved);
 ```
 
 ### LearningCore
+
 Compares prediction to reality and adjusts weights.
 
 ```typescript
-import { LearningCore } from '@ai-operations/spark-engine';
+import { LearningCore } from "@ai-operations/spark-engine";
 
 const core = new LearningCore(sparkStore);
 const episode = core.learn(prediction, outcome);
@@ -52,13 +55,14 @@ const episode = core.learn(prediction, outcome);
 ```
 
 ### AdaptiveSafetyGate
+
 Wraps CordSafetyGate with learned weight multipliers.
 
 ```typescript
-import { AdaptiveSafetyGate } from '@ai-operations/spark-engine';
+import { AdaptiveSafetyGate } from "@ai-operations/spark-engine";
 
 const gate = new AdaptiveSafetyGate(cordGate, weightManager);
-const result = gate.evaluateAction('gmail', 'send', input);
+const result = gate.evaluateAction("gmail", "send", input);
 // score adjusted by learned weight, decision may change
 ```
 

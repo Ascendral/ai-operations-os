@@ -6,9 +6,9 @@
  * layer to call before executing any connector operation.
  */
 
-import type { PolicyConfig } from '@ai-operations/shared-types';
-import { RuleEngine } from './rules';
-import type { EvaluationContext } from './rules';
+import type { PolicyConfig } from "@ai-operations/shared-types";
+import { RuleEngine } from "./rules";
+import type { EvaluationContext } from "./rules";
 
 /** Result of an autonomy check. */
 export interface AutonomyDecision {
@@ -97,21 +97,21 @@ export class AutonomyManager {
     const result = this.engine.evaluate(connector, operation, context);
 
     switch (result.autonomy) {
-      case 'auto':
+      case "auto":
         return {
           allowed: true,
           requiresApproval: false,
           reason: result.reason,
         };
 
-      case 'approve':
+      case "approve":
         return {
           allowed: true,
           requiresApproval: true,
           reason: result.reason,
         };
 
-      case 'deny':
+      case "deny":
         return {
           allowed: false,
           requiresApproval: false,

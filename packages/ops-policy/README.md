@@ -13,11 +13,11 @@ npm install @ai-operations/ops-policy
 ## Quick Start
 
 ```ts
-import { AutonomyManager, BudgetTracker } from '@ai-operations/ops-policy';
-import { DEFAULT_POLICY } from '@ai-operations/shared-types';
+import { AutonomyManager, BudgetTracker } from "@ai-operations/ops-policy";
+import { DEFAULT_POLICY } from "@ai-operations/shared-types";
 
 const manager = new AutonomyManager(DEFAULT_POLICY);
-const decision = manager.canExecute('gmail', 'send', { source: 'email' });
+const decision = manager.canExecute("gmail", "send", { source: "email" });
 
 if (decision.allowed && !decision.requiresApproval) {
   // Safe to execute autonomously

@@ -8,11 +8,11 @@
  *   - social.digest: Generate social analytics digest
  */
 
-import type { QueueJob } from '../queue';
+import type { QueueJob } from "../queue";
 
 export interface SocialPostData {
   taskId: string;
-  platform: 'x' | 'linkedin' | 'instagram';
+  platform: "x" | "linkedin" | "instagram";
   content: string;
   scheduledAt?: string;
   mediaUrls?: string[];
@@ -20,7 +20,7 @@ export interface SocialPostData {
 
 export interface SocialReplyData {
   taskId: string;
-  platform: 'x' | 'linkedin' | 'instagram';
+  platform: "x" | "linkedin" | "instagram";
   postId: string;
   authorHandle: string;
   originalContent: string;
@@ -30,16 +30,20 @@ export interface SocialReplyData {
 /**
  * Handle social media post scheduling.
  */
-export async function handleSocialPost(job: QueueJob<SocialPostData>): Promise<unknown> {
+export async function handleSocialPost(
+  job: QueueJob<SocialPostData>,
+): Promise<unknown> {
   const { taskId, platform, content, scheduledAt } = job.data;
-  console.log(`[social.post] Scheduling on ${platform}: "${content.slice(0, 50)}..." (task: ${taskId})`);
+  console.log(
+    `[social.post] Scheduling on ${platform}: "${content.slice(0, 50)}..." (task: ${taskId})`,
+  );
 
   // Queues post for approval before publishing via platform connector
   return {
     simulation: !process.env.X_BEARER_TOKEN,
     taskId,
     platform,
-    status: scheduledAt ? 'scheduled' : 'queued_for_approval',
+    status: scheduledAt ? "scheduled" : "queued_for_approval",
     scheduledAt: scheduledAt || new Date().toISOString(),
     requiresApproval: true,
   };
@@ -48,9 +52,13 @@ export async function handleSocialPost(job: QueueJob<SocialPostData>): Promise<u
 /**
  * Handle social media reply.
  */
-export async function handleSocialReply(job: QueueJob<SocialReplyData>): Promise<unknown> {
+export async function handleSocialReply(
+  job: QueueJob<SocialReplyData>,
+): Promise<unknown> {
   const { taskId, platform, postId, authorHandle, draftReply } = job.data;
-  console.log(`[social.reply] Replying to @${authorHandle} on ${platform} (task: ${taskId})`);
+  console.log(
+    `[social.reply] Replying to @${authorHandle} on ${platform} (task: ${taskId})`,
+  );
 
   // Uses LLM draft when OPS_LLM_PROVIDER is set, otherwise uses provided draft
   return {
@@ -58,8 +66,10 @@ export async function handleSocialReply(job: QueueJob<SocialReplyData>): Promise
     taskId,
     platform,
     postId,
-    draftReply: draftReply || `Thanks for reaching out, @${authorHandle}. Let me look into this and get back to you.`,
-    status: 'queued_for_approval',
+    draftReply:
+      draftReply ||
+      `Thanks for reaching out, @${authorHandle}. Let me look into this and get back to you.`,
+    status: "queued_for_approval",
     requiresApproval: true,
   };
 }

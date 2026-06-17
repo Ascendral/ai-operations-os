@@ -9,11 +9,15 @@
  * - Apply passive decay over time
  */
 
-import { randomUUID } from 'node:crypto';
-import type { SparkStore } from '@ai-operations/ops-storage';
-import type { MemoryToken, MemoryEdge, Essence } from '@ai-operations/shared-types';
-import { EssenceExtractor } from './essence-extractor';
-import { MemoryTokenManager } from './memory-token-manager';
+import { randomUUID } from "node:crypto";
+import type { SparkStore } from "@ai-operations/ops-storage";
+import type {
+  MemoryToken,
+  MemoryEdge,
+  Essence,
+} from "@ai-operations/shared-types";
+import { EssenceExtractor } from "./essence-extractor";
+import { MemoryTokenManager } from "./memory-token-manager";
 import {
   REINFORCE_RATE,
   DECAY_RATE,
@@ -26,8 +30,8 @@ import {
   MAX_CONNECTIONS_PER_PASS,
   ARCHIVE_STRENGTH_THRESHOLD,
   EMOTIONAL_BOOST_MULTIPLIER,
-} from './spiral-constants';
-import type { EmotionalStateEngine } from './emotional-state';
+} from "./spiral-constants";
+import type { EmotionalStateEngine } from "./emotional-state";
 
 export interface SpiralPassResult {
   tokensReinforced: number;
@@ -51,7 +55,12 @@ export class SpiralLoop {
   private readonly extractor: EssenceExtractor;
   private emotionalState: EmotionalStateEngine | null;
 
-  constructor(store: SparkStore, tokenManager: MemoryTokenManager, extractor: EssenceExtractor, emotionalState?: EmotionalStateEngine) {
+  constructor(
+    store: SparkStore,
+    tokenManager: MemoryTokenManager,
+    extractor: EssenceExtractor,
+    emotionalState?: EmotionalStateEngine,
+  ) {
     this.store = store;
     this.tokenManager = tokenManager;
     this.extractor = extractor;
@@ -85,10 +94,16 @@ export class SpiralLoop {
     for (const related of relatedTokens) {
       if (related.id === newToken.id) continue;
 
-      const similarity = this.computeTopicSimilarity(newToken.essence, related.essence);
+      const similarity = this.computeTopicSimilarity(
+        newToken.essence,
+        related.essence,
+      );
       if (similarity < MIN_SIMILARITY_THRESHOLD) continue;
 
-      const contradiction = this.detectContradiction(newToken.essence, related.essence);
+      const contradiction = this.detectContradiction(
+        newToken.essence,
+        related.essence,
+      );
 
       if (contradiction > 0.5) {
         // Weaken contradicted token
@@ -105,10 +120,21 @@ export class SpiralLoop {
       if (existingEdges.length > 0) {
         // Reinforce existing edge
         const edge = existingEdges[0];
-        const newWeight = Math.min(1.0, edge.weight + EDGE_REINFORCE_RATE * (1 - edge.weight));
-        this.store.reinforceEdge(edge.id, newWeight, edge.reinforceCount + 1, now);
+        const newWeight = Math.min(
+          1.0,
+          edge.weight + EDGE_REINFORCE_RATE * (1 - edge.weight),
+        );
+        this.store.reinforceEdge(
+          edge.id,
+          newWeight,
+          edge.reinforceCount + 1,
+          now,
+        );
         result.edgesReinforced++;
-      } else if (edgesCreatedThisPass < MAX_CONNECTIONS_PER_PASS && similarity >= MIN_SIMILARITY_THRESHOLD) {
+      } else if (
+        edgesCreatedThisPass < MAX_CONNECTIONS_PER_PASS &&
+        similarity >= MIN_SIMILARITY_THRESHOLD
+      ) {
         // Create new edge
         const edge: MemoryEdge = {
           id: randomUUID(),
@@ -146,13 +172,19 @@ export class SpiralLoop {
 
     const now = new Date();
     const nowIso = now.toISOString();
-    const activeTokens = this.store.listMemoryTokens({ excludeArchived: true, limit: 1000 });
+    const activeTokens = this.store.listMemoryTokens({
+      excludeArchived: true,
+      limit: 1000,
+    });
 
     // ── Token decay (exponential) ──
     for (const token of activeTokens) {
-      const daysSinceSpiral = (now.getTime() - new Date(token.lastSpiralAt).getTime()) / (24 * 60 * 60 * 1000);
+      const daysSinceSpiral =
+        (now.getTime() - new Date(token.lastSpiralAt).getTime()) /
+        (24 * 60 * 60 * 1000);
 
-      if (daysSinceSpiral > 0.01) { // More than ~15 minutes
+      if (daysSinceSpiral > 0.01) {
+        // More than ~15 minutes
         // Exponential decay: strength *= exp(-TOKEN_DECAY_RATE * days)
         const decayFactor = Math.exp(-TOKEN_DECAY_RATE * daysSinceSpiral);
         const newStrength = Math.max(0, token.strength * decayFactor);
@@ -161,7 +193,12 @@ export class SpiralLoop {
           this.store.archiveMemoryToken(token.id, nowIso);
           result.tokensArchived++;
         } else {
-          this.store.updateMemoryTokenStrength(token.id, newStrength, token.spiralCount, nowIso);
+          this.store.updateMemoryTokenStrength(
+            token.id,
+            newStrength,
+            token.spiralCount,
+            nowIso,
+          );
           result.tokensDecayed++;
         }
       }
@@ -170,14 +207,22 @@ export class SpiralLoop {
     // ── Edge decay (exponential) + pruning ──
     const allEdges = this.store.listMemoryEdges({ limit: 5000 });
     for (const edge of allEdges) {
-      const daysSinceReinforced = (now.getTime() - new Date(edge.lastReinforcedAt).getTime()) / (24 * 60 * 60 * 1000);
+      const daysSinceReinforced =
+        (now.getTime() - new Date(edge.lastReinforcedAt).getTime()) /
+        (24 * 60 * 60 * 1000);
       if (daysSinceReinforced > 0.01) {
-        const decayedWeight = edge.weight * Math.exp(-EDGE_DECAY_RATE * daysSinceReinforced);
+        const decayedWeight =
+          edge.weight * Math.exp(-EDGE_DECAY_RATE * daysSinceReinforced);
         if (decayedWeight < EDGE_PRUNE_THRESHOLD) {
           this.store.deleteMemoryEdge(edge.id);
           result.edgesPruned++;
         } else {
-          this.store.reinforceEdge(edge.id, decayedWeight, edge.reinforceCount, edge.lastReinforcedAt);
+          this.store.reinforceEdge(
+            edge.id,
+            decayedWeight,
+            edge.reinforceCount,
+            edge.lastReinforcedAt,
+          );
           result.edgesDecayed++;
         }
       }
@@ -251,8 +296,10 @@ export class SpiralLoop {
     const topicOverlap = this.computeTopicSimilarity(a, b);
     if (topicOverlap < MIN_SIMILARITY_THRESHOLD) return 0;
 
-    const sentimentA = a.sentiment === 'positive' ? 1 : a.sentiment === 'negative' ? -1 : 0;
-    const sentimentB = b.sentiment === 'positive' ? 1 : b.sentiment === 'negative' ? -1 : 0;
+    const sentimentA =
+      a.sentiment === "positive" ? 1 : a.sentiment === "negative" ? -1 : 0;
+    const sentimentB =
+      b.sentiment === "positive" ? 1 : b.sentiment === "negative" ? -1 : 0;
 
     // Strong contradiction: same topics, opposite sentiment
     if (sentimentA !== 0 && sentimentB !== 0 && sentimentA !== sentimentB) {
@@ -262,7 +309,11 @@ export class SpiralLoop {
     return 0;
   }
 
-  private reinforceToken(token: MemoryToken, matchScore: number, now: string): void {
+  private reinforceToken(
+    token: MemoryToken,
+    matchScore: number,
+    now: string,
+  ): void {
     // strength += REINFORCE_RATE * (1 - strength) * matchScore
     let boost = REINFORCE_RATE * (1 - token.strength) * matchScore;
 
@@ -272,21 +323,40 @@ export class SpiralLoop {
     }
 
     const newStrength = Math.min(1.0, token.strength + boost);
-    this.store.updateMemoryTokenStrength(token.id, newStrength, token.spiralCount + 1, now);
+    this.store.updateMemoryTokenStrength(
+      token.id,
+      newStrength,
+      token.spiralCount + 1,
+      now,
+    );
   }
 
-  private weakenToken(token: MemoryToken, contradictionScore: number, now: string): void {
+  private weakenToken(
+    token: MemoryToken,
+    contradictionScore: number,
+    now: string,
+  ): void {
     // strength *= (1 - DECAY_RATE * contradictionScore)
-    const newStrength = Math.max(0, token.strength * (1 - DECAY_RATE * contradictionScore));
-    this.store.updateMemoryTokenStrength(token.id, newStrength, token.spiralCount + 1, now);
+    const newStrength = Math.max(
+      0,
+      token.strength * (1 - DECAY_RATE * contradictionScore),
+    );
+    this.store.updateMemoryTokenStrength(
+      token.id,
+      newStrength,
+      token.spiralCount + 1,
+      now,
+    );
   }
 
   private inferEdgeType(a: MemoryToken, b: MemoryToken): string {
     // Infer edge type from token types
-    if (a.type === b.type) return 'same-type';
-    if (a.type === 'episode' && b.type === 'insight') return 'episode-to-insight';
-    if (a.type === 'conversation' && b.type === 'episode') return 'conversation-to-episode';
-    if (a.type === 'belief' && b.type === 'episode') return 'belief-to-episode';
-    return 'related';
+    if (a.type === b.type) return "same-type";
+    if (a.type === "episode" && b.type === "insight")
+      return "episode-to-insight";
+    if (a.type === "conversation" && b.type === "episode")
+      return "conversation-to-episode";
+    if (a.type === "belief" && b.type === "episode") return "belief-to-episode";
+    return "related";
   }
 }

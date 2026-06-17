@@ -6,8 +6,11 @@
  * factory functions for building default weight entries per CORD category.
  */
 
-import type { SparkCategory, SparkWeightEntry } from '@ai-operations/shared-types';
-import { SENTINEL_CATEGORIES } from '@ai-operations/shared-types';
+import type {
+  SparkCategory,
+  SparkWeightEntry,
+} from "@ai-operations/shared-types";
+import { SENTINEL_CATEGORIES } from "@ai-operations/shared-types";
 
 // ── Learning Tuning Parameters ────────────────────────────────────
 
@@ -15,7 +18,7 @@ import { SENTINEL_CATEGORIES } from '@ai-operations/shared-types';
 export const EMA_ALPHA = 0.1;
 
 /** Maximum +-30% deviation from base weight. */
-export const MAX_DEVIATION_PERCENT = 0.30;
+export const MAX_DEVIATION_PERCENT = 0.3;
 
 /** No weight changes until this many episodes have been observed. */
 export const MIN_EPISODES_BEFORE_LEARNING = 3;
@@ -27,13 +30,13 @@ export const DEFAULT_BASE_WEIGHT = 1.0;
 
 /** All seven SPARK/CORD tool categories. */
 export const ALL_CATEGORIES: SparkCategory[] = [
-  'communication',
-  'publication',
-  'destructive',
-  'scheduling',
-  'financial',
-  'readonly',
-  'general',
+  "communication",
+  "publication",
+  "destructive",
+  "scheduling",
+  "financial",
+  "readonly",
+  "general",
 ];
 
 // ── Default Weight Builders ───────────────────────────────────────
@@ -51,13 +54,17 @@ export const ALL_CATEGORIES: SparkCategory[] = [
  */
 export function buildDefaultWeight(category: SparkCategory): SparkWeightEntry {
   const baseWeight = DEFAULT_BASE_WEIGHT;
-  const isSentinel = (SENTINEL_CATEGORIES as readonly string[]).includes(category);
+  const isSentinel = (SENTINEL_CATEGORIES as readonly string[]).includes(
+    category,
+  );
 
   return {
     category,
     currentWeight: baseWeight,
     baseWeight,
-    lowerBound: isSentinel ? baseWeight : baseWeight * (1 - MAX_DEVIATION_PERCENT),
+    lowerBound: isSentinel
+      ? baseWeight
+      : baseWeight * (1 - MAX_DEVIATION_PERCENT),
     upperBound: baseWeight * (1 + MAX_DEVIATION_PERCENT),
     episodeCount: 0,
     lastAdjustedAt: new Date().toISOString(),

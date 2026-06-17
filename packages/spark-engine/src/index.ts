@@ -18,41 +18,39 @@
  */
 
 // ── Core Classes ──────────────────────────────────────────────────
-export { Predictor, operationToCategory } from './predictor';
-export { OutcomeTracker } from './outcome-tracker';
-export { LearningCore } from './learning-core';
-export { WeightManager } from './weight-manager';
-export {
-  AdaptiveSafetyGate,
-} from './adaptive-safety-gate';
+export { Predictor, operationToCategory } from "./predictor";
+export { OutcomeTracker } from "./outcome-tracker";
+export { LearningCore } from "./learning-core";
+export { WeightManager } from "./weight-manager";
+export { AdaptiveSafetyGate } from "./adaptive-safety-gate";
 export type {
   AdaptiveSafetyResult,
   SafetyResult,
   CordSafetyGateInterface,
-} from './adaptive-safety-gate';
+} from "./adaptive-safety-gate";
 
 // ── Memory & Awareness ──────────────────────────────────────────
-export { MemoryCore } from './memory-core';
-export { AwarenessCore } from './awareness-core';
-export { ReasoningCore } from './reasoning-core';
-export { SparkOrchestrator } from './orchestrator';
+export { MemoryCore } from "./memory-core";
+export { AwarenessCore } from "./awareness-core";
+export { ReasoningCore } from "./reasoning-core";
+export { SparkOrchestrator } from "./orchestrator";
 
 // ── Emotional State ─────────────────────────────────────────────
-export { EmotionalStateEngine } from './emotional-state';
+export { EmotionalStateEngine } from "./emotional-state";
 
 // ── Self-Reflection ────────────────────────────────────────────
-export { SelfReflectionEngine } from './self-reflection';
+export { SelfReflectionEngine } from "./self-reflection";
 
 // ── Personality ────────────────────────────────────────────────
-export { PersonalityEngine } from './personality-engine';
+export { PersonalityEngine } from "./personality-engine";
 
 // ── Spiral Memory ───────────────────────────────────────────────
-export { EssenceExtractor } from './essence-extractor';
-export { MemoryTokenManager } from './memory-token-manager';
-export { SpiralLoop } from './spiral-loop';
-export type { SpiralPassResult, SpiralMaintenanceResult } from './spiral-loop';
-export { ContextReconstructor } from './context-reconstructor';
-export { FeedbackIntegrator } from './feedback-integrator';
+export { EssenceExtractor } from "./essence-extractor";
+export { MemoryTokenManager } from "./memory-token-manager";
+export { SpiralLoop } from "./spiral-loop";
+export type { SpiralPassResult, SpiralMaintenanceResult } from "./spiral-loop";
+export { ContextReconstructor } from "./context-reconstructor";
+export { FeedbackIntegrator } from "./feedback-integrator";
 
 // ── Constants ─────────────────────────────────────────────────────
 export {
@@ -63,7 +61,7 @@ export {
   ALL_CATEGORIES,
   buildDefaultWeight,
   buildAllDefaultWeights,
-} from './constants';
+} from "./constants";
 
 export {
   REINFORCE_RATE,
@@ -73,4 +71,4 @@ export {
   ARCHIVE_STRENGTH_THRESHOLD,
   MAX_CONTEXT_TOKENS,
   MAX_GRAPH_DEPTH,
-} from './spiral-constants';
+} from "./spiral-constants";

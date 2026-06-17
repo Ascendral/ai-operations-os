@@ -23,10 +23,10 @@ import type {
   Insight,
   AwarenessReport,
   LearningEpisode,
-} from '@ai-operations/shared-types';
-import { SENTINEL_CATEGORIES } from '@ai-operations/shared-types';
-import type { SparkStore } from '@ai-operations/ops-storage';
-import { ALL_CATEGORIES, MAX_DEVIATION_PERCENT } from './constants';
+} from "@ai-operations/shared-types";
+import { SENTINEL_CATEGORIES } from "@ai-operations/shared-types";
+import type { SparkStore } from "@ai-operations/ops-storage";
+import { ALL_CATEGORIES, MAX_DEVIATION_PERCENT } from "./constants";
 
 // ── AwarenessCore ────────────────────────────────────────────────────
 
@@ -151,31 +151,32 @@ export class AwarenessCore {
         (sum, b) => sum + b.calibration * b.evidence.episodeCount,
         0,
       );
-      overallConfidence = Math.round((weightedSum / totalEpisodes) * 10000) / 10000;
+      overallConfidence =
+        Math.round((weightedSum / totalEpisodes) * 10000) / 10000;
     }
 
     const categoriesLearning = beliefValues
-      .filter(b => b.trustLevel === 'building')
-      .map(b => b.category);
+      .filter((b) => b.trustLevel === "building")
+      .map((b) => b.category);
     const categoriesStable = beliefValues
-      .filter(b => b.trustLevel === 'reliable')
-      .map(b => b.category);
+      .filter((b) => b.trustLevel === "reliable")
+      .map((b) => b.category);
     const categoriesVolatile = beliefValues
-      .filter(b => b.trustLevel === 'volatile')
-      .map(b => b.category);
+      .filter((b) => b.trustLevel === "volatile")
+      .map((b) => b.category);
 
     // Alerts
     const oscillating = beliefValues
-      .filter(b => b.evidence.recentTrend === 'oscillating')
-      .map(b => b.category);
+      .filter((b) => b.evidence.recentTrend === "oscillating")
+      .map((b) => b.category);
 
     const lowConfidence = beliefValues
       .filter(
-        b =>
+        (b) =>
           b.calibration < 0.4 &&
           b.evidence.episodeCount >= AwarenessCore.BUILDING_THRESHOLD,
       )
-      .map(b => b.category);
+      .map((b) => b.category);
 
     const nearingBounds: SparkCategory[] = [];
     for (const category of ALL_CATEGORIES) {
@@ -248,22 +249,22 @@ export class AwarenessCore {
     stability: number,
   ): TrustLevel {
     if (episodeCount < AwarenessCore.BUILDING_THRESHOLD) {
-      return 'insufficient';
+      return "insufficient";
     }
 
-    if (stability < (1.0 - AwarenessCore.VOLATILE_THRESHOLD)) {
-      return 'volatile';
+    if (stability < 1.0 - AwarenessCore.VOLATILE_THRESHOLD) {
+      return "volatile";
     }
 
     if (
       episodeCount >= AwarenessCore.RELIABLE_THRESHOLD &&
       accuracy >= AwarenessCore.RELIABLE_ACCURACY &&
-      stability >= (1.0 - AwarenessCore.STABILITY_THRESHOLD)
+      stability >= 1.0 - AwarenessCore.STABILITY_THRESHOLD
     ) {
-      return 'reliable';
+      return "reliable";
     }
 
-    return 'building';
+    return "building";
   }
 
   /**
@@ -271,10 +272,10 @@ export class AwarenessCore {
    * Uses variance of magnitudes normalized by MAX_DEVIATION_PERCENT.
    */
   private computeStability(episodes: LearningEpisode[]): number {
-    const directed = episodes.filter(e => e.adjustmentDirection !== 'none');
+    const directed = episodes.filter((e) => e.adjustmentDirection !== "none");
     if (directed.length === 0) return 1.0;
 
-    const magnitudes = directed.map(e => e.adjustmentMagnitude);
+    const magnitudes = directed.map((e) => e.adjustmentMagnitude);
     const mean = magnitudes.reduce((s, m) => s + m, 0) / magnitudes.length;
     const variance =
       magnitudes.reduce((s, m) => s + (m - mean) ** 2, 0) / magnitudes.length;
@@ -294,7 +295,10 @@ export class AwarenessCore {
   private computeCalibration(episodeCount: number, accuracy: number): number {
     if (episodeCount === 0) return 0;
 
-    const expectedConfidence = Math.min(0.95, episodeCount / (episodeCount + 10));
+    const expectedConfidence = Math.min(
+      0.95,
+      episodeCount / (episodeCount + 10),
+    );
     const calibration = 1.0 - Math.abs(expectedConfidence - accuracy);
 
     return Math.round(Math.max(0, Math.min(1.0, calibration)) * 10000) / 10000;
@@ -306,7 +310,7 @@ export class AwarenessCore {
   private computeAccuracy(episodes: LearningEpisode[]): number {
     if (episodes.length === 0) return 0;
 
-    const correct = episodes.filter(e => !e.outcomeMismatch).length;
+    const correct = episodes.filter((e) => !e.outcomeMismatch).length;
     return correct / episodes.length;
   }
 
@@ -315,38 +319,45 @@ export class AwarenessCore {
    */
   private detectTrend(episodes: LearningEpisode[]): TrendDirection {
     const recent = episodes.slice(0, AwarenessCore.TREND_WINDOW);
-    const directed = recent.filter(e => e.adjustmentDirection !== 'none');
+    const directed = recent.filter((e) => e.adjustmentDirection !== "none");
 
-    if (directed.length < 3) return 'stable';
+    if (directed.length < 3) return "stable";
 
     // Count direction changes
     let directionChanges = 0;
     for (let i = 1; i < directed.length; i++) {
-      if (directed[i].adjustmentDirection !== directed[i - 1].adjustmentDirection) {
+      if (
+        directed[i].adjustmentDirection !== directed[i - 1].adjustmentDirection
+      ) {
         directionChanges++;
       }
     }
 
     const changeRatio = directionChanges / (directed.length - 1);
-    if (changeRatio > 0.5) return 'oscillating';
+    if (changeRatio > 0.5) return "oscillating";
 
-    const increases = directed.filter(e => e.adjustmentDirection === 'increase').length;
-    const decreases = directed.filter(e => e.adjustmentDirection === 'decrease').length;
+    const increases = directed.filter(
+      (e) => e.adjustmentDirection === "increase",
+    ).length;
+    const decreases = directed.filter(
+      (e) => e.adjustmentDirection === "decrease",
+    ).length;
 
-    if (increases / directed.length >= 0.6) return 'degrading';
-    if (decreases / directed.length >= 0.6) return 'improving';
+    if (increases / directed.length >= 0.6) return "degrading";
+    if (decreases / directed.length >= 0.6) return "improving";
 
-    return 'stable';
+    return "stable";
   }
 
   /**
    * Detect the current streak from most recent episodes.
    */
-  private detectStreak(
-    episodes: LearningEpisode[],
-  ): { direction: 'up' | 'down' | 'none'; length: number } {
-    const directed = episodes.filter(e => e.adjustmentDirection !== 'none');
-    if (directed.length < 2) return { direction: 'none', length: 0 };
+  private detectStreak(episodes: LearningEpisode[]): {
+    direction: "up" | "down" | "none";
+    length: number;
+  } {
+    const directed = episodes.filter((e) => e.adjustmentDirection !== "none");
+    if (directed.length < 2) return { direction: "none", length: 0 };
 
     const firstDir = directed[0].adjustmentDirection;
     let streakLength = 1;
@@ -359,10 +370,10 @@ export class AwarenessCore {
       }
     }
 
-    if (streakLength < 2) return { direction: 'none', length: 0 };
+    if (streakLength < 2) return { direction: "none", length: 0 };
 
     return {
-      direction: firstDir === 'increase' ? 'up' : 'down',
+      direction: firstDir === "increase" ? "up" : "down",
       length: streakLength,
     };
   }
@@ -378,33 +389,35 @@ export class AwarenessCore {
     episodeCount: number,
     _stability: number,
     trend: TrendDirection,
-    streak: { direction: 'up' | 'down' | 'none'; length: number },
+    streak: { direction: "up" | "down" | "none"; length: number },
   ): string {
-    const isSentinel = (SENTINEL_CATEGORIES as readonly string[]).includes(category);
+    const isSentinel = (SENTINEL_CATEGORIES as readonly string[]).includes(
+      category,
+    );
     let narrative: string;
 
     switch (trustLevel) {
-      case 'insufficient':
-        narrative = `${category} has insufficient data — only ${episodeCount} episode${episodeCount !== 1 ? 's' : ''}. Need at least ${AwarenessCore.BUILDING_THRESHOLD} before learning begins.`;
+      case "insufficient":
+        narrative = `${category} has insufficient data — only ${episodeCount} episode${episodeCount !== 1 ? "s" : ""}. Need at least ${AwarenessCore.BUILDING_THRESHOLD} before learning begins.`;
         break;
 
-      case 'reliable':
-        narrative = `${category} is well-calibrated — ${(accuracy * 100).toFixed(0)}% accuracy over ${episodeCount} episodes with ${trend === 'stable' ? 'stable' : trend} weights.`;
+      case "reliable":
+        narrative = `${category} is well-calibrated — ${(accuracy * 100).toFixed(0)}% accuracy over ${episodeCount} episodes with ${trend === "stable" ? "stable" : trend} weights.`;
         break;
 
-      case 'volatile':
+      case "volatile":
         narrative = `${category} is volatile — weight adjustments show high variance. ${
-          trend === 'oscillating'
-            ? 'Oscillating signals suggest environmental instability.'
-            : 'Inconsistent outcomes suggest unpredictable conditions.'
+          trend === "oscillating"
+            ? "Oscillating signals suggest environmental instability."
+            : "Inconsistent outcomes suggest unpredictable conditions."
         }`;
         break;
 
-      case 'building': {
+      case "building": {
         narrative = `${category} is building trust — ${episodeCount} episodes, ${(accuracy * 100).toFixed(0)}% accuracy.`;
-        if (streak.direction === 'up') {
+        if (streak.direction === "up") {
           narrative += ` Trending more cautious (${streak.length} consecutive increases).`;
-        } else if (streak.direction === 'down') {
+        } else if (streak.direction === "down") {
           narrative += ` Trending more permissive (${streak.length} consecutive decreases).`;
         }
         break;
@@ -412,7 +425,8 @@ export class AwarenessCore {
     }
 
     if (isSentinel) {
-      narrative += ' SENTINEL protection ensures it never drops below base weight.';
+      narrative +=
+        " SENTINEL protection ensures it never drops below base weight.";
     }
 
     return narrative;

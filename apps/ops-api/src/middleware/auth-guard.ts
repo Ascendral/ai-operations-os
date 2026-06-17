@@ -6,25 +6,23 @@
  */
 
 /** Routes that don't require authentication. */
-const AUTH_EXEMPT_PATHS = new Set([
-  '/api/auth/register',
-  '/api/auth/login',
-]);
+const AUTH_EXEMPT_PATHS = new Set(["/api/auth/register", "/api/auth/login"]);
 
 /** Check if a path is exempt from authentication. */
 export function isAuthExempt(path: string): boolean {
   if (AUTH_EXEMPT_PATHS.has(path)) return true;
   // Webhooks are called by external services
-  if (path.startsWith('/api/webhooks/')) return true;
+  if (path.startsWith("/api/webhooks/")) return true;
   // OAuth callbacks are part of the auth flow
-  if (path === '/api/oauth/google/callback') return true;
+  if (path === "/api/oauth/google/callback") return true;
   return false;
 }
 
 /** Check if a route requires elevated roles (admin or operator). */
 export function requiresElevatedRole(method: string, path: string): boolean {
-  if (method === 'DELETE') return true;
-  if (method === 'POST' && /^\/api\/approvals\/[^/]+\/decide$/.test(path)) return true;
+  if (method === "DELETE") return true;
+  if (method === "POST" && /^\/api\/approvals\/[^/]+\/decide$/.test(path))
+    return true;
   return false;
 }
 

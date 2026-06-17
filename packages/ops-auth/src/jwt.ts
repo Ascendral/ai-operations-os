@@ -7,17 +7,17 @@
  * Token format: header.payload.signature (base64url encoded)
  */
 
-import * as crypto from 'node:crypto';
+import * as crypto from "node:crypto";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function base64urlEncode(data: string | Buffer): string {
-  const buf = typeof data === 'string' ? Buffer.from(data, 'utf-8') : data;
-  return buf.toString('base64url');
+  const buf = typeof data === "string" ? Buffer.from(data, "utf-8") : data;
+  return buf.toString("base64url");
 }
 
 function base64urlDecode(str: string): string {
-  return Buffer.from(str, 'base64url').toString('utf-8');
+  return Buffer.from(str, "base64url").toString("utf-8");
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -38,8 +38,8 @@ export interface JwtPayload {
 }
 
 export interface JwtHeader {
-  alg: 'HS256';
-  typ: 'JWT';
+  alg: "HS256";
+  typ: "JWT";
 }
 
 // ── Sign / Verify ──────────────────────────────────────────────────────────
@@ -53,13 +53,13 @@ export interface JwtHeader {
  * @returns Signed JWT string (header.payload.signature)
  */
 export function signToken(
-  payload: Omit<JwtPayload, 'iat' | 'exp'> & { sub: string },
+  payload: Omit<JwtPayload, "iat" | "exp"> & { sub: string },
   secret: string,
   expiresInSec: number = 86_400,
 ): string {
   const now = Math.floor(Date.now() / 1000);
 
-  const header: JwtHeader = { alg: 'HS256', typ: 'JWT' };
+  const header: JwtHeader = { alg: "HS256", typ: "JWT" };
 
   const fullPayload = {
     ...payload,
@@ -72,9 +72,9 @@ export function signToken(
 
   const signingInput = `${headerEncoded}.${payloadEncoded}`;
   const signature = crypto
-    .createHmac('sha256', secret)
+    .createHmac("sha256", secret)
     .update(signingInput)
-    .digest('base64url');
+    .digest("base64url");
 
   return `${signingInput}.${signature}`;
 }
@@ -88,9 +88,9 @@ export function signToken(
  * @throws Error if token is invalid, expired, or signature doesn't match
  */
 export function verifyToken(token: string, secret: string): JwtPayload {
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3) {
-    throw new Error('Invalid JWT: expected 3 parts');
+    throw new Error("Invalid JWT: expected 3 parts");
   }
 
   const [headerEncoded, payloadEncoded, signatureProvided] = parts;
@@ -98,21 +98,23 @@ export function verifyToken(token: string, secret: string): JwtPayload {
   // Verify signature
   const signingInput = `${headerEncoded}.${payloadEncoded}`;
   const expectedSignature = crypto
-    .createHmac('sha256', secret)
+    .createHmac("sha256", secret)
     .update(signingInput)
-    .digest('base64url');
+    .digest("base64url");
 
-  if (!crypto.timingSafeEqual(
-    Buffer.from(signatureProvided, 'base64url'),
-    Buffer.from(expectedSignature, 'base64url'),
-  )) {
-    throw new Error('Invalid JWT: signature mismatch');
+  if (
+    !crypto.timingSafeEqual(
+      Buffer.from(signatureProvided, "base64url"),
+      Buffer.from(expectedSignature, "base64url"),
+    )
+  ) {
+    throw new Error("Invalid JWT: signature mismatch");
   }
 
   // Decode header
   const header = JSON.parse(base64urlDecode(headerEncoded)) as JwtHeader;
-  if (header.alg !== 'HS256' || header.typ !== 'JWT') {
-    throw new Error('Invalid JWT: unsupported algorithm or type');
+  if (header.alg !== "HS256" || header.typ !== "JWT") {
+    throw new Error("Invalid JWT: unsupported algorithm or type");
   }
 
   // Decode payload
@@ -121,7 +123,7 @@ export function verifyToken(token: string, secret: string): JwtPayload {
   // Check expiration
   const now = Math.floor(Date.now() / 1000);
   if (payload.exp && payload.exp < now) {
-    throw new Error('Invalid JWT: token expired');
+    throw new Error("Invalid JWT: token expired");
   }
 
   return payload;
@@ -133,7 +135,7 @@ export function verifyToken(token: string, secret: string): JwtPayload {
  */
 export function decodeToken(token: string): JwtPayload | null {
   try {
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) return null;
     return JSON.parse(base64urlDecode(parts[1])) as JwtPayload;
   } catch {

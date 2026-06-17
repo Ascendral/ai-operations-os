@@ -5,8 +5,8 @@
  * This store handles CRUD — the encryption/decryption is done at the API layer.
  */
 
-import { randomUUID } from 'node:crypto';
-import type BetterSqlite3 from 'better-sqlite3';
+import { randomUUID } from "node:crypto";
+import type BetterSqlite3 from "better-sqlite3";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,7 +53,9 @@ export class CredentialStore {
 
     if (existing) {
       this.db
-        .prepare('UPDATE credentials_vault SET encrypted_value = ?, updated_at = ? WHERE id = ?')
+        .prepare(
+          "UPDATE credentials_vault SET encrypted_value = ?, updated_at = ? WHERE id = ?",
+        )
         .run(encryptedValue, now, existing.id);
       return this.get(existing.id)!;
     }
@@ -80,7 +82,7 @@ export class CredentialStore {
   /** Get a single credential by ID. */
   get(id: string): StoredCredential | undefined {
     const row = this.db
-      .prepare('SELECT * FROM credentials_vault WHERE id = ?')
+      .prepare("SELECT * FROM credentials_vault WHERE id = ?")
       .get(id) as Record<string, unknown> | undefined;
 
     if (!row) return undefined;
@@ -126,7 +128,7 @@ export class CredentialStore {
         .all(userId) as Record<string, unknown>[];
     } else {
       rows = this.db
-        .prepare('SELECT * FROM credentials_vault ORDER BY connector, key')
+        .prepare("SELECT * FROM credentials_vault ORDER BY connector, key")
         .all() as Record<string, unknown>[];
     }
 
@@ -136,7 +138,7 @@ export class CredentialStore {
   /** Delete a credential by ID. */
   delete(id: string): boolean {
     const result = this.db
-      .prepare('DELETE FROM credentials_vault WHERE id = ?')
+      .prepare("DELETE FROM credentials_vault WHERE id = ?")
       .run(id);
     return result.changes > 0;
   }
@@ -147,11 +149,13 @@ export class CredentialStore {
 
     if (userId) {
       result = this.db
-        .prepare('DELETE FROM credentials_vault WHERE connector = ? AND user_id = ?')
+        .prepare(
+          "DELETE FROM credentials_vault WHERE connector = ? AND user_id = ?",
+        )
         .run(connector, userId);
     } else {
       result = this.db
-        .prepare('DELETE FROM credentials_vault WHERE connector = ?')
+        .prepare("DELETE FROM credentials_vault WHERE connector = ?")
         .run(connector);
     }
 
@@ -161,7 +165,7 @@ export class CredentialStore {
   /** Count total stored credentials. */
   count(): number {
     const row = this.db
-      .prepare('SELECT COUNT(*) as count FROM credentials_vault')
+      .prepare("SELECT COUNT(*) as count FROM credentials_vault")
       .get() as { count: number };
     return row.count;
   }

@@ -15,16 +15,16 @@ Requires `better-sqlite3` as a peer dependency.
 ## Quick Start
 
 ```ts
-import { createStores } from '@ai-operations/ops-storage';
-import { createTask } from '@ai-operations/shared-types';
+import { createStores } from "@ai-operations/ops-storage";
+import { createTask } from "@ai-operations/shared-types";
 
 const { tasks, workflows, approvals, users, db } = createStores();
 
-const task = createTask({ source: 'email', title: 'Reply to John' });
+const task = createTask({ source: "email", title: "Reply to John" });
 tasks.save(task);
 
 const found = tasks.get(task.id);
-const pending = tasks.list({ status: 'pending', limit: 20 });
+const pending = tasks.list({ status: "pending", limit: 20 });
 ```
 
 ## API

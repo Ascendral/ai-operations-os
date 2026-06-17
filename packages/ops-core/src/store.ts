@@ -5,11 +5,16 @@
  * ~/.ai-ops/tasks.json for durability across restarts.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
 
-import type { Task, TaskStatus, TaskIntent, TaskPriority } from '@ai-operations/shared-types';
+import type {
+  Task,
+  TaskStatus,
+  TaskIntent,
+  TaskPriority,
+} from "@ai-operations/shared-types";
 
 // ---------------------------------------------------------------------------
 // Filter type
@@ -36,10 +41,10 @@ export interface TaskFilter {
 // ---------------------------------------------------------------------------
 
 /** Default directory for AI Ops data files. */
-const DEFAULT_STORE_DIR = path.join(os.homedir(), '.ai-ops');
+const DEFAULT_STORE_DIR = path.join(os.homedir(), ".ai-ops");
 
 /** Default file name for the task store. */
-const DEFAULT_STORE_FILE = 'tasks.json';
+const DEFAULT_STORE_FILE = "tasks.json";
 
 /**
  * TaskStore provides CRUD operations for Task objects with automatic
@@ -70,7 +75,8 @@ export class TaskStore {
    *                    Defaults to ~/.ai-ops/tasks.json.
    */
   constructor(storePath?: string) {
-    this.filePath = storePath ?? path.join(DEFAULT_STORE_DIR, DEFAULT_STORE_FILE);
+    this.filePath =
+      storePath ?? path.join(DEFAULT_STORE_DIR, DEFAULT_STORE_FILE);
     this.tasks = new Map();
     this.load();
   }
@@ -197,7 +203,7 @@ export class TaskStore {
   private load(): void {
     try {
       if (fs.existsSync(this.filePath)) {
-        const raw = fs.readFileSync(this.filePath, 'utf-8');
+        const raw = fs.readFileSync(this.filePath, "utf-8");
         const data: Task[] = JSON.parse(raw);
 
         if (Array.isArray(data)) {
@@ -225,7 +231,7 @@ export class TaskStore {
       }
 
       const data = Array.from(this.tasks.values());
-      fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
     } catch {
       // Swallow write errors silently. In a production system this would
       // be surfaced via a logger or error event.

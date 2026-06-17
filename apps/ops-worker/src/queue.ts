@@ -5,7 +5,7 @@
  * Production: swap for BullMQ, SQS, or similar.
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 export interface QueueJob<T = unknown> {
   id: string;
@@ -14,7 +14,7 @@ export interface QueueJob<T = unknown> {
   createdAt: string;
   attempts: number;
   maxAttempts: number;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: "pending" | "processing" | "completed" | "failed";
   error?: string;
   result?: unknown;
 }
@@ -45,7 +45,11 @@ export class JobQueue {
   /**
    * Enqueue a new job.
    */
-  enqueue<T>(type: string, data: T, options?: { maxAttempts?: number }): QueueJob<T> {
+  enqueue<T>(
+    type: string,
+    data: T,
+    options?: { maxAttempts?: number },
+  ): QueueJob<T> {
     const job: QueueJob<T> = {
       id: randomUUID(),
       type,
@@ -53,7 +57,7 @@ export class JobQueue {
       createdAt: new Date().toISOString(),
       attempts: 0,
       maxAttempts: options?.maxAttempts ?? 3,
-      status: 'pending',
+      status: "pending",
     };
     this.queue.push(job as QueueJob);
     return job;
@@ -76,7 +80,7 @@ export class JobQueue {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
     }
-    console.log('[queue] Stopped');
+    console.log("[queue] Stopped");
   }
 
   /**
@@ -85,35 +89,39 @@ export class JobQueue {
   private async processNext(): Promise<void> {
     if (this.processing) return;
 
-    const job = this.queue.find((j) => j.status === 'pending');
+    const job = this.queue.find((j) => j.status === "pending");
     if (!job) return;
 
     const handler = this.handlers.get(job.type);
     if (!handler) {
-      job.status = 'failed';
+      job.status = "failed";
       job.error = `No handler registered for job type: ${job.type}`;
       console.error(`[queue] ${job.error}`);
       return;
     }
 
     this.processing = true;
-    job.status = 'processing';
+    job.status = "processing";
     job.attempts++;
 
     try {
       job.result = await handler(job);
-      job.status = 'completed';
+      job.status = "completed";
       console.log(`[queue] Job ${job.id} (${job.type}) completed`);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       if (job.attempts >= job.maxAttempts) {
-        job.status = 'failed';
+        job.status = "failed";
         job.error = `Failed after ${job.attempts} attempts: ${errorMsg}`;
-        console.error(`[queue] Job ${job.id} (${job.type}) failed permanently: ${errorMsg}`);
+        console.error(
+          `[queue] Job ${job.id} (${job.type}) failed permanently: ${errorMsg}`,
+        );
       } else {
-        job.status = 'pending'; // Retry
+        job.status = "pending"; // Retry
         job.error = errorMsg;
-        console.warn(`[queue] Job ${job.id} (${job.type}) attempt ${job.attempts} failed, will retry: ${errorMsg}`);
+        console.warn(
+          `[queue] Job ${job.id} (${job.type}) attempt ${job.attempts} failed, will retry: ${errorMsg}`,
+        );
       }
     } finally {
       this.processing = false;
@@ -123,11 +131,19 @@ export class JobQueue {
   /**
    * Get queue statistics.
    */
-  stats(): { pending: number; processing: number; completed: number; failed: number; total: number } {
-    const pending = this.queue.filter((j) => j.status === 'pending').length;
-    const processing = this.queue.filter((j) => j.status === 'processing').length;
-    const completed = this.queue.filter((j) => j.status === 'completed').length;
-    const failed = this.queue.filter((j) => j.status === 'failed').length;
+  stats(): {
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+    total: number;
+  } {
+    const pending = this.queue.filter((j) => j.status === "pending").length;
+    const processing = this.queue.filter(
+      (j) => j.status === "processing",
+    ).length;
+    const completed = this.queue.filter((j) => j.status === "completed").length;
+    const failed = this.queue.filter((j) => j.status === "failed").length;
     return { pending, processing, completed, failed, total: this.queue.length };
   }
 }

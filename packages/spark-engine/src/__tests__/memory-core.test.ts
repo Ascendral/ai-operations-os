@@ -11,20 +11,23 @@
  * - Integration (empty results, persistence)
  */
 
-import { Database, SparkStore } from '@ai-operations/ops-storage';
-import type { LearningEpisode, SparkCategory } from '@ai-operations/shared-types';
-import { MemoryCore } from '../memory-core';
-import { buildAllDefaultWeights } from '../constants';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
+import { Database, SparkStore } from "@ai-operations/ops-storage";
+import type {
+  LearningEpisode,
+  SparkCategory,
+} from "@ai-operations/shared-types";
+import { MemoryCore } from "../memory-core";
+import { buildAllDefaultWeights } from "../constants";
+import * as path from "path";
+import * as fs from "fs";
+import * as os from "os";
 
 // ── Helpers ──────────────────────────────────────────────────────
 
 let tmpDir: string;
 
 beforeAll(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'spark-memory-test-'));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "spark-memory-test-"));
 });
 
 afterAll(() => {
@@ -47,19 +50,21 @@ function initWeights(store: SparkStore): void {
   store.initializeWeights(buildAllDefaultWeights());
 }
 
-function makeEpisode(overrides: Partial<LearningEpisode> = {}): LearningEpisode {
+function makeEpisode(
+  overrides: Partial<LearningEpisode> = {},
+): LearningEpisode {
   return {
     id: `ep-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    predictionId: 'pred-1',
-    outcomeId: 'out-1',
-    category: 'communication',
+    predictionId: "pred-1",
+    outcomeId: "out-1",
+    category: "communication",
     scoreDelta: 0,
     outcomeMismatch: false,
-    adjustmentDirection: 'none',
+    adjustmentDirection: "none",
     adjustmentMagnitude: 0,
     weightBefore: 1.0,
     weightAfter: 1.0,
-    reason: 'test episode',
+    reason: "test episode",
     createdAt: new Date().toISOString(),
     ...overrides,
   };
@@ -70,19 +75,22 @@ function seedEpisodes(store: SparkStore, episodes: LearningEpisode[]): void {
     store.saveEpisode(ep);
   }
   // Update weight episode count
-  const categories = new Set(episodes.map(e => e.category));
+  const categories = new Set(episodes.map((e) => e.category));
   for (const cat of categories) {
-    const count = episodes.filter(e => e.category === cat).length;
+    const count = episodes.filter((e) => e.category === cat).length;
     const weight = store.getWeight(cat as SparkCategory);
     if (weight) {
-      store.saveWeight({ ...weight, episodeCount: weight.episodeCount + count });
+      store.saveWeight({
+        ...weight,
+        episodeCount: weight.episodeCount + count,
+      });
     }
   }
 }
 
 // ── MemoryCore ──────────────────────────────────────────────────
 
-describe('MemoryCore', () => {
+describe("MemoryCore", () => {
   let db: Database;
   let store: SparkStore;
   let memory: MemoryCore;
@@ -101,16 +109,16 @@ describe('MemoryCore', () => {
 
   // ── Streak detection ──────────────────────────────────────────
 
-  describe('streak detection', () => {
-    it('detects 3+ consecutive increases', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+  describe("streak detection", () => {
+    it("detects 3+ consecutive increases", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       for (let i = 0; i < 4; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'increase',
+            category: "communication",
+            adjustmentDirection: "increase",
             adjustmentMagnitude: 0.1,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -119,26 +127,26 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(episodes[episodes.length - 1]);
-      const streakInsight = insights.find(ins => ins.pattern === 'streak');
+      const streakInsight = insights.find((ins) => ins.pattern === "streak");
 
       expect(streakInsight).toBeDefined();
-      expect(streakInsight!.category).toBe('communication');
+      expect(streakInsight!.category).toBe("communication");
     });
 
-    it('does not detect streak with mixed directions', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
-      const directions: Array<'increase' | 'decrease'> = [
-        'increase',
-        'decrease',
-        'increase',
-        'decrease',
+    it("does not detect streak with mixed directions", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
+      const directions: Array<"increase" | "decrease"> = [
+        "increase",
+        "decrease",
+        "increase",
+        "decrease",
       ];
       const episodes: LearningEpisode[] = [];
 
       for (let i = 0; i < directions.length; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
+            category: "communication",
             adjustmentDirection: directions[i],
             adjustmentMagnitude: 0.1,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
@@ -148,20 +156,20 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(episodes[episodes.length - 1]);
-      const streakInsight = insights.find(ins => ins.pattern === 'streak');
+      const streakInsight = insights.find((ins) => ins.pattern === "streak");
 
       expect(streakInsight).toBeUndefined();
     });
 
-    it('streak length matches actual consecutive count', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+    it("streak length matches actual consecutive count", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       for (let i = 0; i < 5; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'increase',
+            category: "communication",
+            adjustmentDirection: "increase",
             adjustmentMagnitude: 0.1,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -170,31 +178,31 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(episodes[episodes.length - 1]);
-      const streakInsight = insights.find(ins => ins.pattern === 'streak');
+      const streakInsight = insights.find((ins) => ins.pattern === "streak");
 
       expect(streakInsight).toBeDefined();
-      expect(streakInsight!.summary).toContain('5');
+      expect(streakInsight!.summary).toContain("5");
     });
   });
 
   // ── Oscillation detection ────────────────────────────────────
 
-  describe('oscillation detection', () => {
-    it('detects alternating increase/decrease pattern', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
-      const directions: Array<'increase' | 'decrease'> = [
-        'increase',
-        'decrease',
-        'increase',
-        'decrease',
-        'increase',
+  describe("oscillation detection", () => {
+    it("detects alternating increase/decrease pattern", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
+      const directions: Array<"increase" | "decrease"> = [
+        "increase",
+        "decrease",
+        "increase",
+        "decrease",
+        "increase",
       ];
       const episodes: LearningEpisode[] = [];
 
       for (let i = 0; i < directions.length; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
+            category: "communication",
             adjustmentDirection: directions[i],
             adjustmentMagnitude: 0.1,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
@@ -204,21 +212,23 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(episodes[episodes.length - 1]);
-      const oscillationInsight = insights.find(ins => ins.pattern === 'oscillation');
+      const oscillationInsight = insights.find(
+        (ins) => ins.pattern === "oscillation",
+      );
 
       expect(oscillationInsight).toBeDefined();
-      expect(oscillationInsight!.category).toBe('communication');
+      expect(oscillationInsight!.category).toBe("communication");
     });
 
-    it('does not detect oscillation with consistent direction', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+    it("does not detect oscillation with consistent direction", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       for (let i = 0; i < 5; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'increase',
+            category: "communication",
+            adjustmentDirection: "increase",
             adjustmentMagnitude: 0.1,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -227,7 +237,9 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(episodes[episodes.length - 1]);
-      const oscillationInsight = insights.find(ins => ins.pattern === 'oscillation');
+      const oscillationInsight = insights.find(
+        (ins) => ins.pattern === "oscillation",
+      );
 
       expect(oscillationInsight).toBeUndefined();
     });
@@ -235,17 +247,17 @@ describe('MemoryCore', () => {
 
   // ── Convergence detection ────────────────────────────────────
 
-  describe('convergence detection', () => {
-    it('detects decreasing magnitudes', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+  describe("convergence detection", () => {
+    it("detects decreasing magnitudes", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const magnitudes = [0.5, 0.4, 0.3, 0.2, 0.15, 0.1];
       const episodes: LearningEpisode[] = [];
 
       for (let i = 0; i < magnitudes.length; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'increase',
+            category: "communication",
+            adjustmentDirection: "increase",
             adjustmentMagnitude: magnitudes[i],
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -254,22 +266,24 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(episodes[episodes.length - 1]);
-      const convergenceInsight = insights.find(ins => ins.pattern === 'convergence');
+      const convergenceInsight = insights.find(
+        (ins) => ins.pattern === "convergence",
+      );
 
       expect(convergenceInsight).toBeDefined();
-      expect(convergenceInsight!.category).toBe('communication');
+      expect(convergenceInsight!.category).toBe("communication");
     });
 
-    it('does not detect convergence with increasing magnitudes', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+    it("does not detect convergence with increasing magnitudes", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const magnitudes = [0.1, 0.2, 0.3, 0.4, 0.5];
       const episodes: LearningEpisode[] = [];
 
       for (let i = 0; i < magnitudes.length; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'increase',
+            category: "communication",
+            adjustmentDirection: "increase",
             adjustmentMagnitude: magnitudes[i],
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -278,7 +292,9 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(episodes[episodes.length - 1]);
-      const convergenceInsight = insights.find(ins => ins.pattern === 'convergence');
+      const convergenceInsight = insights.find(
+        (ins) => ins.pattern === "convergence",
+      );
 
       expect(convergenceInsight).toBeUndefined();
     });
@@ -286,17 +302,17 @@ describe('MemoryCore', () => {
 
   // ── Anomaly detection ────────────────────────────────────────
 
-  describe('anomaly detection', () => {
-    it('detects sudden large magnitude after stability', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+  describe("anomaly detection", () => {
+    it("detects sudden large magnitude after stability", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       // 10 stable episodes with small magnitude
       for (let i = 0; i < 10; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'increase',
+            category: "communication",
+            adjustmentDirection: "increase",
             adjustmentMagnitude: 0.05,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -305,8 +321,8 @@ describe('MemoryCore', () => {
 
       // 1 anomalous episode with large magnitude
       const anomalousEpisode = makeEpisode({
-        category: 'communication',
-        adjustmentDirection: 'increase',
+        category: "communication",
+        adjustmentDirection: "increase",
         adjustmentMagnitude: 0.5,
         createdAt: new Date(baseTime.getTime() + 10 * 60000).toISOString(),
       });
@@ -314,22 +330,22 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(anomalousEpisode);
-      const anomalyInsight = insights.find(ins => ins.pattern === 'anomaly');
+      const anomalyInsight = insights.find((ins) => ins.pattern === "anomaly");
 
       expect(anomalyInsight).toBeDefined();
-      expect(anomalyInsight!.category).toBe('communication');
+      expect(anomalyInsight!.category).toBe("communication");
     });
 
-    it('no anomaly with consistent magnitudes', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+    it("no anomaly with consistent magnitudes", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       // 10 stable episodes with small magnitude
       for (let i = 0; i < 10; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'increase',
+            category: "communication",
+            adjustmentDirection: "increase",
             adjustmentMagnitude: 0.05,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -338,8 +354,8 @@ describe('MemoryCore', () => {
 
       // 1 episode with only slightly higher magnitude (not anomalous)
       const normalEpisode = makeEpisode({
-        category: 'communication',
-        adjustmentDirection: 'increase',
+        category: "communication",
+        adjustmentDirection: "increase",
         adjustmentMagnitude: 0.06,
         createdAt: new Date(baseTime.getTime() + 10 * 60000).toISOString(),
       });
@@ -347,7 +363,7 @@ describe('MemoryCore', () => {
 
       seedEpisodes(store, episodes);
       const insights = memory.consolidate(normalEpisode);
-      const anomalyInsight = insights.find(ins => ins.pattern === 'anomaly');
+      const anomalyInsight = insights.find((ins) => ins.pattern === "anomaly");
 
       expect(anomalyInsight).toBeUndefined();
     });
@@ -355,17 +371,17 @@ describe('MemoryCore', () => {
 
   // ── Milestone detection ──────────────────────────────────────
 
-  describe('milestone detection', () => {
-    it('detects milestone at exactly 10 episodes', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+  describe("milestone detection", () => {
+    it("detects milestone at exactly 10 episodes", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       // Seed 9 episodes first
       for (let i = 0; i < 9; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'none',
+            category: "communication",
+            adjustmentDirection: "none",
             adjustmentMagnitude: 0,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -377,35 +393,37 @@ describe('MemoryCore', () => {
       for (const ep of episodes) {
         store.saveEpisode(ep);
       }
-      const weight = store.getWeight('communication')!;
+      const weight = store.getWeight("communication")!;
       store.saveWeight({ ...weight, episodeCount: 10 });
 
       // Add the 10th episode
       const tenthEpisode = makeEpisode({
-        category: 'communication',
-        adjustmentDirection: 'none',
+        category: "communication",
+        adjustmentDirection: "none",
         adjustmentMagnitude: 0,
         createdAt: new Date(baseTime.getTime() + 9 * 60000).toISOString(),
       });
       store.saveEpisode(tenthEpisode);
 
       const insights = memory.consolidate(tenthEpisode);
-      const milestoneInsight = insights.find(ins => ins.pattern === 'milestone');
+      const milestoneInsight = insights.find(
+        (ins) => ins.pattern === "milestone",
+      );
 
       expect(milestoneInsight).toBeDefined();
-      expect(milestoneInsight!.category).toBe('communication');
+      expect(milestoneInsight!.category).toBe("communication");
     });
 
-    it('does not trigger milestone at 11', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+    it("does not trigger milestone at 11", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       // Seed 10 episodes
       for (let i = 0; i < 10; i++) {
         episodes.push(
           makeEpisode({
-            category: 'communication',
-            adjustmentDirection: 'none',
+            category: "communication",
+            adjustmentDirection: "none",
             adjustmentMagnitude: 0,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -415,21 +433,23 @@ describe('MemoryCore', () => {
       for (const ep of episodes) {
         store.saveEpisode(ep);
       }
-      const weight = store.getWeight('communication')!;
+      const weight = store.getWeight("communication")!;
       // In real flow, LearningCore.learn() increments to 11 BEFORE consolidate()
       store.saveWeight({ ...weight, episodeCount: 11 });
 
       // Add the 11th episode
       const eleventhEpisode = makeEpisode({
-        category: 'communication',
-        adjustmentDirection: 'none',
+        category: "communication",
+        adjustmentDirection: "none",
         adjustmentMagnitude: 0,
         createdAt: new Date(baseTime.getTime() + 10 * 60000).toISOString(),
       });
       store.saveEpisode(eleventhEpisode);
 
       const insights = memory.consolidate(eleventhEpisode);
-      const milestoneInsight = insights.find(ins => ins.pattern === 'milestone');
+      const milestoneInsight = insights.find(
+        (ins) => ins.pattern === "milestone",
+      );
 
       expect(milestoneInsight).toBeUndefined();
     });
@@ -437,18 +457,18 @@ describe('MemoryCore', () => {
 
   // ── Impact scoring ───────────────────────────────────────────
 
-  describe('impact scoring', () => {
-    it('scales with magnitude', () => {
+  describe("impact scoring", () => {
+    it("scales with magnitude", () => {
       const lowMagEpisode = makeEpisode({
         adjustmentMagnitude: 0.05,
         outcomeMismatch: false,
-        category: 'communication',
+        category: "communication",
       });
 
       const highMagEpisode = makeEpisode({
         adjustmentMagnitude: 0.2,
         outcomeMismatch: false,
-        category: 'communication',
+        category: "communication",
       });
 
       const lowImpact = memory.computeImpactScore(lowMagEpisode);
@@ -457,17 +477,17 @@ describe('MemoryCore', () => {
       expect(highImpact).toBeGreaterThan(lowImpact);
     });
 
-    it('boosts for mismatch', () => {
+    it("boosts for mismatch", () => {
       const noMismatch = makeEpisode({
         adjustmentMagnitude: 0.1,
         outcomeMismatch: false,
-        category: 'communication',
+        category: "communication",
       });
 
       const withMismatch = makeEpisode({
         adjustmentMagnitude: 0.1,
         outcomeMismatch: true,
-        category: 'communication',
+        category: "communication",
       });
 
       const noMismatchImpact = memory.computeImpactScore(noMismatch);
@@ -476,17 +496,17 @@ describe('MemoryCore', () => {
       expect(mismatchImpact).toBeGreaterThan(noMismatchImpact);
     });
 
-    it('boosts for SENTINEL category', () => {
+    it("boosts for SENTINEL category", () => {
       const normalEpisode = makeEpisode({
         adjustmentMagnitude: 0.1,
         outcomeMismatch: false,
-        category: 'communication',
+        category: "communication",
       });
 
       const sentinelEpisode = makeEpisode({
         adjustmentMagnitude: 0.1,
         outcomeMismatch: false,
-        category: 'destructive',
+        category: "destructive",
       });
 
       const normalImpact = memory.computeImpactScore(normalEpisode);
@@ -498,16 +518,16 @@ describe('MemoryCore', () => {
 
   // ── Integration ──────────────────────────────────────────────
 
-  describe('integration', () => {
-    it('returns empty array when no patterns detected', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+  describe("integration", () => {
+    it("returns empty array when no patterns detected", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       for (let i = 0; i < 2; i++) {
         episodes.push(
           makeEpisode({
-            category: 'readonly',
-            adjustmentDirection: 'none',
+            category: "readonly",
+            adjustmentDirection: "none",
             adjustmentMagnitude: 0,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -520,16 +540,16 @@ describe('MemoryCore', () => {
       expect(insights).toEqual([]);
     });
 
-    it('persists insights to store', () => {
-      const baseTime = new Date('2025-01-01T00:00:00Z');
+    it("persists insights to store", () => {
+      const baseTime = new Date("2025-01-01T00:00:00Z");
       const episodes: LearningEpisode[] = [];
 
       // Seed a streak to trigger an insight
       for (let i = 0; i < 4; i++) {
         episodes.push(
           makeEpisode({
-            category: 'general',
-            adjustmentDirection: 'increase',
+            category: "general",
+            adjustmentDirection: "increase",
             adjustmentMagnitude: 0.1,
             createdAt: new Date(baseTime.getTime() + i * 60000).toISOString(),
           }),
@@ -542,13 +562,13 @@ describe('MemoryCore', () => {
       expect(insights.length).toBeGreaterThan(0);
 
       // Verify insight was persisted to the store
-      const storedInsights = store.listInsights({ category: 'general' });
+      const storedInsights = store.listInsights({ category: "general" });
       expect(storedInsights.length).toBeGreaterThanOrEqual(1);
 
       const storedInsight = store.getInsight(insights[0].id);
       expect(storedInsight).toBeDefined();
       expect(storedInsight!.pattern).toBe(insights[0].pattern);
-      expect(storedInsight!.category).toBe('general');
+      expect(storedInsight!.category).toBe("general");
     });
   });
 });

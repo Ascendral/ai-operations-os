@@ -6,7 +6,7 @@
  * can be layered on top for ambiguous cases.
  */
 
-import type { TaskIntent } from '@ai-operations/shared-types';
+import type { TaskIntent } from "@ai-operations/shared-types";
 
 /**
  * A mapping from intent to the keywords that signal it.
@@ -19,32 +19,32 @@ interface IntentKeywords {
 /** Default keyword table, ordered by priority (first match wins). */
 const KEYWORD_TABLE: readonly IntentKeywords[] = [
   {
-    intent: 'escalate',
-    keywords: ['urgent', 'escalate', 'help', 'emergency', 'manager'],
+    intent: "escalate",
+    keywords: ["urgent", "escalate", "help", "emergency", "manager"],
   },
   {
-    intent: 'reply',
-    keywords: ['reply', 'respond', 'answer', 'get back to'],
+    intent: "reply",
+    keywords: ["reply", "respond", "answer", "get back to"],
   },
   {
-    intent: 'schedule',
-    keywords: ['schedule', 'meeting', 'calendar', 'book', 'appointment'],
+    intent: "schedule",
+    keywords: ["schedule", "meeting", "calendar", "book", "appointment"],
   },
   {
-    intent: 'post',
-    keywords: ['post', 'publish', 'tweet', 'share', 'announce'],
+    intent: "post",
+    keywords: ["post", "publish", "tweet", "share", "announce"],
   },
   {
-    intent: 'fulfill',
-    keywords: ['ship', 'fulfill', 'order', 'process', 'deliver'],
+    intent: "fulfill",
+    keywords: ["ship", "fulfill", "order", "process", "deliver"],
   },
   {
-    intent: 'refund',
-    keywords: ['refund', 'return', 'chargeback', 'reimburse', 'credit back'],
+    intent: "refund",
+    keywords: ["refund", "return", "chargeback", "reimburse", "credit back"],
   },
   {
-    intent: 'ignore',
-    keywords: ['spam', 'unsubscribe', 'junk', 'promotional'],
+    intent: "ignore",
+    keywords: ["spam", "unsubscribe", "junk", "promotional"],
   },
 ] as const;
 
@@ -56,7 +56,7 @@ export interface ClassificationResult {
   intent: TaskIntent;
 
   /** Confidence level: 'high' if multiple keywords matched, 'low' for single. */
-  confidence: 'high' | 'low' | 'none';
+  confidence: "high" | "low" | "none";
 
   /** The keywords that matched (empty for 'unknown'). */
   matchedKeywords: string[];
@@ -110,22 +110,20 @@ export class IntentClassifier {
     const normalized = text.toLowerCase();
 
     for (const entry of this.keywordTable) {
-      const matched = entry.keywords.filter((kw) =>
-        normalized.includes(kw),
-      );
+      const matched = entry.keywords.filter((kw) => normalized.includes(kw));
 
       if (matched.length > 0) {
         return {
           intent: entry.intent,
-          confidence: matched.length >= 2 ? 'high' : 'low',
+          confidence: matched.length >= 2 ? "high" : "low",
           matchedKeywords: matched,
         };
       }
     }
 
     return {
-      intent: 'unknown',
-      confidence: 'none',
+      intent: "unknown",
+      confidence: "none",
       matchedKeywords: [],
     };
   }

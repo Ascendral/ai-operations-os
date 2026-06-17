@@ -7,17 +7,17 @@
  * memory tokens and runs spiral passes.
  */
 
-import type { SparkStore } from '@ai-operations/ops-storage';
+import type { SparkStore } from "@ai-operations/ops-storage";
 import type {
   LearningEpisode,
   Insight,
   Belief,
   ConversationTurn,
-} from '@ai-operations/shared-types';
-import { MemoryTokenManager } from './memory-token-manager';
-import { SpiralLoop } from './spiral-loop';
-import type { SpiralPassResult } from './spiral-loop';
-import type { EmotionalStateEngine } from './emotional-state';
+} from "@ai-operations/shared-types";
+import { MemoryTokenManager } from "./memory-token-manager";
+import { SpiralLoop } from "./spiral-loop";
+import type { SpiralPassResult } from "./spiral-loop";
+import type { EmotionalStateEngine } from "./emotional-state";
 
 export class FeedbackIntegrator {
   private readonly store: SparkStore;
@@ -25,7 +25,12 @@ export class FeedbackIntegrator {
   private readonly spiralLoop: SpiralLoop;
   private emotionalState: EmotionalStateEngine | null;
 
-  constructor(store: SparkStore, tokenManager: MemoryTokenManager, spiralLoop: SpiralLoop, emotionalState?: EmotionalStateEngine) {
+  constructor(
+    store: SparkStore,
+    tokenManager: MemoryTokenManager,
+    spiralLoop: SpiralLoop,
+    emotionalState?: EmotionalStateEngine,
+  ) {
     this.store = store;
     this.tokenManager = tokenManager;
     this.spiralLoop = spiralLoop;

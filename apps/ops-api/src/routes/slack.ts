@@ -8,9 +8,9 @@
  * GET   /api/slack/search            Search messages
  */
 
-import { SlackConnector } from '@ai-operations/ops-connectors';
-import { pathToRoute, sendJson, sendError } from '../server';
-import type { Route } from '../server';
+import { SlackConnector } from "@ai-operations/ops-connectors";
+import { pathToRoute, sendJson, sendError } from "../server";
+import type { Route } from "../server";
 
 // ── Connector ──────────────────────────────────────────────────────────────
 
@@ -27,17 +27,17 @@ async function listChannels(ctx: any): Promise<void> {
   const { res, query } = ctx;
   const slack = getSlackConnector();
   if (!slack) {
-    sendError(res, 401, 'Slack not connected. Set SLACK_BOT_TOKEN env var.');
+    sendError(res, 401, "Slack not connected. Set SLACK_BOT_TOKEN env var.");
     return;
   }
 
-  const result = await slack.execute('list', {
-    limit: parseInt(query.limit || '100', 10),
-    types: query.types || 'public_channel,private_channel',
+  const result = await slack.execute("list", {
+    limit: parseInt(query.limit || "100", 10),
+    types: query.types || "public_channel,private_channel",
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to list channels');
+    sendError(res, 502, result.error || "Failed to list channels");
     return;
   }
 
@@ -49,17 +49,17 @@ async function readMessages(ctx: any): Promise<void> {
   const { res, params, query } = ctx;
   const slack = getSlackConnector();
   if (!slack) {
-    sendError(res, 401, 'Slack not connected. Set SLACK_BOT_TOKEN env var.');
+    sendError(res, 401, "Slack not connected. Set SLACK_BOT_TOKEN env var.");
     return;
   }
 
-  const result = await slack.execute('read', {
+  const result = await slack.execute("read", {
     channel: params.channel,
-    limit: parseInt(query.limit || '20', 10),
+    limit: parseInt(query.limit || "20", 10),
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to read messages');
+    sendError(res, 502, result.error || "Failed to read messages");
     return;
   }
 
@@ -71,23 +71,23 @@ async function sendMessage(ctx: any): Promise<void> {
   const { res, body } = ctx;
   const slack = getSlackConnector();
   if (!slack) {
-    sendError(res, 401, 'Slack not connected. Set SLACK_BOT_TOKEN env var.');
+    sendError(res, 401, "Slack not connected. Set SLACK_BOT_TOKEN env var.");
     return;
   }
 
   if (!body.channel || !body.text) {
-    sendError(res, 400, 'Missing required fields: channel, text');
+    sendError(res, 400, "Missing required fields: channel, text");
     return;
   }
 
-  const result = await slack.execute('send', {
+  const result = await slack.execute("send", {
     channel: body.channel as string,
     text: body.text as string,
     blocks: body.blocks,
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to send message');
+    sendError(res, 502, result.error || "Failed to send message");
     return;
   }
 
@@ -99,23 +99,23 @@ async function addReaction(ctx: any): Promise<void> {
   const { res, body } = ctx;
   const slack = getSlackConnector();
   if (!slack) {
-    sendError(res, 401, 'Slack not connected. Set SLACK_BOT_TOKEN env var.');
+    sendError(res, 401, "Slack not connected. Set SLACK_BOT_TOKEN env var.");
     return;
   }
 
   if (!body.channel || !body.timestamp || !body.name) {
-    sendError(res, 400, 'Missing required fields: channel, timestamp, name');
+    sendError(res, 400, "Missing required fields: channel, timestamp, name");
     return;
   }
 
-  const result = await slack.execute('react', {
+  const result = await slack.execute("react", {
     channel: body.channel as string,
     timestamp: body.timestamp as string,
     name: body.name as string,
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to add reaction');
+    sendError(res, 502, result.error || "Failed to add reaction");
     return;
   }
 
@@ -127,22 +127,22 @@ async function searchMessages(ctx: any): Promise<void> {
   const { res, query } = ctx;
   const slack = getSlackConnector();
   if (!slack) {
-    sendError(res, 401, 'Slack not connected. Set SLACK_BOT_TOKEN env var.');
+    sendError(res, 401, "Slack not connected. Set SLACK_BOT_TOKEN env var.");
     return;
   }
 
   if (!query.q) {
-    sendError(res, 400, 'Missing required query parameter: q');
+    sendError(res, 400, "Missing required query parameter: q");
     return;
   }
 
-  const result = await slack.execute('search', {
+  const result = await slack.execute("search", {
     query: query.q,
-    count: parseInt(query.count || '20', 10),
+    count: parseInt(query.count || "20", 10),
   });
 
   if (!result.success) {
-    sendError(res, 502, result.error || 'Failed to search messages');
+    sendError(res, 502, result.error || "Failed to search messages");
     return;
   }
 
@@ -152,9 +152,9 @@ async function searchMessages(ctx: any): Promise<void> {
 // ── Export routes ────────────────────────────────────────────────────────────
 
 export const slackRoutes: Route[] = [
-  pathToRoute('GET', '/api/slack/channels', listChannels),
-  pathToRoute('GET', '/api/slack/messages/:channel', readMessages),
-  pathToRoute('GET', '/api/slack/search', searchMessages),
-  pathToRoute('POST', '/api/slack/send', sendMessage),
-  pathToRoute('POST', '/api/slack/react', addReaction),
+  pathToRoute("GET", "/api/slack/channels", listChannels),
+  pathToRoute("GET", "/api/slack/messages/:channel", readMessages),
+  pathToRoute("GET", "/api/slack/search", searchMessages),
+  pathToRoute("POST", "/api/slack/send", sendMessage),
+  pathToRoute("POST", "/api/slack/react", addReaction),
 ];

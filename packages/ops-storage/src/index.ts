@@ -5,30 +5,36 @@
  * all backed by a single SQLite database.
  */
 
-export { Database } from './database';
-export { TaskStore } from './task-store';
-export type { TaskFilter } from './task-store';
-export { WorkflowStore } from './workflow-store';
-export type { WorkflowRunFilter } from './workflow-store';
-export { ApprovalStore } from './approval-store';
-export type { ApprovalFilter } from './approval-store';
-export { UserStore } from './user-store';
-export type { User, CreateUserInput } from './user-store';
-export { CredentialStore } from './credential-store';
-export type { StoredCredential } from './credential-store';
-export { SparkStore } from './spark-store';
-export type { SparkEpisodeFilter, SparkPredictionFilter, SparkInsightFilter, SparkMemoryTokenFilter, SparkMemoryEdgeFilter } from './spark-store';
-export { AuditStore } from './audit-store';
-export type { AuditEntry, AuditEventType, AuditFilter } from './audit-store';
+export { Database } from "./database";
+export { TaskStore } from "./task-store";
+export type { TaskFilter } from "./task-store";
+export { WorkflowStore } from "./workflow-store";
+export type { WorkflowRunFilter } from "./workflow-store";
+export { ApprovalStore } from "./approval-store";
+export type { ApprovalFilter } from "./approval-store";
+export { UserStore } from "./user-store";
+export type { User, CreateUserInput } from "./user-store";
+export { CredentialStore } from "./credential-store";
+export type { StoredCredential } from "./credential-store";
+export { SparkStore } from "./spark-store";
+export type {
+  SparkEpisodeFilter,
+  SparkPredictionFilter,
+  SparkInsightFilter,
+  SparkMemoryTokenFilter,
+  SparkMemoryEdgeFilter,
+} from "./spark-store";
+export { AuditStore } from "./audit-store";
+export type { AuditEntry, AuditEventType, AuditFilter } from "./audit-store";
 
-import { Database } from './database';
-import { TaskStore } from './task-store';
-import { WorkflowStore } from './workflow-store';
-import { ApprovalStore } from './approval-store';
-import { UserStore } from './user-store';
-import { CredentialStore } from './credential-store';
-import { SparkStore } from './spark-store';
-import { AuditStore } from './audit-store';
+import { Database } from "./database";
+import { TaskStore } from "./task-store";
+import { WorkflowStore } from "./workflow-store";
+import { ApprovalStore } from "./approval-store";
+import { UserStore } from "./user-store";
+import { CredentialStore } from "./credential-store";
+import { SparkStore } from "./spark-store";
+import { AuditStore } from "./audit-store";
 
 export interface Stores {
   tasks: TaskStore;

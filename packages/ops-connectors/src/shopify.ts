@@ -1,6 +1,6 @@
-import { BaseConnector, ConnectorConfig, ConnectorResult } from './base';
+import { BaseConnector, ConnectorConfig, ConnectorResult } from "./base";
 
-const SHOPIFY_API_VERSION = '2024-01';
+const SHOPIFY_API_VERSION = "2024-01";
 
 /**
  * Shopify connector for managing orders, products, and customers
@@ -21,12 +21,16 @@ export class ShopifyConnector extends BaseConnector {
   constructor(config?: Partial<ConnectorConfig>) {
     const storeUrl =
       config?.credentials?.storeUrl ||
-      (typeof process !== 'undefined' ? process.env?.SHOPIFY_STORE_URL : undefined) ||
-      '';
+      (typeof process !== "undefined"
+        ? process.env?.SHOPIFY_STORE_URL
+        : undefined) ||
+      "";
     const accessToken =
       config?.credentials?.accessToken ||
-      (typeof process !== 'undefined' ? process.env?.SHOPIFY_ACCESS_TOKEN : undefined) ||
-      '';
+      (typeof process !== "undefined"
+        ? process.env?.SHOPIFY_ACCESS_TOKEN
+        : undefined) ||
+      "";
 
     const hasCredentials = !!storeUrl && !!accessToken;
 
@@ -36,10 +40,10 @@ export class ShopifyConnector extends BaseConnector {
       // If the caller explicitly passed `enabled` via config, honour it only
       // when credentials are actually available; otherwise force disabled.
       ...(hasCredentials ? {} : { enabled: false }),
-      name: config?.name ?? 'shopify',
+      name: config?.name ?? "shopify",
     });
 
-    this.storeUrl = storeUrl.replace(/\/+$/, ''); // strip trailing slashes
+    this.storeUrl = storeUrl.replace(/\/+$/, ""); // strip trailing slashes
     this.accessToken = accessToken;
   }
 
@@ -55,13 +59,13 @@ export class ShopifyConnector extends BaseConnector {
    */
   get supportedOperations(): string[] {
     return [
-      'list_orders',
-      'get_order',
-      'fulfill_order',
-      'refund',
-      'list_products',
-      'update_product',
-      'list_customers',
+      "list_orders",
+      "get_order",
+      "fulfill_order",
+      "refund",
+      "list_products",
+      "update_product",
+      "list_customers",
     ];
   }
 
@@ -94,37 +98,37 @@ export class ShopifyConnector extends BaseConnector {
       return {
         success: false,
         error:
-          'Shopify not configured — set storeUrl and accessToken in connector credentials or SHOPIFY_STORE_URL / SHOPIFY_ACCESS_TOKEN environment variables.',
+          "Shopify not configured — set storeUrl and accessToken in connector credentials or SHOPIFY_STORE_URL / SHOPIFY_ACCESS_TOKEN environment variables.",
       };
     }
 
     try {
       switch (operation) {
-        case 'list_orders':
+        case "list_orders":
           return await this.listOrders(input);
-        case 'get_order':
+        case "get_order":
           return await this.getOrder(input);
-        case 'fulfill_order':
+        case "fulfill_order":
           return {
             success: false,
             error:
-              'fulfill_order: Requires implementation and approval gate \u2014 use API directly for safety',
+              "fulfill_order: Requires implementation and approval gate \u2014 use API directly for safety",
           };
-        case 'refund':
+        case "refund":
           return {
             success: false,
             error:
-              'refund: Requires implementation and approval gate \u2014 use API directly for safety',
+              "refund: Requires implementation and approval gate \u2014 use API directly for safety",
           };
-        case 'list_products':
+        case "list_products":
           return await this.listProducts(input);
-        case 'update_product':
+        case "update_product":
           return {
             success: false,
             error:
-              'update_product: Requires implementation and approval gate \u2014 use API directly for safety',
+              "update_product: Requires implementation and approval gate \u2014 use API directly for safety",
           };
-        case 'list_customers':
+        case "list_customers":
           return await this.listCustomers(input);
         default:
           return { success: false, error: `Unknown operation: ${operation}` };
@@ -145,7 +149,7 @@ export class ShopifyConnector extends BaseConnector {
   async healthCheck(): Promise<boolean> {
     if (!this.storeUrl || !this.accessToken) return false;
     try {
-      const res = await this.shopifyFetch('/shop.json');
+      const res = await this.shopifyFetch("/shop.json");
       return res.ok;
     } catch {
       return false;
@@ -162,7 +166,7 @@ export class ShopifyConnector extends BaseConnector {
   private async listOrders(
     input: Record<string, unknown>,
   ): Promise<ConnectorResult> {
-    const status = (input.status as string) || 'open';
+    const status = (input.status as string) || "open";
     const limit = (input.limit as number) || 50;
     const sinceId = input.since_id as string | undefined;
     const createdAtMin = input.created_at_min as string | undefined;
@@ -171,8 +175,8 @@ export class ShopifyConnector extends BaseConnector {
       status,
       limit: String(limit),
     });
-    if (sinceId) params.set('since_id', sinceId);
-    if (createdAtMin) params.set('created_at_min', createdAtMin);
+    if (sinceId) params.set("since_id", sinceId);
+    if (createdAtMin) params.set("created_at_min", createdAtMin);
 
     const res = await this.shopifyFetch(`/orders.json?${params}`);
     if (!res.ok) return this.apiError(res);
@@ -188,11 +192,9 @@ export class ShopifyConnector extends BaseConnector {
         financial_status: o.financial_status,
         fulfillment_status: o.fulfillment_status,
         created_at: o.created_at,
-        line_items_count: Array.isArray(o.line_items)
-          ? o.line_items.length
-          : 0,
+        line_items_count: Array.isArray(o.line_items) ? o.line_items.length : 0,
         customer_name: o.customer
-          ? `${o.customer.first_name || ''} ${o.customer.last_name || ''}`.trim()
+          ? `${o.customer.first_name || ""} ${o.customer.last_name || ""}`.trim()
           : null,
       }),
     );
@@ -215,7 +217,7 @@ export class ShopifyConnector extends BaseConnector {
   ): Promise<ConnectorResult> {
     const orderId = input.orderId as string;
     if (!orderId) {
-      return { success: false, error: 'orderId is required' };
+      return { success: false, error: "orderId is required" };
     }
 
     const res = await this.shopifyFetch(`/orders/${orderId}.json`);
@@ -288,8 +290,8 @@ export class ShopifyConnector extends BaseConnector {
     const params = new URLSearchParams({
       limit: String(limit),
     });
-    if (collectionId) params.set('collection_id', collectionId);
-    if (status) params.set('status', status);
+    if (collectionId) params.set("collection_id", collectionId);
+    if (status) params.set("status", status);
 
     const res = await this.shopifyFetch(`/products.json?${params}`);
     if (!res.ok) return this.apiError(res);
@@ -323,7 +325,7 @@ export class ShopifyConnector extends BaseConnector {
   private async listCustomers(
     input: Record<string, unknown>,
   ): Promise<ConnectorResult> {
-    const query = (input.query as string) || '';
+    const query = (input.query as string) || "";
     const limit = (input.limit as number) || 50;
 
     const params = new URLSearchParams({
@@ -335,16 +337,16 @@ export class ShopifyConnector extends BaseConnector {
     if (!res.ok) return this.apiError(res);
 
     const data = (await res.json()) as any;
-    const customers: Record<string, unknown>[] = (
-      data.customers || []
-    ).map((c: any) => ({
-      id: c.id,
-      first_name: c.first_name,
-      last_name: c.last_name,
-      email: c.email,
-      orders_count: c.orders_count,
-      total_spent: c.total_spent,
-    }));
+    const customers: Record<string, unknown>[] = (data.customers || []).map(
+      (c: any) => ({
+        id: c.id,
+        first_name: c.first_name,
+        last_name: c.last_name,
+        email: c.email,
+        orders_count: c.orders_count,
+        total_spent: c.total_spent,
+      }),
+    );
 
     return {
       success: true,
@@ -368,8 +370,8 @@ export class ShopifyConnector extends BaseConnector {
     return fetch(url, {
       ...options,
       headers: {
-        'X-Shopify-Access-Token': this.accessToken,
-        'Content-Type': 'application/json',
+        "X-Shopify-Access-Token": this.accessToken,
+        "Content-Type": "application/json",
         ...((options?.headers as Record<string, string>) || {}),
       },
     });
@@ -384,7 +386,7 @@ export class ShopifyConnector extends BaseConnector {
       const data = (await res.json()) as any;
       if (data.errors) {
         msg =
-          typeof data.errors === 'string'
+          typeof data.errors === "string"
             ? data.errors
             : JSON.stringify(data.errors);
       }

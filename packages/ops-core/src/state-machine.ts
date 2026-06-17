@@ -12,17 +12,17 @@
  * Any transition not in the table above is rejected with an error.
  */
 
-import type { StepStatus } from '@ai-operations/shared-types';
+import type { StepStatus } from "@ai-operations/shared-types";
 
 /** Events that trigger state transitions. */
 export type StepEvent =
-  | 'start'
-  | 'complete'
-  | 'fail'
-  | 'block'
-  | 'approve'
-  | 'pause'
-  | 'resume';
+  | "start"
+  | "complete"
+  | "fail"
+  | "block"
+  | "approve"
+  | "pause"
+  | "resume";
 
 /**
  * A single entry in the transition table.
@@ -36,15 +36,15 @@ interface TransitionRule {
 
 /** The canonical set of valid transitions. */
 const TRANSITION_TABLE: readonly TransitionRule[] = [
-  { from: 'pending', event: 'start', to: 'running' },
-  { from: 'running', event: 'complete', to: 'completed' },
-  { from: 'running', event: 'fail', to: 'failed' },
-  { from: 'running', event: 'block', to: 'blocked' },
-  { from: 'running', event: 'pause', to: 'pending' },
-  { from: 'blocked', event: 'approve', to: 'approved' },
-  { from: 'approved', event: 'start', to: 'running' },
-  { from: 'approved', event: 'resume', to: 'running' },
-  { from: 'pending', event: 'resume', to: 'running' },
+  { from: "pending", event: "start", to: "running" },
+  { from: "running", event: "complete", to: "completed" },
+  { from: "running", event: "fail", to: "failed" },
+  { from: "running", event: "block", to: "blocked" },
+  { from: "running", event: "pause", to: "pending" },
+  { from: "blocked", event: "approve", to: "approved" },
+  { from: "approved", event: "start", to: "running" },
+  { from: "approved", event: "resume", to: "running" },
+  { from: "pending", event: "resume", to: "running" },
 ] as const;
 
 /**
@@ -58,7 +58,7 @@ export class InvalidTransitionError extends Error {
     super(
       `Invalid transition: cannot apply event '${event}' to state '${currentState}'`,
     );
-    this.name = 'InvalidTransitionError';
+    this.name = "InvalidTransitionError";
   }
 }
 

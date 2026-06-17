@@ -5,7 +5,7 @@
  * No external cron dependencies — pure Node.js timers.
  */
 
-import { JobQueue } from './queue';
+import { JobQueue } from "./queue";
 
 export interface ScheduledTask {
   id: string;
@@ -71,7 +71,7 @@ export class Scheduler {
       clearInterval(this.timer);
       this.timer = null;
     }
-    console.log('[scheduler] Stopped');
+    console.log("[scheduler] Stopped");
   }
 
   /**
@@ -88,10 +88,20 @@ export class Scheduler {
       if (!task.enabled) continue;
 
       // Check if this task should run now
-      if (task.schedule.minute !== undefined && task.schedule.minute !== minute) continue;
-      if (task.schedule.hour !== undefined && task.schedule.hour !== hour) continue;
-      if (task.schedule.dayOfWeek && !task.schedule.dayOfWeek.includes(dayOfWeek)) continue;
-      if (task.schedule.dayOfMonth && !task.schedule.dayOfMonth.includes(dayOfMonth)) continue;
+      if (task.schedule.minute !== undefined && task.schedule.minute !== minute)
+        continue;
+      if (task.schedule.hour !== undefined && task.schedule.hour !== hour)
+        continue;
+      if (
+        task.schedule.dayOfWeek &&
+        !task.schedule.dayOfWeek.includes(dayOfWeek)
+      )
+        continue;
+      if (
+        task.schedule.dayOfMonth &&
+        !task.schedule.dayOfMonth.includes(dayOfMonth)
+      )
+        continue;
 
       // Prevent double-firing within the same minute
       if (task.lastRunAt) {

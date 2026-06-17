@@ -16,16 +16,16 @@
  * Deterministic and testable.
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 import type {
   Insight,
   InsightPattern,
   LearningEpisode,
   SparkCategory,
-} from '@ai-operations/shared-types';
-import { SENTINEL_CATEGORIES } from '@ai-operations/shared-types';
-import type { SparkStore } from '@ai-operations/ops-storage';
-import { ALL_CATEGORIES, MAX_DEVIATION_PERCENT } from './constants';
+} from "@ai-operations/shared-types";
+import { SENTINEL_CATEGORIES } from "@ai-operations/shared-types";
+import type { SparkStore } from "@ai-operations/ops-storage";
+import { ALL_CATEGORIES, MAX_DEVIATION_PERCENT } from "./constants";
 
 // ── MemoryCore ───────────────────────────────────────────────────────
 
@@ -121,7 +121,10 @@ export class MemoryCore {
   /**
    * Run all pattern detectors and collect non-null insights.
    */
-  private runDetectors(category: SparkCategory, episodes: LearningEpisode[]): Insight[] {
+  private runDetectors(
+    category: SparkCategory,
+    episodes: LearningEpisode[],
+  ): Insight[] {
     const insights: Insight[] = [];
 
     const detectors = [
@@ -151,7 +154,7 @@ export class MemoryCore {
     episodes: LearningEpisode[],
   ): Insight | null {
     // Episodes come ordered by created_at DESC — newest first
-    const directed = episodes.filter(e => e.adjustmentDirection !== 'none');
+    const directed = episodes.filter((e) => e.adjustmentDirection !== "none");
     if (directed.length < MemoryCore.STREAK_THRESHOLD) return null;
 
     // Count consecutive same direction from the newest
@@ -169,18 +172,19 @@ export class MemoryCore {
     if (streakLength < MemoryCore.STREAK_THRESHOLD) return null;
 
     const streakEpisodes = directed.slice(0, streakLength);
-    const dirLabel = firstDir === 'increase' ? 'upward' : 'downward';
-    const behavior = firstDir === 'increase'
-      ? 'Becoming more cautious'
-      : 'Becoming more permissive';
+    const dirLabel = firstDir === "increase" ? "upward" : "downward";
+    const behavior =
+      firstDir === "increase"
+        ? "Becoming more cautious"
+        : "Becoming more permissive";
 
     return {
       id: randomUUID(),
       category,
-      pattern: 'streak' as InsightPattern,
+      pattern: "streak" as InsightPattern,
       summary: `${category} has ${streakLength} consecutive ${dirLabel} adjustments. ${behavior} — persistent signal.`,
       evidence: {
-        episodeIds: streakEpisodes.map(e => e.id),
+        episodeIds: streakEpisodes.map((e) => e.id),
         window: {
           from: streakEpisodes[streakEpisodes.length - 1].createdAt,
           to: streakEpisodes[0].createdAt,
@@ -199,12 +203,14 @@ export class MemoryCore {
     category: SparkCategory,
     episodes: LearningEpisode[],
   ): Insight | null {
-    const directed = episodes.filter(e => e.adjustmentDirection !== 'none');
+    const directed = episodes.filter((e) => e.adjustmentDirection !== "none");
     if (directed.length < MemoryCore.OSCILLATION_THRESHOLD) return null;
 
     let alternations = 0;
     for (let i = 1; i < directed.length; i++) {
-      if (directed[i].adjustmentDirection !== directed[i - 1].adjustmentDirection) {
+      if (
+        directed[i].adjustmentDirection !== directed[i - 1].adjustmentDirection
+      ) {
         alternations++;
       }
     }
@@ -214,10 +220,10 @@ export class MemoryCore {
     return {
       id: randomUUID(),
       category,
-      pattern: 'oscillation' as InsightPattern,
+      pattern: "oscillation" as InsightPattern,
       summary: `${category} is oscillating between increasing and decreasing weight (${alternations} alternations). Environmental instability or conflicting signals.`,
       evidence: {
-        episodeIds: directed.map(e => e.id),
+        episodeIds: directed.map((e) => e.id),
         window: {
           from: directed[directed.length - 1].createdAt,
           to: directed[0].createdAt,
@@ -238,7 +244,7 @@ export class MemoryCore {
     category: SparkCategory,
     episodes: LearningEpisode[],
   ): Insight | null {
-    const nonZero = episodes.filter(e => e.adjustmentMagnitude > 0);
+    const nonZero = episodes.filter((e) => e.adjustmentMagnitude > 0);
     if (nonZero.length < 5) return null;
 
     // Episodes are newest-first — reverse to get chronological order
@@ -248,7 +254,10 @@ export class MemoryCore {
     const totalPairs = chronological.length - 1;
 
     for (let i = 1; i < chronological.length; i++) {
-      if (chronological[i].adjustmentMagnitude <= chronological[i - 1].adjustmentMagnitude) {
+      if (
+        chronological[i].adjustmentMagnitude <=
+        chronological[i - 1].adjustmentMagnitude
+      ) {
         decreasingPairs++;
       }
     }
@@ -259,10 +268,10 @@ export class MemoryCore {
     return {
       id: randomUUID(),
       category,
-      pattern: 'convergence' as InsightPattern,
+      pattern: "convergence" as InsightPattern,
       summary: `${category} weight adjustments are converging — approaching stable calibration.`,
       evidence: {
-        episodeIds: nonZero.map(e => e.id),
+        episodeIds: nonZero.map((e) => e.id),
         window: {
           from: nonZero[nonZero.length - 1].createdAt,
           to: nonZero[0].createdAt,
@@ -281,14 +290,15 @@ export class MemoryCore {
     category: SparkCategory,
     episodes: LearningEpisode[],
   ): Insight | null {
-    const nonZero = episodes.filter(e => e.adjustmentMagnitude > 0);
+    const nonZero = episodes.filter((e) => e.adjustmentMagnitude > 0);
     if (nonZero.length < 3) return null;
 
     const latest = nonZero[0];
     const priors = nonZero.slice(1, 11); // Up to 10 prior episodes
     if (priors.length === 0) return null;
 
-    const avgMagnitude = priors.reduce((s, e) => s + e.adjustmentMagnitude, 0) / priors.length;
+    const avgMagnitude =
+      priors.reduce((s, e) => s + e.adjustmentMagnitude, 0) / priors.length;
     if (avgMagnitude === 0) return null;
 
     const ratio = latest.adjustmentMagnitude / avgMagnitude;
@@ -297,10 +307,10 @@ export class MemoryCore {
     return {
       id: randomUUID(),
       category,
-      pattern: 'anomaly' as InsightPattern,
+      pattern: "anomaly" as InsightPattern,
       summary: `${category} experienced an anomalous adjustment (${latest.adjustmentMagnitude.toFixed(4)} vs avg ${avgMagnitude.toFixed(4)}). Unusual event.`,
       evidence: {
-        episodeIds: [latest.id, ...priors.map(e => e.id)],
+        episodeIds: [latest.id, ...priors.map((e) => e.id)],
         window: {
           from: priors[priors.length - 1].createdAt,
           to: latest.createdAt,
@@ -324,12 +334,12 @@ export class MemoryCore {
     const episodeCount = weight?.episodeCount ?? episodes.length;
 
     const milestoneMessages: Record<number, string> = {
-      10: 'initial patterns forming',
-      25: 'building confidence',
-      50: 'substantial learning history',
-      100: 'mature learning state',
-      250: 'extensive experience',
-      500: 'expert-level calibration',
+      10: "initial patterns forming",
+      25: "building confidence",
+      50: "substantial learning history",
+      100: "mature learning state",
+      250: "extensive experience",
+      500: "expert-level calibration",
     };
 
     for (const milestone of MemoryCore.MILESTONES) {
@@ -339,13 +349,19 @@ export class MemoryCore {
         return {
           id: randomUUID(),
           category,
-          pattern: 'milestone' as InsightPattern,
+          pattern: "milestone" as InsightPattern,
           summary: `${category} reached ${milestone} learning episodes — ${message}.`,
           evidence: {
-            episodeIds: episodes.slice(0, 5).map(e => e.id),
+            episodeIds: episodes.slice(0, 5).map((e) => e.id),
             window: {
-              from: episodes.length > 0 ? episodes[episodes.length - 1].createdAt : new Date().toISOString(),
-              to: episodes.length > 0 ? episodes[0].createdAt : new Date().toISOString(),
+              from:
+                episodes.length > 0
+                  ? episodes[episodes.length - 1].createdAt
+                  : new Date().toISOString(),
+              to:
+                episodes.length > 0
+                  ? episodes[0].createdAt
+                  : new Date().toISOString(),
             },
           },
           impact: 0.3,
