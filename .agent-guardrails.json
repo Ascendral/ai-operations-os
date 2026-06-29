@@ -1,0 +1,18 @@
+{
+  "requireCommitTags": true,
+  "allowedCommitTags": [
+    "FIX",
+    "REFACTOR",
+    "LEARN",
+    "EVAL",
+    "INFRA",
+    "DOCS",
+    "TEST",
+    "SECURITY",
+    "SOLVE"
+  ],
+  "scoreRequiredTags": ["SOLVE"],
+  "requireVerificationCommand": true,
+  "verificationCommand": "npm test -- --runInBand",
+  "forbiddenAddedPatterns": []
+}
